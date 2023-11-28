@@ -7,3 +7,4 @@ set(CMAKE_C_STANDARD_REQUIRED YES)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 add_subdirectory(thirdparty)
+add_subdirectory(sanity)
