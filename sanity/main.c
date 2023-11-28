@@ -1,7 +1,10 @@
 #include "raylib.h"
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
+	(void)argc;
+	(void)argv;
+
 	SetTraceLogLevel(LOG_NONE);
 
 	InitWindow(800, 600, "Test");
