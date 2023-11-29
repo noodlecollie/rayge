@@ -2,6 +2,8 @@
 // Helper macros for ensuring robust passing of data
 // across library boundaries.
 
+#pragma once
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>

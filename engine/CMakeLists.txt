@@ -8,6 +8,8 @@ add_library(${TARGETNAME_ENGINE} SHARED
 	${EXPORT_HEADER}
 	include/RayGE/Private/Launcher.h
 
+	src/GameLoader/GameLoader.h
+	src/GameLoader/GameLoader.c
 	src/Launcher.c
 )
 
