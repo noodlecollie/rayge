@@ -5,5 +5,6 @@ add_executable(${TARGETNAME_LAUNCHER}
 target_link_libraries(${TARGETNAME_LAUNCHER}
 	PRIVATE
 	${TARGETNAME_ENGINE}
+	${TARGETNAME_PLATFORM}
 	raylib
 )

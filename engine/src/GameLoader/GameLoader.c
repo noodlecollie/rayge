@@ -22,12 +22,8 @@ bool GameLoader_InvokeGameLibraryStartup(void* gameLibrary)
 		return false;
 	}
 
-// No way to do this without suppressing -pedantic...
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
 	GameLibFunc_Startup startupFunc =
-		(GameLibFunc_Startup)Platform_LookUpLibrarySymbol(gameLibrary, GAMELIBSYMBOL_STARTUP);
-#pragma GCC diagnostic pop
+		(GameLibFunc_Startup)Platform_LookUpLibraryFunction(gameLibrary, GAMELIBSYMBOL_STARTUP);
 
 	if ( !startupFunc )
 	{
@@ -45,12 +41,8 @@ void GameLoader_InvokeGameLibraryShutdown(void* gameLibrary)
 		return;
 	}
 
-// No way to do this without suppressing -pedantic...
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
 	GameLibFunc_ShutDown shutdownFunc =
-		(GameLibFunc_ShutDown)Platform_LookUpLibrarySymbol(gameLibrary, GAMELIBSYMBOL_SHUTDOWN);
-#pragma GCC diagnostic pop
+		(GameLibFunc_ShutDown)Platform_LookUpLibraryFunction(gameLibrary, GAMELIBSYMBOL_SHUTDOWN);
 
 	if ( !shutdownFunc )
 	{

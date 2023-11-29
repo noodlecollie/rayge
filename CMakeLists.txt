@@ -27,7 +27,8 @@ set(TARGETNAME_ENGINE rayge-engine)
 set(TARGETNAME_LAUNCHER launcher)
 set(TARGETNAME_PLATFORM platform)
 
-add_subdirectory(sanity)
+add_compile_definitions("LIBNAME_ENGINE=\"${TARGETNAME_ENGINE}\"")
+
 add_subdirectory(platform)
 add_subdirectory(engine)
 add_subdirectory(launcher)

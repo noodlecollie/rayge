@@ -1,12 +1,12 @@
 #include "Platform/Library.h"
 #include <dlfcn.h>
 
-void* Platform_LoadLibrary(const char* filename, uint32_t flags)
+void* Platform_LoadLibrary(const char* filename)
 {
-	return dlopen(filename, (int)flags);
+	return dlopen(filename, RTLD_NOW);
 }
 
-int32_t Platform_CloseLibrary(void* handle)
+int32_t Platform_UnloadLibrary(void* handle)
 {
 	return dlclose(handle);
 }
