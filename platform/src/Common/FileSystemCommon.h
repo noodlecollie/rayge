@@ -16,4 +16,5 @@ typedef struct Platform_DirectoryListing
 	char* path;
 } Platform_DirectoryListing;
 
-void FileSystem_LinuxToWindowsPathSeparators(char* path);
+bool PathBeginsWithWindowsDrive(char* path);
+void NormalisePathSeparators(char* path);

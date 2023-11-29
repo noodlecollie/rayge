@@ -14,7 +14,7 @@ char* Platform_DuplicateString(const char* in)
 
 	// Two-step just to make absolutely sure this is terminated:
 	memcpy(out, in, length - 1);
-	out[length] = '\0';
+	out[length - 1] = '\0';
 
 	return out;
 }

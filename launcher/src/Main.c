@@ -2,6 +2,7 @@
 #include "RayGE/Private/Launcher.h"
 #include "RayGE/InterfaceUtils.h"
 #include "Platform/Library.h"
+#include <stdio.h>
 
 int main(int argc, char** argv)
 {
@@ -10,11 +11,12 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	void* engineLibrary = Platform_LoadLibrary(LIBNAME_ENGINE PLATFORM_LIB_EXTENSION);
+	void* engineLibrary = Platform_LoadLibrary(PLATFORM_LIB_PREFIX LIBNAME_ENGINE PLATFORM_LIB_EXTENSION);
 
 	if ( !engineLibrary )
 	{
-		// TODO: Message box?
+		// TODO: More comprehensive function calls
+		printf("Failed to load engine library\n");
 		return -1;
 	}
 
@@ -23,7 +25,8 @@ int main(int argc, char** argv)
 
 	if ( !runFuncPtr )
 	{
-		// TODO: Message box?
+		// TODO: More comprehensive function calls
+		printf("Failed to look up function in engine library\n");
 		return -1;
 	}
 

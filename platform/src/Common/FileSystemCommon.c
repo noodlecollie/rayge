@@ -1,7 +1,14 @@
 #include <stdlib.h>
+#include <stdbool.h>
+#include "Platform/String.h"
 #include "Common/FileSystemCommon.h"
 
-void FileSystem_LinuxToWindowsPathSeparators(char* path)
+bool PathBeginsWithWindowsDrive(char* path)
+{
+	return path && path[0] >= 'A' && path[0] <= 'Z' && path[1] == ':' && path[2] == '\\';
+}
+
+void NormalisePathSeparators(char* path)
 {
 	if ( !path )
 	{
@@ -10,10 +17,28 @@ void FileSystem_LinuxToWindowsPathSeparators(char* path)
 
 	for ( ; *path; ++path )
 	{
-		if ( *path == '/' )
+		if ( *path == '\\' )
 		{
-			*path = '\\';
+			*path = '/';
 		}
+	}
+}
+
+bool Platform_PathIsAbsolute(Platform_Path path)
+{
+	return path.path && path.path[0] == '/';
+}
+
+Platform_Path Platform_AllocatePath(const char* path)
+{
+	return (Platform_Path) {Platform_DuplicateString(path)};
+}
+
+void Platform_FreePath(Platform_Path path)
+{
+	if ( path.path )
+	{
+		free(path.path);
 	}
 }
 
