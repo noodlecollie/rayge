@@ -24,6 +24,8 @@ else()
 endif()
 
 set(TARGETNAME_ENGINE rayge-engine)
+set(TARGETNAME_LAUNCHER launcher)
 
 add_subdirectory(sanity)
 add_subdirectory(engine)
+add_subdirectory(launcher)
