@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "RayGE/Export.gen"
+#include "RayGE/Export.h"
 #include "RayGE/InterfaceUtils.h"
 
 #define RAYGE_LAUNCHER_RUN_SYMBOL_NAME "RayGE_Launcher_Run"

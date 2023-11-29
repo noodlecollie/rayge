@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "RayGE/Export.gen"
+#include "RayGE/Export.h"
 
 typedef void*(
 	RAYGE_ENGINE_CDECL* EngineLibFunc_GetEngineAPI)(uint64_t /* version */, uint64_t* /*outSupportedVersion*/);

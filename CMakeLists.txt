@@ -6,9 +6,9 @@ project(rayge LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED YES)
 
+# This must go here, so that it is configured before the later options are set up.
 add_subdirectory(thirdparty)
 
-# These must come after the thirdparty directory:
 if(MSVC)
 	add_compile_options(
 		/W4
@@ -26,6 +26,7 @@ endif()
 set(TARGETNAME_ENGINE rayge-engine)
 set(TARGETNAME_LAUNCHER launcher)
 set(TARGETNAME_PLATFORM platform)
+set(INSTALL_DEST rayge)
 
 add_compile_definitions("LIBNAME_ENGINE=\"${TARGETNAME_ENGINE}\"")
 
