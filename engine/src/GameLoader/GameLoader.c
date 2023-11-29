@@ -1,10 +1,11 @@
-#include "GameLoader/GameLoader.h"
-#include <dlfcn.h>
 #include <stddef.h>
+#include "GameLoader/GameLoader.h"
+#include "Platform/Library.h"
 
 static void* GetEngineAPI(uint64_t version, uint64_t* outSupportedVersion)
 {
 	// TODO: Implement
+	(void)version;
 
 	if ( outSupportedVersion )
 	{
@@ -21,7 +22,12 @@ bool GameLoader_InvokeGameLibraryStartup(void* gameLibrary)
 		return false;
 	}
 
-	GameLibFunc_Startup startupFunc = (GameLibFunc_Startup)dlsym(gameLibrary, GAMELIBSYMBOL_STARTUP);
+// No way to do this without suppressing -pedantic...
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+	GameLibFunc_Startup startupFunc =
+		(GameLibFunc_Startup)Platform_LookUpLibrarySymbol(gameLibrary, GAMELIBSYMBOL_STARTUP);
+#pragma GCC diagnostic pop
 
 	if ( !startupFunc )
 	{
@@ -36,16 +42,20 @@ void GameLoader_InvokeGameLibraryShutdown(void* gameLibrary)
 {
 	if ( !gameLibrary )
 	{
-		return false;
+		return;
 	}
 
-	GameLibFunc_ShutDown shutdownFunc = (GameLibFunc_ShutDown)dlsym(gameLibrary, GAMELIBSYMBOL_SHUTDOWN);
+// No way to do this without suppressing -pedantic...
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+	GameLibFunc_ShutDown shutdownFunc =
+		(GameLibFunc_ShutDown)Platform_LookUpLibrarySymbol(gameLibrary, GAMELIBSYMBOL_SHUTDOWN);
+#pragma GCC diagnostic pop
 
 	if ( !shutdownFunc )
 	{
-		return false;
+		return;
 	}
 
 	shutdownFunc();
-	return true;
 }
