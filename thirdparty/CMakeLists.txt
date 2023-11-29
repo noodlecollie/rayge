@@ -1,5 +1,6 @@
 add_subdirectory(cJSON)
 add_subdirectory(raylib-5.0)
+add_subdirectory(cwalk-1.2.7)
 
 if(WIN32)
 	add_subdirectory(pthreads-win32)

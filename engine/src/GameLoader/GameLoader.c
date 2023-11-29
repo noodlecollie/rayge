@@ -23,7 +23,7 @@ bool GameLoader_InvokeGameLibraryStartup(void* gameLibrary)
 	}
 
 	GameLibFunc_Startup startupFunc =
-		(GameLibFunc_Startup)Platform_LookUpLibraryFunction(gameLibrary, GAMELIBSYMBOL_STARTUP);
+		(GameLibFunc_Startup)Platform_LookUpLibraryFunction(gameLibrary, RAYGE_GAMELIBRARY_STARTUP_SYMBOL_NAME);
 
 	if ( !startupFunc )
 	{
@@ -42,7 +42,7 @@ void GameLoader_InvokeGameLibraryShutdown(void* gameLibrary)
 	}
 
 	GameLibFunc_ShutDown shutdownFunc =
-		(GameLibFunc_ShutDown)Platform_LookUpLibraryFunction(gameLibrary, GAMELIBSYMBOL_SHUTDOWN);
+		(GameLibFunc_ShutDown)Platform_LookUpLibraryFunction(gameLibrary, RAYGE_GAMELIBRARY_SHUTDOWN_SYMBOL_NAME);
 
 	if ( !shutdownFunc )
 	{

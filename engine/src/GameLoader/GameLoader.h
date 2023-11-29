@@ -10,8 +10,8 @@ typedef void*(
 typedef void(RAYGE_ENGINE_CDECL* GameLibFunc_Startup)(EngineLibFunc_GetEngineAPI /*getEngineApiPtr*/);
 typedef void(RAYGE_ENGINE_CDECL* GameLibFunc_ShutDown)(void);
 
-#define GAMELIBSYMBOL_STARTUP "RayGE_GameLibrary_Startup"
-#define GAMELIBSYMBOL_SHUTDOWN "RayGE_GameLibrary_ShutDown"
+#define RAYGE_GAMELIBRARY_STARTUP_SYMBOL_NAME "RayGE_GameLibrary_Startup"
+#define RAYGE_GAMELIBRARY_SHUTDOWN_SYMBOL_NAME "RayGE_GameLibrary_ShutDown"
 
 bool GameLoader_InvokeGameLibraryStartup(void* gameLibrary);
 void GameLoader_InvokeGameLibraryShutdown(void* gameLibrary);
