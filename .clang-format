@@ -2,11 +2,7 @@
 Language: Cpp
 BasedOnStyle: Google
 AccessModifierOffset: '-4'
-
-# TODO: We'd like this but I don't think it's in yet:
-# https://reviews.llvm.org/rG966f24e5a62a9f5df518357c2d4b0e361244a624
-AlignAfterOpenBracket: AlwaysBreak
-
+AlignAfterOpenBracket: BlockIndent
 AlignConsecutiveMacros: 'false'
 AlignConsecutiveAssignments: 'false'
 AlignConsecutiveDeclarations: 'false'
