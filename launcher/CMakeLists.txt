@@ -7,6 +7,7 @@ target_link_libraries(${TARGETNAME_LAUNCHER}
 	${TARGETNAME_ENGINE}
 	${TARGETNAME_PLATFORM}
 	raylib
+	wzl-cutl
 )
 
 install(TARGETS ${TARGETNAME_LAUNCHER}

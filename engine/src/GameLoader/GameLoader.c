@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include "GameLoader/GameLoader.h"
-#include "Platform/Library.h"
+#include "wzl_cutl/libloader.h"
 
 static void* GetEngineAPI(uint64_t version, uint64_t* outSupportedVersion)
 {
@@ -23,7 +23,7 @@ bool GameLoader_InvokeGameLibraryStartup(void* gameLibrary)
 	}
 
 	GameLibFunc_Startup startupFunc =
-		(GameLibFunc_Startup)Platform_LookUpLibraryFunction(gameLibrary, RAYGE_GAMELIBRARY_STARTUP_SYMBOL_NAME);
+		(GameLibFunc_Startup)wzl_get_library_function(gameLibrary, RAYGE_GAMELIBRARY_STARTUP_SYMBOL_NAME);
 
 	if ( !startupFunc )
 	{
@@ -42,7 +42,7 @@ void GameLoader_InvokeGameLibraryShutdown(void* gameLibrary)
 	}
 
 	GameLibFunc_ShutDown shutdownFunc =
-		(GameLibFunc_ShutDown)Platform_LookUpLibraryFunction(gameLibrary, RAYGE_GAMELIBRARY_SHUTDOWN_SYMBOL_NAME);
+		(GameLibFunc_ShutDown)wzl_get_library_function(gameLibrary, RAYGE_GAMELIBRARY_SHUTDOWN_SYMBOL_NAME);
 
 	if ( !shutdownFunc )
 	{

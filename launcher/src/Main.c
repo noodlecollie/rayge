@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "RayGE/Private/Launcher.h"
 #include "RayGE/InterfaceUtils.h"
+#include "wzl_cutl/libloader.h"
 #include "Platform/Library.h"
 #include <stdio.h>
 
@@ -11,7 +12,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	void* engineLibrary = Platform_LoadLibrary(PLATFORM_LIB_PREFIX LIBNAME_ENGINE PLATFORM_LIB_EXTENSION);
+	void* engineLibrary = wzl_load_library(PLATFORM_LIB_PREFIX LIBNAME_ENGINE PLATFORM_LIB_EXTENSION);
 
 	if ( !engineLibrary )
 	{
@@ -21,7 +22,7 @@ int main(int argc, char** argv)
 	}
 
 	RayGE_Launcher_Run_FuncPtr runFuncPtr =
-		(RayGE_Launcher_Run_FuncPtr)Platform_LookUpLibraryFunction(engineLibrary, RAYGE_LAUNCHER_RUN_SYMBOL_NAME);
+		(RayGE_Launcher_Run_FuncPtr)wzl_get_library_function(engineLibrary, RAYGE_LAUNCHER_RUN_SYMBOL_NAME);
 
 	if ( !runFuncPtr )
 	{
@@ -38,7 +39,7 @@ int main(int argc, char** argv)
 
 	const int32_t result = runFuncPtr(&params);
 
-	Platform_UnloadLibrary(engineLibrary);
+	wzl_unload_library(engineLibrary);
 
 	return result;
 }

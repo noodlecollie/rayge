@@ -7,14 +7,13 @@ add_library(${TARGETNAME_PLATFORM} STATIC
 	src/Common/FileSystemCommon.c
 	src/Common/StringCommon.c
 
-	$<$<BOOL:UNIX>:src/Unix/FileSystem.c>
-	$<$<BOOL:UNIX>:src/Unix/Library.c>
+	$<$<PLATFORM_ID:Linux>::src/Linux/FileSystem.c>
 )
 
 target_link_libraries(${TARGETNAME_PLATFORM}
 	PRIVATE
 	cwalk
-	$<$<BOOL:UNIX>:dl>
+	$<$<PLATFORM_ID:Linux>::dl>
 )
 
 target_include_directories(${TARGETNAME_PLATFORM}
