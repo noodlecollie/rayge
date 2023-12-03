@@ -4,7 +4,13 @@ include(generate_export_header_template)
 
 set(GENERATED_HEADER_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated_headers")
 set(EXPORT_HEADER "${GENERATED_HEADER_DIR}/RayGE/Export.h")
-generate_export_header_template(${TARGETNAME_ENGINE} ${EXPORT_HEADER})
+
+generate_export_header_template(
+	TARGET ${TARGETNAME_ENGINE}
+	OUTPUT ${EXPORT_HEADER}
+	STATIC
+	PRODUCER_DEFINE RAYGE_PRODUCER
+)
 
 target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/GameLoader/GameLoader.h
@@ -27,6 +33,8 @@ target_link_libraries(${TARGETNAME_ENGINE}
 	PRIVATE
 	${TARGETNAME_PLATFORM}
 )
+
+target_compile_definitions(${TARGETNAME_ENGINE} PRIVATE RAYGE_PRODUCER)
 
 install(TARGETS ${TARGETNAME_ENGINE}
 	ARCHIVE DESTINATION ${INSTALL_DEST}/api/lib

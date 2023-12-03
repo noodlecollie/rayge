@@ -1,0 +1,7 @@
+#ifndef WZL_CUTL_WINDOWS_WINAPI_MIN_H
+#define WZL_CUTL_WINDOWS_WINAPI_MIN_H
+
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
+#endif  // WZL_CUTL_WINDOWS_WINAPI_MIN_H
