@@ -7,7 +7,9 @@ add_library(${TARGETNAME_PLATFORM} STATIC
 	src/Common/FileSystemCommon.c
 	src/Common/StringCommon.c
 
-	$<$<PLATFORM_ID:Linux>::src/Linux/FileSystem.c>
+	$<$<PLATFORM_ID:Linux>:src/Linux/FileSystem.c>
+
+	$<$<PLATFORM_ID:Windows>:src/Windows/FileSystem.c>
 )
 
 target_link_libraries(${TARGETNAME_PLATFORM}
