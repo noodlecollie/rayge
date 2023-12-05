@@ -2,6 +2,8 @@
 
 #include <stdbool.h>
 
+typedef char Platform_Path[512];
+
 typedef enum Platform_FileNodeType
 {
 	PLATFORM_NODE_UNKNOWN = 0,
@@ -12,23 +14,20 @@ typedef enum Platform_FileNodeType
 struct Platform_DirectoryListing;
 struct Platform_DirectoryEntry;
 
-// Always expected to be relative, and to use forward slash as a separator.
-typedef struct Platform_Path
-{
-	char* path;
-} Platform_Path;
+// Unless specified, paths here are expected to be relative to the
+// engine launcher directory, and are expected to use '/' as a separator.
 
-Platform_Path Platform_AllocatePath(const char* path);
-void Platform_FreePath(Platform_Path path);
-bool Platform_PathIsAbsolute(Platform_Path path);
-
-bool Platform_SetExecutableFromArgV0(const char* path);
+bool Platform_SetExecutableFromArgV0(const char* nativePath);
 
 // Assumes Platform_SetExecutableFromArgV0() has been called successfully.
 // Caller takes ownership of the native path. It must be freed later.
-char* Platform_NativeAbsolutePathFromExecutableDirectory(Platform_Path relativePath);
+char* Platform_NativeAbsolutePathFromExecutableDirectory(const char* relativePath);
 
-struct Platform_DirectoryListing* Platform_GetDirectoryListing(Platform_Path path);
+bool Platform_PathIsAbsolute(const char* path);
+bool Platform_DirectoryExists(const char* path);
+bool Platform_FileExists(const char* path);
+
+struct Platform_DirectoryListing* Platform_GetDirectoryListing(const char* path);
 void Platform_FreeDirectoryListing(struct Platform_DirectoryListing* listing);
 
 const char* Platform_DirectoryListing_GetDirectoryPath(struct Platform_DirectoryListing* listing);

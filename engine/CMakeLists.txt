@@ -33,6 +33,7 @@ target_link_libraries(${TARGETNAME_ENGINE}
 	PRIVATE
 	${TARGETNAME_PLATFORM}
 	wzl-cutl
+	cJSON
 )
 
 target_compile_definitions(${TARGETNAME_ENGINE} PRIVATE RAYGE_PRODUCER)

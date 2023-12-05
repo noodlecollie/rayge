@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdbool.h>
-#include "Platform/String.h"
 #include "Common/FileSystemCommon.h"
 
 bool PathBeginsWithWindowsDrive(char* path)
@@ -24,22 +23,9 @@ void NormalisePathSeparators(char* path)
 	}
 }
 
-bool Platform_PathIsAbsolute(Platform_Path path)
+bool Platform_PathIsAbsolute(const char* path)
 {
-	return path.path && path.path[0] == '/';
-}
-
-Platform_Path Platform_AllocatePath(const char* path)
-{
-	return (Platform_Path) {Platform_DuplicateString(path)};
-}
-
-void Platform_FreePath(Platform_Path path)
-{
-	if ( path.path )
-	{
-		free(path.path);
-	}
+	return path && path[0] == '/';
 }
 
 void Platform_FreeDirectoryListing(struct Platform_DirectoryListing* listing)

@@ -23,6 +23,6 @@
 //
 //   Pointer to allocated memory for the duplicated
 //   string, or NULL if the input string was NULL.
-WZL_CUTL_PUBLIC(char*) wzl_duplicate_string(char* str);
+WZL_CUTL_PUBLIC(char*) wzl_duplicate_string(const char* str);
 
 #endif  // WZL_CUTL_STRING_H

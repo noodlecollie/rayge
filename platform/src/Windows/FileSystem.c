@@ -1,93 +1,121 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "Platform/FileSystem.h"
-#include "Platform/String.h"
 #include "Common/FileSystemCommon.h"
 #include "cwalk.h"
+#include "wzl_cutl/string.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <direct.h>
 
-static char g_ExecutableDirectory[MAX_PATH];
+static Platform_Path g_ExecutableDirectory;
 static size_t g_ExecutableDirectoryLength = 0;
 
-bool Platform_SetExecutableFromArgV0(const char* path)
+bool Platform_SetExecutableFromArgV0(const char* nativePath)
 {
-	if ( !path )
+	if ( !nativePath )
 	{
 		return false;
 	}
 
-	char temp[MAX_PATH];
+	Platform_Path temp;
 
-	if ( cwk_path_is_relative(path) )
+	if ( cwk_path_is_relative(nativePath) )
 	{
-		char cwd[MAX_PATH];
+		Platform_Path cwd;
 
 		if ( !_getcwd(cwd, sizeof(cwd)) )
 		{
 			return false;
 		}
 
-		cwk_path_get_absolute(cwd, path, temp, sizeof(temp));
-		path = temp;
+		cwk_path_get_absolute(cwd, nativePath, temp, sizeof(temp));
+		nativePath = temp;
 	}
 
 	size_t length = 0;
-	cwk_path_get_dirname(path, &length);
+	cwk_path_get_dirname(nativePath, &length);
 
-	if ( length < 1 || length >= MAX_PATH )
+	if ( length < 1 || length >= sizeof(Platform_Path) )
 	{
 		return false;
 	}
 
-	if ( path[length - 1] == '/' )
+	if ( nativePath[length - 1] == '/' )
 	{
 		--length;
 	}
 
 	g_ExecutableDirectoryLength = length;
-	memcpy(g_ExecutableDirectory, path, g_ExecutableDirectoryLength);
+	memcpy(g_ExecutableDirectory, nativePath, g_ExecutableDirectoryLength);
 	g_ExecutableDirectory[g_ExecutableDirectoryLength + 1] = '\0';
 
 	return true;
 }
 
-char* Platform_NativeAbsolutePathFromExecutableDirectory(Platform_Path relativePath)
+bool Platform_DirectoryExists(const char* path)
 {
-	if ( !relativePath.path || !g_ExecutableDirectory[0] )
+	if ( !path || !(*path) )
+	{
+		return false;
+	}
+
+	char* nativePath = Platform_NativeAbsolutePathFromExecutableDirectory(path);
+	const DWORD attributes = GetFileAttributesA(nativePath);
+	free(nativePath);
+
+	return attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+bool Platform_FileExists(const char* path)
+{
+	if ( !path || !(*path) )
+	{
+		return false;
+	}
+
+	char* nativePath = Platform_NativeAbsolutePathFromExecutableDirectory(path);
+	const DWORD attributes = GetFileAttributesA(nativePath);
+	free(nativePath);
+
+	return attributes != INVALID_FILE_ATTRIBUTES && !(attributes & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+char* Platform_NativeAbsolutePathFromExecutableDirectory(const char* relativePath)
+{
+	if ( !relativePath || !g_ExecutableDirectory[0] )
 	{
 		return NULL;
 	}
 
 	// We handle this manually:
-	if ( relativePath.path[0] == '/' )
+	if ( relativePath[0] == '/' )
 	{
-		++relativePath.path;
+		++relativePath;
 	}
 
-	size_t relLength = strlen(relativePath.path);
+	size_t relLength = strlen(relativePath);
 	size_t totalLength = g_ExecutableDirectoryLength + sizeof('/') + relLength + sizeof('\0');
 	char* out = malloc(totalLength);
 
 	memcpy(out, g_ExecutableDirectory, g_ExecutableDirectoryLength);
 	out[g_ExecutableDirectoryLength] = '/';
-	memcpy(out + g_ExecutableDirectoryLength + 1, relativePath.path, relLength);
+	memcpy(out + g_ExecutableDirectoryLength + 1, relativePath, relLength);
 	out[totalLength - 1] = '\0';
 
 	return out;
 }
 
-struct Platform_DirectoryListing* Platform_GetDirectoryListing(Platform_Path path)
+struct Platform_DirectoryListing* Platform_GetDirectoryListing(const char* path)
 {
-	char sPath[MAX_PATH];
+	Platform_Path sPath;
 
-	snprintf(sPath, sizeof(sPath), "%s\\*.*", path.path);
-	sPath[MAX_PATH - 1] = '\0';
+	snprintf(sPath, sizeof(sPath), "%s\\*.*", path);
+	sPath[sizeof(Platform_Path) - 1] = '\0';
 
 	WIN32_FIND_DATA fdFile;
-	HANDLE hFind = FindFirstFile(sPath, &fdFile);
+	HANDLE hFind = FindFirstFileA(sPath, &fdFile);
 
 	if ( hFind == INVALID_HANDLE_VALUE )
 	{
@@ -102,7 +130,7 @@ struct Platform_DirectoryListing* Platform_GetDirectoryListing(Platform_Path pat
 		return NULL;
 	}
 
-	listing->path = Platform_DuplicateString(path.path);
+	listing->path = wzl_duplicate_string(path);
 
 	Platform_DirectoryEntry* prevEntry = NULL;
 
@@ -127,7 +155,7 @@ struct Platform_DirectoryListing* Platform_GetDirectoryListing(Platform_Path pat
 			listingEntry->prev->next = listingEntry;
 		}
 
-		listingEntry->name = Platform_DuplicateString(fdFile.cFileName);
+		listingEntry->name = wzl_duplicate_string(fdFile.cFileName);
 
 		if ( fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
 		{
@@ -140,7 +168,7 @@ struct Platform_DirectoryListing* Platform_GetDirectoryListing(Platform_Path pat
 
 		prevEntry = listingEntry;
 	}
-	while ( FindNextFile(hFind, &fdFile) );
+	while ( FindNextFileA(hFind, &fdFile) );
 
 	FindClose(hFind);
 	return listing;

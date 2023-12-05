@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <unistd.h>
 #include "Platform/FileSystem.h"
 #include "Platform/String.h"
@@ -12,9 +13,9 @@
 static char g_ExecutableDirectory[PATH_MAX];
 static size_t g_ExecutableDirectoryLength = 0;
 
-static DIR* OpenDir(Platform_Path path)
+static DIR* OpenDir(const char* relativePath)
 {
-	char* nativeDirectory = Platform_NativeAbsolutePathFromExecutableDirectory(path);
+	char* nativeDirectory = Platform_NativeAbsolutePathFromExecutableDirectory(relativePath);
 
 	if ( !nativeDirectory )
 	{
@@ -26,74 +27,93 @@ static DIR* OpenDir(Platform_Path path)
 	return dirPtr;
 }
 
-bool Platform_SetExecutableFromArgV0(const char* path)
+bool Platform_SetExecutableFromArgV0(const char* nativePath)
 {
-	if ( !path )
+	if ( !nativePath )
 	{
 		return false;
 	}
 
-	char temp[PATH_MAX];
+	Platform_Path temp;
 
-	if ( cwk_path_is_relative(path) )
+	if ( cwk_path_is_relative(nativePath) )
 	{
-		char cwd[PATH_MAX];
+		Platform_Path cwd;
 
 		if ( !getcwd(cwd, sizeof(cwd)) )
 		{
 			return false;
 		}
 
-		cwk_path_get_absolute(cwd, path, temp, sizeof(temp));
-		path = temp;
+		cwk_path_get_absolute(cwd, nativePath, temp, sizeof(temp));
+		nativePath = temp;
 	}
 
 	size_t length = 0;
-	cwk_path_get_dirname(path, &length);
+	cwk_path_get_dirname(nativePath, &length);
 
-	if ( length < 1 || length >= PATH_MAX )
+	if ( length < 1 || length >= sizeof(Platform_Path) )
 	{
 		return false;
 	}
 
-	if ( path[length - 1] == '/' )
+	if ( nativePath[length - 1] == '/' )
 	{
 		--length;
 	}
 
 	g_ExecutableDirectoryLength = length;
-	memcpy(g_ExecutableDirectory, path, g_ExecutableDirectoryLength);
+	memcpy(g_ExecutableDirectory, nativePath, g_ExecutableDirectoryLength);
 	g_ExecutableDirectory[g_ExecutableDirectoryLength + 1] = '\0';
 
 	return true;
 }
 
-char* Platform_NativeAbsolutePathFromExecutableDirectory(Platform_Path relativePath)
+bool Platform_DirectoryExists(const char* path)
 {
-	if ( !relativePath.path || !g_ExecutableDirectory[0] )
+	if ( !path || !(*path) )
+	{
+		return false;
+	}
+
+	DIR* dir = OpenDir(path);
+	bool isDir = dir != NULL;
+	closedir(dir);
+
+	return isDir;
+}
+
+bool Platform_FileExists(const char* path)
+{
+	return path && *path && access(path, F_OK) == 0;
+}
+
+char* Platform_NativeAbsolutePathFromExecutableDirectory(const char* relativePath)
+{
+	if ( !relativePath || !g_ExecutableDirectory[0] )
 	{
 		return NULL;
 	}
 
 	// We handle this manually:
-	if ( relativePath.path[0] == '/' )
+	if ( relativePath[0] == '/' )
 	{
-		++relativePath.path;
+		++relativePath;
 	}
 
-	size_t relLength = strlen(relativePath.path);
+	size_t relLength = strlen(relativePath);
 	size_t totalLength = g_ExecutableDirectoryLength + sizeof('/') + relLength + sizeof('\0');
 	char* out = malloc(totalLength);
 
 	memcpy(out, g_ExecutableDirectory, g_ExecutableDirectoryLength);
 	out[g_ExecutableDirectoryLength] = '/';
-	memcpy(out + g_ExecutableDirectoryLength + 1, relativePath.path, relLength);
+	memcpy(out + g_ExecutableDirectoryLength + 1, relativePath, relLength);
 	out[totalLength - 1] = '\0';
 
 	return out;
 }
 
-struct Platform_DirectoryListing* Platform_GetDirectoryListing(Platform_Path path)
+struct Platform_DirectoryListing* Platform_GetDirectoryListing(const char* path)
 {
 	DIR* dirPtr = OpenDir(path);
 
@@ -110,7 +130,7 @@ struct Platform_DirectoryListing* Platform_GetDirectoryListing(Platform_Path pat
 		return NULL;
 	}
 
-	listing->path = Platform_DuplicateString(path.path);
+	listing->path = Platform_DuplicateString(path);
 
 	Platform_DirectoryEntry* prevEntry = NULL;
 
