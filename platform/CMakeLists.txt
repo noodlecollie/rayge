@@ -1,5 +1,6 @@
 add_library(${TARGETNAME_PLATFORM} STATIC
 	include/Platform/FileSystem.h
+	include/Platform/FileSystemNative.h
 	include/Platform/Library.h
 
 	src/Common/FileSystemCommon.h

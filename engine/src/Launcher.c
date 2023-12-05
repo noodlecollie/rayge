@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "RayGE/Private/Launcher.h"
 #include "Platform/FileSystem.h"
+#include "Platform/FileSystemNative.h"
 #include "cJSON/cJSON.h"
 
 #define DEFAULT_GAME_DIR "games/defaultgame"
@@ -9,9 +10,7 @@ bool TryLoadGameFromDirectory(const char* directory)
 {
 	Platform_Path path;
 
-	// TODO: Safe string functions
-	snprintf(path, sizeof(path), "%s/game.json", directory);
-	path[sizeof(path) - 1] = '\0';
+	sprintf_s(path, sizeof(path), "%s/game.json", directory);
 
 	if ( !Platform_FileExists(path) )
 	{

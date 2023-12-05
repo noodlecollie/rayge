@@ -15,6 +15,3 @@ typedef struct Platform_DirectoryListing
 	Platform_DirectoryEntry* entries;
 	char* path;
 } Platform_DirectoryListing;
-
-bool PathBeginsWithWindowsDrive(char* path);
-void NormalisePathSeparators(char* path);

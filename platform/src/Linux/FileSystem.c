@@ -6,12 +6,10 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "Platform/FileSystem.h"
+#include "Platform/FileSystemNative.h"
 #include "Platform/String.h"
 #include "Common/FileSystemCommon.h"
 #include "cwalk.h"
-
-static char g_ExecutableDirectory[PATH_MAX];
-static size_t g_ExecutableDirectoryLength = 0;
 
 static DIR* OpenDir(const char* relativePath)
 {
@@ -27,90 +25,20 @@ static DIR* OpenDir(const char* relativePath)
 	return dirPtr;
 }
 
-bool Platform_SetExecutableFromArgV0(const char* nativePath)
+void Platform_PathSeparatorsToNative(char* path)
 {
-	if ( !nativePath )
+	if ( !path )
 	{
-		return false;
+		return;
 	}
 
-	Platform_Path temp;
-
-	if ( cwk_path_is_relative(nativePath) )
+	for ( ; *path; ++path )
 	{
-		Platform_Path cwd;
-
-		if ( !getcwd(cwd, sizeof(cwd)) )
+		if ( *path == '\\' )
 		{
-			return false;
+			*path = '/';
 		}
-
-		cwk_path_get_absolute(cwd, nativePath, temp, sizeof(temp));
-		nativePath = temp;
 	}
-
-	size_t length = 0;
-	cwk_path_get_dirname(nativePath, &length);
-
-	if ( length < 1 || length >= sizeof(Platform_Path) )
-	{
-		return false;
-	}
-
-	if ( nativePath[length - 1] == '/' )
-	{
-		--length;
-	}
-
-	g_ExecutableDirectoryLength = length;
-	memcpy(g_ExecutableDirectory, nativePath, g_ExecutableDirectoryLength);
-	g_ExecutableDirectory[g_ExecutableDirectoryLength + 1] = '\0';
-
-	return true;
-}
-
-bool Platform_DirectoryExists(const char* path)
-{
-	if ( !path || !(*path) )
-	{
-		return false;
-	}
-
-	DIR* dir = OpenDir(path);
-	bool isDir = dir != NULL;
-	closedir(dir);
-
-	return isDir;
-}
-
-bool Platform_FileExists(const char* path)
-{
-	return path && *path && access(path, F_OK) == 0;
-}
-
-char* Platform_NativeAbsolutePathFromExecutableDirectory(const char* relativePath)
-{
-	if ( !relativePath || !g_ExecutableDirectory[0] )
-	{
-		return NULL;
-	}
-
-	// We handle this manually:
-	if ( relativePath[0] == '/' )
-	{
-		++relativePath;
-	}
-
-	size_t relLength = strlen(relativePath);
-	size_t totalLength = g_ExecutableDirectoryLength + sizeof('/') + relLength + sizeof('\0');
-	char* out = malloc(totalLength);
-
-	memcpy(out, g_ExecutableDirectory, g_ExecutableDirectoryLength);
-	out[g_ExecutableDirectoryLength] = '/';
-	memcpy(out + g_ExecutableDirectoryLength + 1, relativePath, relLength);
-	out[totalLength - 1] = '\0';
-
-	return out;
 }
 
 struct Platform_DirectoryListing* Platform_GetDirectoryListing(const char* path)

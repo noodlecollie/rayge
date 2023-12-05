@@ -17,12 +17,6 @@ struct Platform_DirectoryEntry;
 // Unless specified, paths here are expected to be relative to the
 // engine launcher directory, and are expected to use '/' as a separator.
 
-bool Platform_SetExecutableFromArgV0(const char* nativePath);
-
-// Assumes Platform_SetExecutableFromArgV0() has been called successfully.
-// Caller takes ownership of the native path. It must be freed later.
-char* Platform_NativeAbsolutePathFromExecutableDirectory(const char* relativePath);
-
 bool Platform_PathIsAbsolute(const char* path);
 bool Platform_DirectoryExists(const char* path);
 bool Platform_FileExists(const char* path);
