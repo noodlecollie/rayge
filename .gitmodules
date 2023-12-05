@@ -1,0 +1,3 @@
+[submodule "thirdparty/wzl-cutl/wzl-cutl"]
+	path = thirdparty/wzl-cutl/wzl-cutl
+	url = https://github.com/noodlecollie/wzl-cutl.git
