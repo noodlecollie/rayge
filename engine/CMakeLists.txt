@@ -15,7 +15,11 @@ generate_export_header_template(
 target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/GameLoader/GameLoader.h
 	src/GameLoader/GameLoader.c
-	src/Launcher.c
+	src/LoggingSubsystem/LoggingSubsystem.h
+	src/LoggingSubsystem/LoggingSubsystem.c
+	src/Private/Launcher.c
+	src/EngineAPI.h
+	src/EngineAPI.c
 )
 
 target_sources(${TARGETNAME_ENGINE}
@@ -24,7 +28,9 @@ target_sources(${TARGETNAME_ENGINE}
 	FILES
 	${EXPORT_HEADER}
 	include/RayGE/Private/Launcher.h
+	include/RayGE/Engine.h
 	include/RayGE/InterfaceUtils.h
+	include/RayGE/Logging.h
 )
 
 target_include_directories(${TARGETNAME_ENGINE} PRIVATE src)
@@ -34,6 +40,7 @@ target_link_libraries(${TARGETNAME_ENGINE}
 	${TARGETNAME_PLATFORM}
 	wzl-cutl
 	cJSON
+	raylib
 )
 
 target_compile_definitions(${TARGETNAME_ENGINE} PRIVATE RAYGE_PRODUCER)
