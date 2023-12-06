@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include "RayGE/Engine.h"
 #include "RayGE/Private/Launcher.h"
-#include "Platform/FileSystem.h"
-#include "Platform/FileSystemNative.h"
 #include "Subsystems/LoggingSubsystem.h"
+#include "Subsystems/FileSubsystem.h"
 #include "EngineAPI.h"
-#include "cJSON/cJSON.h"
 
 #define NUM_ENGINE_API_FUNCTIONS (sizeof(RayGE_Engine_API) / sizeof(void*))
 #define DEFAULT_GAME_DIR "games/defaultgame"
@@ -20,24 +18,6 @@ typedef union EngineAPIVerifyWrapper
 	const RayGE_Engine_API* apiPtr;
 	const EngineAPIOpaqueFunctionTable* funcTablePtr;
 } EngineAPIVerifyWrapper;
-
-static bool TryLoadGameFromDirectory(const char* directory)
-{
-	Platform_Path path;
-
-	sprintf_s(path, sizeof(path), "%s/game.json", directory);
-
-	if ( !Platform_FileExists(path) )
-	{
-		// TODO: Log
-		return false;
-	}
-
-	// TODO: Parse JSON to get library name
-	// TODO: Load library by name
-	// TODO: Pass interface to library
-	return false;
-}
 
 static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 {
@@ -84,25 +64,14 @@ RAYGE_ENGINE_PUBLIC(int32_t) RayGE_Launcher_Run(const RayGE_LaunchParams* params
 		return -RAYGE_LAUNCHPARAMS_VERSION;
 	}
 
+	// This must go first, so that we can log if required on init.
+	LoggingSubsystem_Init();
+
 	SanityCheckEngineBeforeRunningInitProcedure();
 
-	Platform_SetExecutableFromArgV0(params->argv[0]);
-
-	const char* gameDir = DEFAULT_GAME_DIR;
-
-	if ( !Platform_DirectoryExists(gameDir) )
-	{
-		// TODO: Expect a command line argument to
-		// specify the game to open
-		return 1;
-	}
-
-	if ( !TryLoadGameFromDirectory(gameDir) )
-	{
-		// TODO: Better logging
-		return 1;
-	}
-
 	// TODO
-	return 1;
+
+	LoggingSubsystem_ShutDown();
+
+	return 0;
 }
