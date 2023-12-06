@@ -5,6 +5,7 @@
 
 void LoggingSubsystem_Init(void);
 void LoggingSubsystem_ShutDown(void);
+void LoggingSubsystem_SetLogLevel(RayGE_Log_Level level);
 void LoggingSubsystem_EmitMessageV(RayGE_Log_Level level, const char* format, va_list args);
 
 static inline void LoggingSubsystem_EmitMessage(RayGE_Log_Level level, const char* format, ...)

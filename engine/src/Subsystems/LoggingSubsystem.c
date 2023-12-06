@@ -2,33 +2,33 @@
 #include "Subsystems/LoggingSubsystem.h"
 #include "raylib.h"
 
-#define MAX_LOG_MESSAGE_LENGTH 256
-
-static void LogCallback(int logLevel, const char *text, va_list args)
-{
-	// TODO: Make this more sophisticated.
-	(void)logLevel;
-	vprintf(text, args);
-}
+static RayGE_Log_Level g_LogLevel = RAYGE_LOG_NONE;
 
 void LoggingSubsystem_Init(void)
 {
-	SetTraceLogCallback(LogCallback);
+	// Disable raylib logging
+	SetTraceLogLevel(LOG_NONE);
+
+	g_LogLevel = RAYGE_LOG_INFO;
 }
 
 void LoggingSubsystem_ShutDown(void)
 {
-	SetTraceLogCallback(NULL);
+	g_LogLevel = RAYGE_LOG_NONE;
+}
+
+void LoggingSubsystem_SetLogLevel(RayGE_Log_Level level)
+{
+	g_LogLevel = level;
 }
 
 void LoggingSubsystem_EmitMessageV(RayGE_Log_Level level, const char* format, va_list args)
 {
-	char message[MAX_LOG_MESSAGE_LENGTH];
-	vsprintf_s(message, sizeof(message), format, args);
+	if ( level < g_LogLevel )
+	{
+		return;
+	}
 
-	// TODO: We may want to have some more sophisticated handling
-	// of when a fatal error occurs. Perhaps have systems register
-	// cleanup functions which have to run before the library exits?
-	// Check to see what Xash does with its mempools.
-	TraceLog(level, "%s", message);
+	// TODO: Make this more sophisticated.
+	vprintf(format, args);
 }
