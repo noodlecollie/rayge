@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include "RayGE/Engine.h"
-#include "LoggingSubsystem/LoggingSubsystem.h"
+#include "Subsystems/LoggingSubsystem.h"
 
 const RayGE_Engine_API g_EngineAPI = {
 	// Logging

@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "RayGE/Export.h"
-#include "RayGE/InterfaceUtils.h"
+#include "RayGE/Private/InterfaceUtils.h"
 
 #define RAYGE_LAUNCHER_RUN_SYMBOL_NAME "RayGE_Launcher_Run"
 #define RAYGE_LAUNCHPARAMS_VERSION 1

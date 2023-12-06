@@ -2,12 +2,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "RayGE/Export.h"
+#include "RayGE/Engine.h"
 
-typedef void*(
-	RAYGE_ENGINE_CDECL* EngineLibFunc_GetEngineAPI)(uint64_t /* version */, uint64_t* /*outSupportedVersion*/);
-
-typedef void(RAYGE_ENGINE_CDECL* GameLibFunc_Startup)(EngineLibFunc_GetEngineAPI /*getEngineApiPtr*/);
+typedef void(RAYGE_ENGINE_CDECL* GameLibFunc_Startup)(RayGE_Engine_GetAPIFunc /*getEngineApiPtr*/);
 typedef void(RAYGE_ENGINE_CDECL* GameLibFunc_ShutDown)(void);
 
 #define RAYGE_GAMELIBRARY_STARTUP_SYMBOL_NAME "RayGE_GameLibrary_Startup"

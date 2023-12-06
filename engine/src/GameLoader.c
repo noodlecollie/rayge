@@ -1,11 +1,14 @@
 #include <stddef.h>
-#include "GameLoader/GameLoader.h"
+#include "GameLoader.h"
 #include "wzl_cutl/libloader.h"
 
-static void* GetEngineAPI(uint64_t version, uint64_t* outSupportedVersion)
+static const RayGE_Engine_API* RAYGE_ENGINE_CDECL GetEngineAPI(
+	uint16_t requestedVersion,
+	uint16_t* outSupportedVersion
+)
 {
 	// TODO: Implement
-	(void)version;
+	(void)requestedVersion;
 
 	if ( outSupportedVersion )
 	{

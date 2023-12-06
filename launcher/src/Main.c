@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "RayGE/Private/Launcher.h"
-#include "RayGE/InterfaceUtils.h"
+#include "RayGE/Private/InterfaceUtils.h"
 #include "wzl_cutl/libloader.h"
 #include "Platform/Library.h"
 #include <stdio.h>

@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "LoggingSubsystem/LoggingSubsystem.h"
+#include "Subsystems/LoggingSubsystem.h"
 #include "raylib.h"
 
 #define MAX_LOG_MESSAGE_LENGTH 256

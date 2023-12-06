@@ -3,7 +3,7 @@
 #include "RayGE/Private/Launcher.h"
 #include "Platform/FileSystem.h"
 #include "Platform/FileSystemNative.h"
-#include "LoggingSubsystem/LoggingSubsystem.h"
+#include "Subsystems/LoggingSubsystem.h"
 #include "EngineAPI.h"
 #include "cJSON/cJSON.h"
 

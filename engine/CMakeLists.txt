@@ -13,13 +13,13 @@ generate_export_header_template(
 )
 
 target_sources(${TARGETNAME_ENGINE} PRIVATE
-	src/GameLoader/GameLoader.h
-	src/GameLoader/GameLoader.c
-	src/LoggingSubsystem/LoggingSubsystem.h
-	src/LoggingSubsystem/LoggingSubsystem.c
-	src/Private/Launcher.c
+	src/Subsystems/LoggingSubsystem.h
+	src/Subsystems/LoggingSubsystem.c
 	src/EngineAPI.h
 	src/EngineAPI.c
+	src/GameLoader.h
+	src/GameLoader.c
+	src/Launcher.c
 )
 
 target_sources(${TARGETNAME_ENGINE}
@@ -27,9 +27,9 @@ target_sources(${TARGETNAME_ENGINE}
 	BASE_DIRS include ${GENERATED_HEADER_DIR}
 	FILES
 	${EXPORT_HEADER}
+	include/RayGE/Private/InterfaceUtils.h
 	include/RayGE/Private/Launcher.h
 	include/RayGE/Engine.h
-	include/RayGE/InterfaceUtils.h
 	include/RayGE/Logging.h
 )
 

@@ -1,6 +1,6 @@
 // File: InterfaceUtils.h
-// Helper macros for ensuring robust passing of data
-// across library boundaries.
+// This file is private, and is not intended to be
+// used by games.
 
 #pragma once
 
