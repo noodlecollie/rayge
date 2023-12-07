@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include "RayGE/Private/Launcher.h"
 #include "RayGE/Private/InterfaceUtils.h"
+#include "RayGE/Platform.h"
 #include "wzl_cutl/libloader.h"
-#include "Platform/Library.h"
 #include <stdio.h>
 
 int main(int argc, char** argv)
@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	void* engineLibrary = wzl_load_library(PLATFORM_LIB_PREFIX LIBNAME_ENGINE PLATFORM_LIB_EXTENSION);
+	void* engineLibrary = wzl_load_library(LIB_PREFIX LIBNAME_ENGINE LIB_EXTENSION);
 
 	if ( !engineLibrary )
 	{

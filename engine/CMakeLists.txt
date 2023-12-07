@@ -42,7 +42,6 @@ target_include_directories(${TARGETNAME_ENGINE} PRIVATE src)
 
 target_link_libraries(${TARGETNAME_ENGINE}
 	PRIVATE
-	${TARGETNAME_PLATFORM}
 	wzl-cutl
 	cJSON
 	raylib

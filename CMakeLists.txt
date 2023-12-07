@@ -25,11 +25,17 @@ endif()
 
 set(TARGETNAME_ENGINE rayge-engine)
 set(TARGETNAME_LAUNCHER launcher)
-set(TARGETNAME_PLATFORM platform)
 set(INSTALL_DEST rayge)
 
-add_compile_definitions("LIBNAME_ENGINE=\"${TARGETNAME_ENGINE}\"")
+add_compile_definitions(
+	LIBNAME_ENGINE="${TARGETNAME_ENGINE}"
 
-add_subdirectory(platform)
+	$<$<PLATFORM_ID:Linux>:LIB_PREFIX="lib">
+	$<$<PLATFORM_ID:Linux>:LIB_EXTENSION=".so">
+
+	$<$<PLATFORM_ID:Windows>:LIB_PREFIX="">
+	$<$<PLATFORM_ID:Windows>:LIB_EXTENSION=".dll">
+)
+
 add_subdirectory(engine)
 add_subdirectory(launcher)

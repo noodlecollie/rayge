@@ -14,11 +14,3 @@ typedef enum RayGE_PlatformID
 #else
 #error Unsupported platform
 #endif
-
-#if RAYGE_PLATFORM() == RAYGE_PLATFORM_LINUX
-#define PLATFORM_LIB_PREFIX "lib"
-#define PLATFORM_LIB_EXTENSION ".so"
-#elif RAYGE_PLATFORM() == RAYGE_PLATFORM_WINDOWS
-#define PLATFORM_LIB_PREFIX ""
-#define PLATFORM_LIB_EXTENSION ".dll"
-#endif
