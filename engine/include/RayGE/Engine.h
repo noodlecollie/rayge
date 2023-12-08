@@ -11,7 +11,7 @@
 
 typedef struct RayGE_Engine_API
 {
-	RayGE_Log_API logging;
+	RayGE_Log_API log;
 } RayGE_Engine_API;
 
 typedef const RayGE_Engine_API*(RAYGE_ENGINE_CDECL* RayGE_Engine_GetAPIFunc)(

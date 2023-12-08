@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "Subsystems/LoggingSubsystem.h"
 #include "raylib.h"
 
@@ -22,7 +23,7 @@ void LoggingSubsystem_SetLogLevel(RayGE_Log_Level level)
 	g_LogLevel = level;
 }
 
-void LoggingSubsystem_EmitMessageV(RayGE_Log_Level level, const char* format, va_list args)
+void LoggingSubsystem_PrintLineV(RayGE_Log_Level level, const char* format, va_list args)
 {
 	if ( level < g_LogLevel )
 	{
@@ -31,4 +32,15 @@ void LoggingSubsystem_EmitMessageV(RayGE_Log_Level level, const char* format, va
 
 	// TODO: Make this more sophisticated.
 	vprintf(format, args);
+	printf("\n");
+
+	if ( level == RAYGE_LOG_FATAL )
+	{
+		// This isn't ideal given this is a library,
+		// but unsure what else we can do. Receiving
+		// a fatal log message implies that the engine
+		// cannot progress any further, so we just
+		// pay respects and quit.
+		exit(0xFFFFFFFF);
+	}
 }

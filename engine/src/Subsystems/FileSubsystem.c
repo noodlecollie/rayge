@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include "raylib.h"
 #include "RayGE/Platform.h"
 #include "Subsystems/FileSubsystem.h"
 #include "Subsystems/LoggingSubsystem.h"
@@ -152,6 +153,7 @@ static void MakePathSafe(char* path)
 	}
 }
 
+// Always returns a valid pointer.
 static char* PathSeparatorsToNative(const char* path)
 {
 	char* newPath = wzl_duplicate_string(path ? path : "");
@@ -252,4 +254,38 @@ void FileSubsystem_FreePathList(FileSubsystem_PathList* list)
 
 	free(list->entries);
 	free(list);
+}
+
+bool FileSubsystem_DirectoryExists(const char* path)
+{
+	char* nativePath = RelativePathToAbsoluteNativePath(path);
+	const bool exists = DirectoryExists(nativePath);
+	free(nativePath);
+
+	return exists;
+}
+
+uint8_t* FileSubsystem_LoadFileData(const char* path, size_t* size)
+{
+	char* nativePath = RelativePathToAbsoluteNativePath(path);
+
+	int dataSize = 0;
+	uint8_t* data = LoadFileData(nativePath, &dataSize);
+
+	free(nativePath);
+
+	if ( size )
+	{
+		*size = (size_t)WZL_MAX(dataSize, 0);
+	}
+
+	return data;
+}
+
+void FileSubsystem_UnloadFileData(uint8_t* data)
+{
+	if ( data )
+	{
+		UnloadFileData(data);
+	}
 }

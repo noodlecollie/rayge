@@ -37,9 +37,9 @@ static inline void RayGE_EnsureTrue(
 		va_end(args);
 	}
 
-	LoggingSubsystem_EmitMessage(
+	LoggingSubsystem_PrintLine(
 		RAYGE_LOG_FATAL,
-		"ASSERTION FAILED: %s:%d (%s): %s%s%s\n",
+		"ASSERTION FAILED: %s:%d (%s): %s%s%s",
 		file ? file : "unknown-file",
 		line,
 		function ? function : "unknown-function",

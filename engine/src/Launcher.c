@@ -3,6 +3,7 @@
 #include "RayGE/Private/Launcher.h"
 #include "Subsystems/LoggingSubsystem.h"
 #include "Subsystems/FileSubsystem.h"
+#include "GameLoader.h"
 #include "EngineAPI.h"
 
 #define NUM_ENGINE_API_FUNCTIONS (sizeof(RayGE_Engine_API) / sizeof(void*))
@@ -35,9 +36,9 @@ static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 	{
 		if ( !wrapper.funcTablePtr->funcPtrs[index] )
 		{
-			LoggingSubsystem_EmitMessage(
+			LoggingSubsystem_PrintLine(
 				RAYGE_LOG_ERROR,
-				"Engine API function was null! (Table index: %zu, table size: %zu)\n",
+				"Engine API function was null! (Table index: %zu, table size: %zu)",
 				index,
 				NUM_ENGINE_API_FUNCTIONS
 			);
@@ -48,7 +49,7 @@ static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 
 	if ( functionWasInvalid )
 	{
-		LoggingSubsystem_EmitMessage(RAYGE_LOG_FATAL, "One or more engine API functions were missing, aborting.\n");
+		LoggingSubsystem_PrintLine(RAYGE_LOG_FATAL, "One or more engine API functions were missing, aborting");
 	}
 }
 
@@ -56,10 +57,27 @@ static void SanityCheckEngineBeforeRunningInitProcedure(void)
 {
 	VerifyAllEngineAPIFunctionPointersAreValid();
 }
+static void* LoadGameLibrary(const RayGE_LaunchParams* params)
+{
+	// TODO: Support loading from a specific directory if passed in params.
+	(void)params;
+
+	if ( FileSubsystem_DirectoryExists(DEFAULT_GAME_DIR) )
+	{
+		return GameLoader_LoadLibraryFromDirectory(DEFAULT_GAME_DIR);
+	}
+
+	LoggingSubsystem_PrintLine(
+		RAYGE_LOG_ERROR,
+		"Default game directory %s was not found, and no game directory override was specified"
+	);
+
+	return NULL;
+}
 
 RAYGE_ENGINE_PUBLIC(int32_t) RayGE_Launcher_Run(const RayGE_LaunchParams* params)
 {
-	if ( !RAYGE_INTERFACE_VERIFY(params, RAYGE_LAUNCHPARAMS_VERSION) || params->argc < 1 )
+	if ( !RAYGE_INTERFACE_VERIFY(params, RAYGE_LAUNCHPARAMS_VERSION) )
 	{
 		return -RAYGE_LAUNCHPARAMS_VERSION;
 	}
@@ -69,9 +87,13 @@ RAYGE_ENGINE_PUBLIC(int32_t) RayGE_Launcher_Run(const RayGE_LaunchParams* params
 
 	SanityCheckEngineBeforeRunningInitProcedure();
 
-	// TODO
+	void* gameLib = LoadGameLibrary(params);
+
+	// TODO: Report error if not loaded
+	// TODO: Call init function on library
+	(void)gameLib;
 
 	LoggingSubsystem_ShutDown();
 
-	return 0;
+	return RAYGE_LAUNCHER_EXIT_OK;
 }
