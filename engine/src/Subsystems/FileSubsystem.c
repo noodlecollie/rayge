@@ -56,7 +56,7 @@ static char* MakeAbsolutePathFromApplicationDirectory(const char* relNativePath)
 
 	if ( !relNativePath || !(*relNativePath) )
 	{
-		return wzl_duplicate_string(g_NativeApplicationDirectory);
+		return wzl_strdup(g_NativeApplicationDirectory);
 	}
 
 	char dummy;
@@ -79,7 +79,7 @@ static char* MakeRelativePathFromApplicationDirectory(const char* absNativePath)
 
 	if ( !absNativePath || !(*absNativePath) )
 	{
-		return wzl_duplicate_string("");
+		return wzl_strdup("");
 	}
 
 	char dummy;
@@ -156,7 +156,7 @@ static void MakePathSafe(char* path)
 // Always returns a valid pointer.
 static char* PathSeparatorsToNative(const char* path)
 {
-	char* newPath = wzl_duplicate_string(path ? path : "");
+	char* newPath = wzl_strdup(path ? path : "");
 
 #if RAYGE_PLATFORM() == RAYGE_PLATFORM_WINDOWS
 	for ( char* cursor = newPath; *cursor; ++cursor )
@@ -173,7 +173,7 @@ static char* PathSeparatorsToNative(const char* path)
 
 static char* PathSeparatorsFromNative(const char* path)
 {
-	char* newPath = wzl_duplicate_string(path ? path : "");
+	char* newPath = wzl_strdup(path ? path : "");
 
 #if RAYGE_PLATFORM() == RAYGE_PLATFORM_WINDOWS
 	for ( char* cursor = newPath; *cursor; ++cursor )
