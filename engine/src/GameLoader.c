@@ -95,7 +95,7 @@ static cJSON* ParseJSONFromFile(const char* path)
 
 static const char* GetGameClientLibraryStringFromJSON(cJSON* json)
 {
-	if ( !json || !json->type == cJSON_Object )
+	if ( !json || json->type != cJSON_Object )
 	{
 		LoggingSubsystem_PrintLine(RAYGE_LOG_WARNING, "Game JSON root was not an object");
 		return NULL;

@@ -38,7 +38,10 @@ target_sources(${TARGETNAME_ENGINE}
 	include/RayGE/Platform.h
 )
 
-target_include_directories(${TARGETNAME_ENGINE} PRIVATE src)
+target_include_directories(${TARGETNAME_ENGINE}
+	PRIVATE
+	src
+)
 
 target_link_libraries(${TARGETNAME_ENGINE}
 	PRIVATE
@@ -48,7 +51,10 @@ target_link_libraries(${TARGETNAME_ENGINE}
 	cwalk
 )
 
-target_compile_definitions(${TARGETNAME_ENGINE} PRIVATE RAYGE_PRODUCER)
+target_compile_definitions(${TARGETNAME_ENGINE}
+	PRIVATE
+	RAYGE_PRODUCER
+)
 
 install(TARGETS ${TARGETNAME_ENGINE}
 	ARCHIVE DESTINATION ${INSTALL_DEST}/api/lib
