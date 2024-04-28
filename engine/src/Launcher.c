@@ -49,7 +49,7 @@ static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 
 	if ( functionWasInvalid )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_FATAL, "One or more engine API functions were missing, aborting");
+		LoggingSubsystem_PrintLine(RAYGE_LOG_FATAL, "One or more engine API functions were missing, aborting.");
 	}
 }
 
@@ -69,7 +69,7 @@ static void* LoadGameLibrary(const RayGE_LaunchParams* params)
 
 	LoggingSubsystem_PrintLine(
 		RAYGE_LOG_ERROR,
-		"Default game directory %s was not found, and no game directory override was specified"
+		"Default game directory %s was not found, and no game directory override was specified."
 	);
 
 	return NULL;
@@ -87,13 +87,27 @@ RAYGE_ENGINE_PUBLIC(int32_t) RayGE_Launcher_Run(const RayGE_LaunchParams* params
 
 	SanityCheckEngineBeforeRunningInitProcedure();
 
-	void* gameLib = LoadGameLibrary(params);
+	int32_t returnCode = RAYGE_LAUNCHER_EXIT_OK;
 
-	// TODO: Report error if not loaded
-	// TODO: Call init function on library
-	(void)gameLib;
+	do
+	{
+		void* gameLib = LoadGameLibrary(params);
+
+		if ( !gameLib )
+		{
+			LoggingSubsystem_PrintLine(
+				RAYGE_LOG_ERROR,
+				"Could not load game library."
+			);
+
+			break;
+		}
+
+		// TODO: Call init function on library
+	}
+	while ( false );
 
 	LoggingSubsystem_ShutDown();
 
-	return RAYGE_LAUNCHER_EXIT_OK;
+	return returnCode;
 }

@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.24)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/wzl-cutl/wzl-cutl/cmake_public")
 
 project(rayge LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED YES)
+set(CMAKE_COMPILE_WARNING_AS_ERROR YES)
 
 # This must go here, so that it is configured before the later options are set up.
 add_subdirectory(thirdparty)
@@ -12,14 +13,12 @@ add_subdirectory(thirdparty)
 if(MSVC)
 	add_compile_options(
 		/W4
-		/WX
 	)
 else()
 	add_compile_options(
 		-Wall
 		-Wextra
 		-pedantic
-		-Werror
 	)
 endif()
 

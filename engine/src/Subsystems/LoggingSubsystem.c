@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "RayGE/Private/Launcher.h"
 #include "Subsystems/LoggingSubsystem.h"
 #include "raylib.h"
 
@@ -39,8 +40,7 @@ void LoggingSubsystem_PrintLineV(RayGE_Log_Level level, const char* format, va_l
 		// This isn't ideal given this is a library,
 		// but unsure what else we can do. Receiving
 		// a fatal log message implies that the engine
-		// cannot progress any further, so we just
-		// pay respects and quit.
-		exit(0xFFFFFFFF);
+		// cannot progress any further, so we just quit.
+		exit(RAYGE_LAUNCHER_EXIT_FATAL_ERROR);
 	}
 }

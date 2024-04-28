@@ -13,6 +13,7 @@
 typedef enum RayGE_Launche_ExitCode
 {
 	RAYGE_LAUNCHER_EXIT_OK = 0,
+	RAYGE_LAUNCHER_EXIT_FATAL_ERROR,
 	RAYGE_LAUNCHER_EXIT_FAIL_GAME_LOAD
 } RayGE_Launcher_ExitCode;
 
