@@ -78,21 +78,22 @@ static cJSON* ParseJSONFromFile(const char* path)
 	}
 
 	cJSON* out = cJSON_ParseWithLength((const char*)fileData, size);
-	FileSubsystem_UnloadFileData(fileData);
 
 	if ( !out )
 	{
+		// cJSON is not the best at reporting errors,
+		// but not sure what else we can really do here...
 		const char* errorPtr = cJSON_GetErrorPtr();
+
 		LoggingSubsystem_PrintLine(
 			RAYGE_LOG_ERROR,
-			"Failed to parse %s. Error: %s",
+			"Failed to parse %s. Parse failed at character %zu",
 			path,
-			errorPtr ? errorPtr : "Unknown error"
+			errorPtr - (const char*)fileData
 		);
-
-		return NULL;
 	}
 
+	FileSubsystem_UnloadFileData(fileData);
 	return out;
 }
 
@@ -117,7 +118,7 @@ static const char* GetGameClientLibraryStringFromJSON(cJSON* json)
 		return NULL;
 	}
 
-	return libItem->valuestring;
+	return cJSON_GetStringValue(libItem);
 }
 
 void* GameLoader_LoadLibraryFromDirectory(const char* dirPath)
@@ -144,6 +145,11 @@ void* GameLoader_LoadLibraryFromDirectory(const char* dirPath)
 			// Error will have been logged.
 			break;
 		}
+
+		LoggingSubsystem_PrintLine(
+			RAYGE_LOG_DEBUG,
+			"Loading game client library: %s", libName
+		);
 
 		// TODO: Load library
 	}

@@ -18,6 +18,9 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	include/RayGE/Private/InterfaceUtils.h
 	include/RayGE/Private/Launcher.h
 
+	src/Launcher/Launcher.c
+	src/Launcher/LaunchParams.h
+	src/Launcher/LaunchParams.c
 	src/Subsystems/LoggingSubsystem.h
 	src/Subsystems/LoggingSubsystem.c
 	src/Subsystems/FileSubsystem.h
@@ -27,7 +30,6 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/EngineAPI.c
 	src/GameLoader.h
 	src/GameLoader.c
-	src/Launcher.c
 )
 
 target_sources(${TARGETNAME_ENGINE}
@@ -51,6 +53,7 @@ target_link_libraries(${TARGETNAME_ENGINE}
 	cJSON
 	raylib
 	cwalk
+	cargs
 )
 
 target_compile_definitions(${TARGETNAME_ENGINE}

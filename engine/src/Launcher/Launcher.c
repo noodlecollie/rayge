@@ -4,6 +4,7 @@
 #include "RayGE/Private/CurrentEngineAPI.h"
 #include "Subsystems/LoggingSubsystem.h"
 #include "Subsystems/FileSubsystem.h"
+#include "Launcher/LaunchParams.h"
 #include "GameLoader.h"
 #include "EngineAPI.h"
 
@@ -58,6 +59,7 @@ static void SanityCheckEngineBeforeRunningInitProcedure(void)
 {
 	VerifyAllEngineAPIFunctionPointersAreValid();
 }
+
 static void* LoadGameLibrary(const RayGE_LaunchParams* params)
 {
 	// TODO: Support loading from a specific directory if passed in params.
@@ -70,11 +72,25 @@ static void* LoadGameLibrary(const RayGE_LaunchParams* params)
 
 	LoggingSubsystem_PrintLine(
 		RAYGE_LOG_ERROR,
-		"Default game directory %s was not found, and no game directory override was specified.",
-		DEFAULT_GAME_DIR
+		"Default game directory " DEFAULT_GAME_DIR " was not found, and no game directory override was specified."
 	);
 
 	return NULL;
+}
+
+static int32_t LoadAndRunGame(const RayGE_LaunchParams* params)
+{
+	void* gameLib = LoadGameLibrary(params);
+
+	if ( !gameLib )
+	{
+		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Could not load game library.");
+
+		return RAYGE_LAUNCHER_EXIT_FAIL_GAME_LOAD;
+	}
+
+	// TODO: Call init function on library
+	return RAYGE_LAUNCHER_EXIT_OK;
 }
 
 RAYGE_ENGINE_PUBLIC(int32_t) RayGE_Launcher_Run(const RayGE_LaunchParams* params)
@@ -88,26 +104,19 @@ RAYGE_ENGINE_PUBLIC(int32_t) RayGE_Launcher_Run(const RayGE_LaunchParams* params
 	LoggingSubsystem_Init();
 
 	SanityCheckEngineBeforeRunningInitProcedure();
+	LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, "RayGE engine initialised.");
 
-	int32_t returnCode = RAYGE_LAUNCHER_EXIT_OK;
+	int32_t returnCode = RAYGE_LAUNCHER_EXIT_UNKNOWN_ERROR;
 
-	do
+	if ( !LaunchParams_Parse(params) )
 	{
-		void* gameLib = LoadGameLibrary(params);
-
-		if ( !gameLib )
-		{
-			LoggingSubsystem_PrintLine(
-				RAYGE_LOG_ERROR,
-				"Could not load game library."
-			);
-
-			break;
-		}
-
-		// TODO: Call init function on library
+		// We don't need to go any further than parsing the params.
+		returnCode = RAYGE_LAUNCHER_EXIT_LOAD_ABORTED;
 	}
-	while ( false );
+	else
+	{
+		returnCode = LoadAndRunGame(params);
+	}
 
 	LoggingSubsystem_ShutDown();
 

@@ -1,11 +1,10 @@
 // File: Platform.h
 // Provides definitions for supporting different platforms.
 
-typedef enum RayGE_PlatformID
-{
-	RAYGE_PLATFORM_LINUX = 0,
-	RAYGE_PLATFORM_WINDOWS
-} RayGE_PlatformID;
+#pragma once
+
+#define RAYGE_PLATFORM_LINUX 0
+#define RAYGE_PLATFORM_WINDOWS 1
 
 #if defined(__linux__)
 #define RAYGE_PLATFORM() RAYGE_PLATFORM_LINUX

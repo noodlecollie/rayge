@@ -2,6 +2,8 @@
 // This file is private, and is not intended to be
 // used by games.
 
+#pragma once
+
 #include <stdint.h>
 #include <stddef.h>
 #include "RayGE/Export.h"
@@ -16,7 +18,8 @@ typedef enum RayGE_Launche_ExitCode
 	RAYGE_LAUNCHER_EXIT_UNKNOWN_ERROR,
 	RAYGE_LAUNCHER_EXIT_LOG_FATAL_ERROR,
 	RAYGE_LAUNCHER_EXIT_FAIL_ENGINE_LOAD,
-	RAYGE_LAUNCHER_EXIT_FAIL_GAME_LOAD
+	RAYGE_LAUNCHER_EXIT_FAIL_GAME_LOAD,
+	RAYGE_LAUNCHER_EXIT_LOAD_ABORTED
 } RayGE_Launcher_ExitCode;
 
 typedef struct RayGE_LaunchParams

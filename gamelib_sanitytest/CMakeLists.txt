@@ -16,3 +16,13 @@ target_include_directories(${TARGETNAME_GAMELIB_SANITYTEST}
 	PRIVATE
 	src
 )
+
+if(INSTALL_SANITY_TEST)
+	install(TARGETS ${TARGETNAME_GAMELIB_SANITYTEST}
+		LIBRARY DESTINATION ${INSTALL_DEST_SANITY_TEST}/games/defaultgame
+	)
+
+	install(FILES game.json
+		DESTINATION ${INSTALL_DEST_SANITY_TEST}/games/defaultgame
+	)
+endif()
