@@ -32,7 +32,7 @@ static void EnsureApplicationDirectory()
 		return;
 	}
 
-	strcpy_s(g_NativeApplicationDirectory, sizeof(g_NativeApplicationDirectory), appDir);
+	wzl_strcpy(g_NativeApplicationDirectory, sizeof(g_NativeApplicationDirectory), appDir);
 	RAYGE_ASSERT(g_NativeApplicationDirectory[0], "Received invalid application directory");
 
 	if ( !g_NativeApplicationDirectory[0] )

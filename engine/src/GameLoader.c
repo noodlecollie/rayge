@@ -6,6 +6,7 @@
 #include "Subsystems/LoggingSubsystem.h"
 #include "EngineAPI.h"
 #include "wzl_cutl/libloader.h"
+#include "wzl_cutl/string.h"
 #include "cJSON/cJSON.h"
 
 #define GAME_JSON_KEY_CLIENT_LIB "client_library"
@@ -120,7 +121,7 @@ static const char* GetGameClientLibraryStringFromJSON(cJSON* json)
 void* GameLoader_LoadLibraryFromDirectory(const char* dirPath)
 {
 	FileSubsystem_Path gameJsonPath;
-	sprintf_s(gameJsonPath, sizeof(gameJsonPath), "%s/game.json", dirPath);
+	wzl_sprintf(gameJsonPath, sizeof(gameJsonPath), "%s/game.json", dirPath);
 
 	cJSON* json = ParseJSONFromFile(gameJsonPath);
 

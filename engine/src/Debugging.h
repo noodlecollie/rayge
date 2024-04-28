@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include "Subsystems/LoggingSubsystem.h"
+#include "wzl_cutl/string.h"
 
 #ifndef NDEBUG
 #define RAYGE_DEBUG() 1
@@ -33,7 +34,7 @@ static inline void RayGE_EnsureTrue(
 	{
 		va_list args;
 		va_start(args, description);
-		vsprintf_s(descBuffer, sizeof(descBuffer), description, args);
+		wzl_vsprintf(descBuffer, sizeof(descBuffer), description, args);
 		va_end(args);
 	}
 
