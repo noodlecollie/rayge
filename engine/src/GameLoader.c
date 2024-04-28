@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "GameLoader.h"
 #include "RayGE/Engine.h"
 #include "RayGE/Private/CurrentEngineAPI.h"
@@ -41,6 +42,11 @@ bool GameLoader_InvokeGameLibraryStartup(void* gameLibrary)
 
 	if ( !startupFunc )
 	{
+		LoggingSubsystem_PrintLine(
+			RAYGE_LOG_ERROR,
+			"Could not resolve " RAYGE_GAMELIBRARY_STARTUP_SYMBOL_NAME " function in game library."
+		);
+
 		return false;
 	}
 
@@ -60,6 +66,11 @@ void GameLoader_InvokeGameLibraryShutdown(void* gameLibrary)
 
 	if ( !shutdownFunc )
 	{
+		LoggingSubsystem_PrintLine(
+			RAYGE_LOG_ERROR,
+			"Could not resolve " RAYGE_GAMELIBRARY_SHUTDOWN_SYMBOL_NAME " function in game library."
+		);
+
 		return;
 	}
 
@@ -111,8 +122,7 @@ static const char* GetGameClientLibraryStringFromJSON(cJSON* json)
 	{
 		LoggingSubsystem_PrintLine(
 			RAYGE_LOG_WARNING,
-			"Could not find valid \"%s\" property in game JSON",
-			GAME_JSON_KEY_CLIENT_LIB
+			"Could not find valid \"" GAME_JSON_KEY_CLIENT_LIB "\" property in game JSON"
 		);
 
 		return NULL;
@@ -146,12 +156,33 @@ void* GameLoader_LoadLibraryFromDirectory(const char* dirPath)
 			break;
 		}
 
-		LoggingSubsystem_PrintLine(
-			RAYGE_LOG_DEBUG,
-			"Loading game client library: %s", libName
-		);
+		LoggingSubsystem_PrintLine(RAYGE_LOG_DEBUG, "Loading game client library: %s", libName);
 
-		// TODO: Load library
+		FileSubsystem_Path libPathRelativeToJson;
+		wzl_sprintf(libPathRelativeToJson, sizeof(libPathRelativeToJson), "%s/%s", dirPath, libName);
+
+		char* absPath = (char*)malloc(FILESYSTEM_MAX_ABS_PATH);
+
+		FileSubsystem_MakeAbsolute(libPathRelativeToJson, absPath, FILESYSTEM_MAX_ABS_PATH);
+		LoggingSubsystem_PrintLine(RAYGE_LOG_TRACE, "Absolute path to game client library: %s", absPath);
+
+		libHandle = wzl_load_library(absPath);
+
+		free(absPath);
+
+		if ( !libHandle )
+		{
+			LoggingSubsystem_PrintLine(
+				RAYGE_LOG_ERROR,
+				"Loading %s failed. Message: %s",
+				libName,
+				wzl_get_last_library_error()
+			);
+
+			break;
+		}
+
+		LoggingSubsystem_PrintLine(RAYGE_LOG_TRACE, "Successfully loaded game client library from disk.");
 	}
 	while ( false );
 

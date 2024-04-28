@@ -55,8 +55,26 @@ bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 				int level = value ? atoi(value) : 0;
 
 				// TODO: Move this to some static state manager.
-				LoggingSubsystem_SetBackendDebugLogsEnabled(level >= 2);
-				LoggingSubsystem_SetLogLevel(level >= 1 ? RAYGE_LOG_DEBUG : RAYGE_LOG_INFO);
+				if ( level >= 3 )
+				{
+					LoggingSubsystem_SetBackendDebugLogsEnabled(true);
+					LoggingSubsystem_SetLogLevel(RAYGE_LOG_TRACE);
+				}
+				else if ( level == 2 )
+				{
+					LoggingSubsystem_SetBackendDebugLogsEnabled(false);
+					LoggingSubsystem_SetLogLevel(RAYGE_LOG_TRACE);
+				}
+				else if ( level == 1 )
+				{
+					LoggingSubsystem_SetBackendDebugLogsEnabled(false);
+					LoggingSubsystem_SetLogLevel(RAYGE_LOG_DEBUG);
+				}
+				else
+				{
+					LoggingSubsystem_SetBackendDebugLogsEnabled(false);
+					LoggingSubsystem_SetLogLevel(RAYGE_LOG_INFO);
+				}
 
 				break;
 			}

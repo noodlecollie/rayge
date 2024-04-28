@@ -289,3 +289,24 @@ void FileSubsystem_UnloadFileData(uint8_t* data)
 		UnloadFileData(data);
 	}
 }
+
+bool FileSubsystem_MakeAbsolute(const char* relPath, char* outBuffer, size_t outBufferSize)
+{
+	if ( !outBuffer || outBufferSize < 1 )
+	{
+		return false;
+	}
+
+	outBuffer[0] = '\0';
+
+	if ( !relPath || !(*relPath) )
+	{
+		return false;
+	}
+
+	char* nativePath = RelativePathToAbsoluteNativePath(relPath);
+	wzl_strcpy(outBuffer, outBufferSize, nativePath);
+	free(nativePath);
+
+	return true;
+}
