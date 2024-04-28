@@ -13,6 +13,7 @@ generate_export_header_template(
 )
 
 target_sources(${TARGETNAME_ENGINE} PRIVATE
+	include/RayGE/Private/CurrentEngineAPI.h
 	include/RayGE/Private/InterfaceUtils.h
 	include/RayGE/Private/Launcher.h
 
@@ -57,7 +58,13 @@ target_compile_definitions(${TARGETNAME_ENGINE}
 )
 
 install(TARGETS ${TARGETNAME_ENGINE}
+	# This is only for Windows.
+	# If games want to use the API, they will need the .lib file
+	# to be read by the linker. This is not the same as the
+	# engine being statically compiled - the shared engine
+	# library should live alongside the launcher, as specified below.
 	ARCHIVE DESTINATION ${INSTALL_DEST}/api/lib
+
 	RUNTIME DESTINATION ${INSTALL_DEST}
 	LIBRARY DESTINATION ${INSTALL_DEST}
 	FILE_SET HEADERS DESTINATION ${INSTALL_DEST}/api/include

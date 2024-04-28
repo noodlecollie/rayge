@@ -41,6 +41,6 @@ void LoggingSubsystem_PrintLineV(RayGE_Log_Level level, const char* format, va_l
 		// but unsure what else we can do. Receiving
 		// a fatal log message implies that the engine
 		// cannot progress any further, so we just quit.
-		exit(RAYGE_LAUNCHER_EXIT_FATAL_ERROR);
+		exit(RAYGE_LAUNCHER_EXIT_LOG_FATAL_ERROR);
 	}
 }

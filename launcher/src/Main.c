@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
 	if ( argc < 1 )
 	{
-		return -1;
+		return RAYGE_LAUNCHER_EXIT_UNKNOWN_ERROR;
 	}
 
 	void* engineLibrary = wzl_load_library(LIB_PREFIX LIBNAME_ENGINE LIB_EXTENSION);
@@ -17,8 +17,8 @@ int main(int argc, char** argv)
 	if ( !engineLibrary )
 	{
 		// TODO: More comprehensive function calls
-		printf("Failed to load engine library\n");
-		return -1;
+		fprintf(stderr, "Failed to load engine library\n");
+		return RAYGE_LAUNCHER_EXIT_FAIL_ENGINE_LOAD;
 	}
 
 	RayGE_Launcher_Run_FuncPtr runFuncPtr =
@@ -27,8 +27,8 @@ int main(int argc, char** argv)
 	if ( !runFuncPtr )
 	{
 		// TODO: More comprehensive function calls
-		printf("Failed to look up function in engine library\n");
-		return -1;
+		fprintf(stderr, "Failed to look up function in engine library\n");
+		return RAYGE_LAUNCHER_EXIT_FAIL_ENGINE_LOAD;
 	}
 
 	RayGE_LaunchParams params;

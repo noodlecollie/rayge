@@ -7,14 +7,14 @@
 #include "RayGE/Export.h"
 #include "RayGE/Logging.h"
 
-#define RAYGE_ENGINEAPI_VERSION 1
+#define RAYGE_ENGINEAPI_VERSION_1 1
 
-typedef struct RayGE_Engine_API
+typedef struct RayGE_Engine_API_V1
 {
 	RayGE_Log_API log;
-} RayGE_Engine_API;
+} RayGE_Engine_API_V1;
 
-typedef const RayGE_Engine_API*(RAYGE_ENGINE_CDECL* RayGE_Engine_GetAPIFunc)(
+typedef const RayGE_Engine_API_V1*(RAYGE_ENGINE_CDECL* RayGE_Engine_GetAPIFunc)(
 	uint16_t /*requestedVersion*/,
 	uint16_t* /*outSupportedVersion*/
 );

@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include "RayGE/Engine.h"
 #include "RayGE/Private/Launcher.h"
+#include "RayGE/Private/CurrentEngineAPI.h"
 #include "Subsystems/LoggingSubsystem.h"
 #include "Subsystems/FileSubsystem.h"
 #include "GameLoader.h"
 #include "EngineAPI.h"
 
-#define NUM_ENGINE_API_FUNCTIONS (sizeof(RayGE_Engine_API) / sizeof(void*))
+#define NUM_ENGINE_API_FUNCTIONS (sizeof(RayGE_Engine_API_Current) / sizeof(void*))
 #define DEFAULT_GAME_DIR "games/defaultgame"
 
 typedef struct EngineAPIOpaqueFunctionTable
@@ -16,14 +17,14 @@ typedef struct EngineAPIOpaqueFunctionTable
 
 typedef union EngineAPIVerifyWrapper
 {
-	const RayGE_Engine_API* apiPtr;
+	const RayGE_Engine_API_Current* apiPtr;
 	const EngineAPIOpaqueFunctionTable* funcTablePtr;
 } EngineAPIVerifyWrapper;
 
 static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 {
 	static_assert(
-		sizeof(RayGE_Engine_API) == sizeof(EngineAPIOpaqueFunctionTable),
+		sizeof(RayGE_Engine_API_Current) == sizeof(EngineAPIOpaqueFunctionTable),
 		"Expected verifier struct to be same size as engine API struct"
 	);
 

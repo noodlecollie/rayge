@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "GameLoader.h"
 #include "RayGE/Engine.h"
+#include "RayGE/Private/CurrentEngineAPI.h"
 #include "Subsystems/FileSubsystem.h"
 #include "Subsystems/LoggingSubsystem.h"
 #include "EngineAPI.h"
@@ -11,15 +12,16 @@
 
 #define GAME_JSON_KEY_CLIENT_LIB "client_library"
 
-static const RayGE_Engine_API* RAYGE_ENGINE_CDECL GetEngineAPI(uint16_t requestedVersion, uint16_t* outSupportedVersion)
+static const RayGE_Engine_API_V1* RAYGE_ENGINE_CDECL
+GetEngineAPI(uint16_t requestedVersion, uint16_t* outSupportedVersion)
 {
 	// Always pass back the version we support, if we can.
 	if ( outSupportedVersion )
 	{
-		*outSupportedVersion = RAYGE_ENGINEAPI_VERSION;
+		*outSupportedVersion = RAYGE_ENGINEAPI_VERSION_CURRENT;
 	}
 
-	if ( requestedVersion == RAYGE_ENGINEAPI_VERSION )
+	if ( requestedVersion == RAYGE_ENGINEAPI_VERSION_CURRENT )
 	{
 		return &g_EngineAPI;
 	}
