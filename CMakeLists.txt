@@ -1,14 +1,18 @@
 cmake_minimum_required(VERSION 3.24)
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/wzl-cutl/wzl-cutl/cmake_public")
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/wzl-cutl/wzl-cutl/cmake_public;${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(rayge LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED YES)
-set(CMAKE_COMPILE_WARNING_AS_ERROR YES)
+
+option(CMAKE_COMPILE_WARNING_AS_ERROR "If set, any compiler warnings are treated as errors." TRUE)
+option(INSTALL_SANITY_TEST "If set, a separate directory will be created under the install prefix for the sanity test game." FALSE)
 
 # This must go here, so that it is configured before the later options are set up.
 add_subdirectory(thirdparty)
+
+include(rayge_definitions)
 
 if(MSVC)
 	add_compile_options(
@@ -21,11 +25,6 @@ else()
 		-pedantic
 	)
 endif()
-
-set(TARGETNAME_ENGINE rayge-engine)
-set(TARGETNAME_LAUNCHER launcher)
-set(TARGETNAME_GAMELIB_SANITYTEST gamelib_sanitytest)
-set(INSTALL_DEST rayge)
 
 add_compile_definitions(
 	LIBNAME_ENGINE="${TARGETNAME_ENGINE}"
@@ -40,3 +39,9 @@ add_compile_definitions(
 add_subdirectory(engine)
 add_subdirectory(launcher)
 add_subdirectory(gamelib_sanitytest)
+
+generate_engine_install(${INSTALL_DEST})
+
+if(INSTALL_SANITY_TEST)
+	generate_engine_install(${INSTALL_DEST_SANITY_TEST})
+endif()

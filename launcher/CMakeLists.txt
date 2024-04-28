@@ -8,7 +8,3 @@ target_link_libraries(${TARGETNAME_LAUNCHER}
 	raylib
 	wzl-cutl
 )
-
-install(TARGETS ${TARGETNAME_LAUNCHER}
-	DESTINATION ${INSTALL_DEST}
-)

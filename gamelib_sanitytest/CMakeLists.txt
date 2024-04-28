@@ -1,3 +1,5 @@
+include(rayge_install)
+
 add_library(${TARGETNAME_GAMELIB_SANITYTEST} SHARED
 	include/GameLib_SanityTest/LibInterface.h
 	src/LibInterface.c

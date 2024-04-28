@@ -6,6 +6,32 @@
 
 static RayGE_Log_Level g_LogLevel = RAYGE_LOG_NONE;
 
+static const char* LogPrefix(RayGE_Log_Level level)
+{
+	switch ( level )
+	{
+		case RAYGE_LOG_WARNING:
+		{
+			return "Warning: ";
+		}
+
+		case RAYGE_LOG_ERROR:
+		{
+			return "Error: ";
+		}
+
+		case RAYGE_LOG_FATAL:
+		{
+			return "FATAL ERROR: ";
+		}
+
+		default:
+		{
+			return "";
+		}
+	}
+}
+
 void LoggingSubsystem_Init(void)
 {
 	// Disable raylib logging
@@ -32,6 +58,7 @@ void LoggingSubsystem_PrintLineV(RayGE_Log_Level level, const char* format, va_l
 	}
 
 	// TODO: Make this more sophisticated.
+	printf("%s", LogPrefix(level));
 	vprintf(format, args);
 	printf("\n");
 

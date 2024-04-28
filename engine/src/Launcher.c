@@ -70,7 +70,8 @@ static void* LoadGameLibrary(const RayGE_LaunchParams* params)
 
 	LoggingSubsystem_PrintLine(
 		RAYGE_LOG_ERROR,
-		"Default game directory %s was not found, and no game directory override was specified."
+		"Default game directory %s was not found, and no game directory override was specified.",
+		DEFAULT_GAME_DIR
 	);
 
 	return NULL;
