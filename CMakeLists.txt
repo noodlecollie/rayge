@@ -14,6 +14,14 @@ option(INSTALL_SANITY_TEST "If set, a separate directory will be created under t
 add_subdirectory(thirdparty)
 
 include(rayge_definitions)
+include(rayge_utilities)
+
+# Not sure of a better way to do this right now.
+# Rather than manually duplicating certain third party
+# headers that are required in the engine interface,
+# we keep paths to them at the root level so that other
+# targets can make use of them.
+declare_dependent_file("${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib-5.0/raylib-5.0/src/raymath.h" RAYMATH_HEADER_PATH)
 
 if(MSVC)
 	add_compile_options(

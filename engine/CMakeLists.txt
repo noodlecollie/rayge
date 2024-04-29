@@ -4,7 +4,11 @@ include(generate_export_header_template)
 include(rayge_install)
 
 set(GENERATED_HEADER_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated_headers")
+set(EXTERNAL_HEADER_DIR "${CMAKE_CURRENT_BINARY_DIR}/external_headers")
 set(EXPORT_HEADER "${GENERATED_HEADER_DIR}/RayGE/Export.h")
+set(RAYMATH_HEADER "${EXTERNAL_HEADER_DIR}/RayGE/External/raymath.h")
+
+file(COPY_FILE ${RAYMATH_HEADER_PATH} ${RAYMATH_HEADER} ONLY_IF_DIFFERENT)
 
 generate_export_header_template(
 	TARGET ${TARGETNAME_ENGINE}
@@ -36,11 +40,13 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 
 target_sources(${TARGETNAME_ENGINE}
 	PUBLIC FILE_SET HEADERS
-	BASE_DIRS include ${GENERATED_HEADER_DIR}
+	BASE_DIRS include ${GENERATED_HEADER_DIR} ${EXTERNAL_HEADER_DIR}
 	FILES
 	${EXPORT_HEADER}
+	${RAYMATH_HEADER}
 	include/RayGE/APIs/Engine.h
 	include/RayGE/APIs/Logging.h
+	include/RayGE/Math.h
 	include/RayGE/Platform.h
 )
 
