@@ -18,6 +18,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	include/RayGE/Private/InterfaceUtils.h
 	include/RayGE/Private/Launcher.h
 
+	src/JSON/JSONUtils.h
+	src/JSON/JSONUtils.c
 	src/Launcher/Launcher.c
 	src/Launcher/LaunchParams.h
 	src/Launcher/LaunchParams.c
