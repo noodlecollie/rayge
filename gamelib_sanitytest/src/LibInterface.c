@@ -1,7 +1,27 @@
 #include <stdio.h>
 #include "GameLib_SanityTest/LibInterface.h"
 
-GAMELIB_SANITYTEST_PUBLIC(void) RayGE_GameLibrary_Startup(RayGE_Engine_GetAPIFunc getEngineAPIFunc)
+static void Game_StartUp(void);
+static void Game_ShutDown(void);
+
+static const RayGE_Engine_API_V1* g_EngineAPI = NULL;
+
+static const RayGE_Game_Callbacks_V1 g_Callbacks = {
+	Game_StartUp,
+	Game_ShutDown,
+};
+
+static void Game_StartUp(void)
+{
+	g_EngineAPI->log.printLine(RAYGE_LOG_INFO, "Sanity test: Game_StartUp()");
+}
+
+static void Game_ShutDown(void)
+{
+	g_EngineAPI->log.printLine(RAYGE_LOG_INFO, "Sanity test: Game_ShutDown()");
+}
+
+GAMELIB_SANITYTEST_PUBLIC(void) RayGE_GameLibrary_ExchangeAPIs(RayGE_Engine_GetAPIFunc getEngineAPIFunc)
 {
 	if ( !getEngineAPIFunc )
 	{
@@ -10,9 +30,9 @@ GAMELIB_SANITYTEST_PUBLIC(void) RayGE_GameLibrary_Startup(RayGE_Engine_GetAPIFun
 	}
 
 	uint16_t actualVersion = 0;
-	const RayGE_Engine_API_V1* api = getEngineAPIFunc(RAYGE_ENGINEAPI_VERSION_1, &actualVersion);
+	g_EngineAPI = getEngineAPIFunc(RAYGE_ENGINEAPI_VERSION_1, &g_Callbacks, &actualVersion);
 
-	if ( !api )
+	if ( !g_EngineAPI )
 	{
 		fprintf(
 			stderr,
@@ -25,5 +45,5 @@ GAMELIB_SANITYTEST_PUBLIC(void) RayGE_GameLibrary_Startup(RayGE_Engine_GetAPIFun
 	}
 
 	// We now know that the API is safe to use and matches what we expect.
-	api->log.printLine(RAYGE_LOG_INFO, "Sanity test loaded RayGE API successfully.");
+	g_EngineAPI->log.printLine(RAYGE_LOG_INFO, "Sanity test loaded RayGE API successfully.");
 }

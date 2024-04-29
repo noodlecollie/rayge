@@ -88,25 +88,14 @@ static int32_t LoadAndRunGame(const RayGE_LaunchParams* params)
 		return RAYGE_LAUNCHER_EXIT_FAIL_GAME_LOAD;
 	}
 
-	int32_t returnCode = RAYGE_LAUNCHER_EXIT_OK;
+	INVOKE_CALLBACK(g_GameCallbacks.Game_StartUp);
 
-	do
-	{
-		if ( !GameLoader_InvokeGameLibraryStartup(gameLib) )
-		{
-			// Error will have been logged.
-			returnCode = RAYGE_LAUNCHER_EXIT_FAIL_GAME_LOAD;
-			break;
-		}
+	// TODO: Run game here
 
-		// TODO: Run the game here.
-
-		GameLoader_InvokeGameLibraryShutdown(gameLib);
-	}
-	while ( false );
+	INVOKE_CALLBACK(g_GameCallbacks.Game_ShutDown);
 
 	GameLoader_UnloadLibrary(gameLib);
-	return returnCode;
+	return RAYGE_LAUNCHER_EXIT_OK;
 }
 
 RAYGE_ENGINE_PUBLIC(int32_t) RayGE_Launcher_Run(const RayGE_LaunchParams* params)

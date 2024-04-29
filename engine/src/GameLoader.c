@@ -13,70 +13,6 @@
 
 #define GAME_JSON_KEY_CLIENT_LIB "client_library"
 
-static const RayGE_Engine_API_V1* RAYGE_ENGINE_CDECL
-GetEngineAPI(uint16_t requestedVersion, uint16_t* outSupportedVersion)
-{
-	// Always pass back the version we support, if we can.
-	if ( outSupportedVersion )
-	{
-		*outSupportedVersion = RAYGE_ENGINEAPI_VERSION_CURRENT;
-	}
-
-	if ( requestedVersion == RAYGE_ENGINEAPI_VERSION_CURRENT )
-	{
-		return &g_EngineAPI;
-	}
-
-	return NULL;
-}
-
-bool GameLoader_InvokeGameLibraryStartup(void* gameLibrary)
-{
-	if ( !gameLibrary )
-	{
-		return false;
-	}
-
-	GameLibFunc_Startup startupFunc =
-		(GameLibFunc_Startup)wzl_get_library_function(gameLibrary, RAYGE_GAMELIBRARY_STARTUP_SYMBOL_NAME);
-
-	if ( !startupFunc )
-	{
-		LoggingSubsystem_PrintLine(
-			RAYGE_LOG_ERROR,
-			"Could not resolve " RAYGE_GAMELIBRARY_STARTUP_SYMBOL_NAME " function in game library."
-		);
-
-		return false;
-	}
-
-	startupFunc(&GetEngineAPI);
-	return true;
-}
-
-void GameLoader_InvokeGameLibraryShutdown(void* gameLibrary)
-{
-	if ( !gameLibrary )
-	{
-		return;
-	}
-
-	GameLibFunc_ShutDown shutdownFunc =
-		(GameLibFunc_ShutDown)wzl_get_library_function(gameLibrary, RAYGE_GAMELIBRARY_SHUTDOWN_SYMBOL_NAME);
-
-	if ( !shutdownFunc )
-	{
-		LoggingSubsystem_PrintLine(
-			RAYGE_LOG_ERROR,
-			"Could not resolve " RAYGE_GAMELIBRARY_SHUTDOWN_SYMBOL_NAME " function in game library."
-		);
-
-		return;
-	}
-
-	shutdownFunc();
-}
-
 static cJSON* ParseJSONFromFile(const char* path)
 {
 	size_t size = 0;
@@ -131,7 +67,7 @@ static const char* GetGameClientLibraryStringFromJSON(cJSON* json)
 	return cJSON_GetStringValue(libItem);
 }
 
-void* GameLoader_LoadLibraryFromDirectory(const char* dirPath)
+static void* LoadGameLibraryFromGameJSON(const char* dirPath)
 {
 	FileSubsystem_Path gameJsonPath;
 	wzl_sprintf(gameJsonPath, sizeof(gameJsonPath), "%s/game.json", dirPath);
@@ -187,6 +123,35 @@ void* GameLoader_LoadLibraryFromDirectory(const char* dirPath)
 	while ( false );
 
 	cJSON_Delete(json);
+	return libHandle;
+}
+
+void* GameLoader_LoadLibraryFromDirectory(const char* dirPath)
+{
+	void* libHandle = LoadGameLibraryFromGameJSON(dirPath);
+
+	if ( !libHandle )
+	{
+		return NULL;
+	}
+
+	GameLibFunc_ExchangeAPIs apiFunc =
+		(GameLibFunc_ExchangeAPIs)wzl_get_library_function(libHandle, RAYGE_GAMELIBRARY_EXCHANGEAPIS_SYMBOL_NAME);
+
+	if ( !apiFunc )
+	{
+		LoggingSubsystem_PrintLine(
+			RAYGE_LOG_ERROR,
+			"Could not resolve " RAYGE_GAMELIBRARY_EXCHANGEAPIS_SYMBOL_NAME " function in game library."
+		);
+
+		wzl_unload_library(libHandle);
+		return NULL;
+	}
+
+	// TODO: Validation of game callbacks after this call.
+	apiFunc(&EngineAPI_ExchangeAPIsWithGame);
+
 	return libHandle;
 }
 
