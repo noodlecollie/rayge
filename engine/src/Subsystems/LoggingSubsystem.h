@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 #include <stdarg.h>
-#include "RayGE/Logging.h"
+#include "RayGE/APIs/Logging.h"
 
 void LoggingSubsystem_Init(void);
 void LoggingSubsystem_ShutDown(void);

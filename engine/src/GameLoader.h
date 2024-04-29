@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "RayGE/Engine.h"
+#include "RayGE/APIs/Engine.h"
 
 typedef void(RAYGE_ENGINE_CDECL* GameLibFunc_ExchangeAPIs)(RayGE_Engine_GetAPIFunc /*getEngineApiPtr*/);
 

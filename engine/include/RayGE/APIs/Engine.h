@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 #include "RayGE/Export.h"
-#include "RayGE/Logging.h"
+#include "RayGE/APIs/Logging.h"
 
 #define RAYGE_ENGINEAPI_VERSION_1 1
 

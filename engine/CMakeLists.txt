@@ -39,8 +39,8 @@ target_sources(${TARGETNAME_ENGINE}
 	BASE_DIRS include ${GENERATED_HEADER_DIR}
 	FILES
 	${EXPORT_HEADER}
-	include/RayGE/Engine.h
-	include/RayGE/Logging.h
+	include/RayGE/APIs/Engine.h
+	include/RayGE/APIs/Logging.h
 	include/RayGE/Platform.h
 )
 
