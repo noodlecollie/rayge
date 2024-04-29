@@ -85,12 +85,28 @@ static int32_t LoadAndRunGame(const RayGE_LaunchParams* params)
 	if ( !gameLib )
 	{
 		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Could not load game library.");
-
 		return RAYGE_LAUNCHER_EXIT_FAIL_GAME_LOAD;
 	}
 
-	// TODO: Call init function on library
-	return RAYGE_LAUNCHER_EXIT_OK;
+	int32_t returnCode = RAYGE_LAUNCHER_EXIT_OK;
+
+	do
+	{
+		if ( !GameLoader_InvokeGameLibraryStartup(gameLib) )
+		{
+			// Error will have been logged.
+			returnCode = RAYGE_LAUNCHER_EXIT_FAIL_GAME_LOAD;
+			break;
+		}
+
+		// TODO: Run the game here.
+
+		GameLoader_InvokeGameLibraryShutdown(gameLib);
+	}
+	while ( false );
+
+	GameLoader_UnloadLibrary(gameLib);
+	return returnCode;
 }
 
 RAYGE_ENGINE_PUBLIC(int32_t) RayGE_Launcher_Run(const RayGE_LaunchParams* params)
@@ -118,6 +134,7 @@ RAYGE_ENGINE_PUBLIC(int32_t) RayGE_Launcher_Run(const RayGE_LaunchParams* params
 		returnCode = LoadAndRunGame(params);
 	}
 
+	LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, "RayGE engine shutting down.");
 	LoggingSubsystem_ShutDown();
 
 	return returnCode;
