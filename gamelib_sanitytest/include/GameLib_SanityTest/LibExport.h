@@ -22,13 +22,13 @@
 // Windows supports specifying the cdecl calling convention
 #define GAMELIB_SANITYTEST_CDECL __cdecl
 
-#ifdef RAYGE_PRODUCER
+#ifdef GAMELIB_SANITYTEST_PRODUCER
 // Shared library is being built, so mark symbols for export
 #define GAMELIB_SANITYTEST_EXPORT __declspec(dllexport)
 #else
 // Shared library is being used, so mark symbols for import
 #define GAMELIB_SANITYTEST_EXPORT __declspec(dllimport)
-#endif  // RAYGE_PRODUCER
+#endif  // GAMELIB_SANITYTEST_PRODUCER
 
 ////////////////////////////////////////////
 // End Windows
