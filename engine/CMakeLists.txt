@@ -6,8 +6,10 @@ include(rayge_install)
 set(GENERATED_HEADER_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated_headers")
 set(EXTERNAL_HEADER_DIR "${CMAKE_CURRENT_BINARY_DIR}/external_headers")
 set(EXPORT_HEADER "${GENERATED_HEADER_DIR}/RayGE/Export.h")
-set(RAYMATH_HEADER "${EXTERNAL_HEADER_DIR}/RayGE/External/raymath.h")
+set(RAYMATH_HEADER_DIR "${EXTERNAL_HEADER_DIR}/RayGE/External")
+set(RAYMATH_HEADER "${RAYMATH_HEADER_DIR}/raymath.h")
 
+file(MAKE_DIRECTORY ${RAYMATH_HEADER_DIR})
 file(COPY_FILE ${RAYMATH_HEADER_PATH} ${RAYMATH_HEADER} ONLY_IF_DIFFERENT)
 
 generate_export_header_template(
