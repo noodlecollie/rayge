@@ -10,11 +10,11 @@ const RayGE_Engine_API_Current g_EngineAPI = {
 	}
 };
 
-RayGE_Game_Callbacks_V1 g_GameCallbacks;
+RayGE_GameLib_Callbacks_V1 g_GameLibCallbacks;
 
 const RayGE_Engine_API_V1* RAYGE_ENGINE_CDECL EngineAPI_ExchangeAPIsWithGame(
 	uint16_t requestedVersion,
-	const RayGE_Game_Callbacks_V1* callbacks,
+	const RayGE_GameLib_Callbacks_V1* callbacks,
 	uint16_t* outSupportedVersion
 )
 {
@@ -29,6 +29,6 @@ const RayGE_Engine_API_V1* RAYGE_ENGINE_CDECL EngineAPI_ExchangeAPIsWithGame(
 		return NULL;
 	}
 
-	g_GameCallbacks = *callbacks;
+	g_GameLibCallbacks = *callbacks;
 	return &g_EngineAPI;
 }

@@ -5,7 +5,8 @@
 #include "Subsystems/LoggingSubsystem.h"
 #include "Subsystems/FileSubsystem.h"
 #include "Launcher/LaunchParams.h"
-#include "GameLoader.h"
+#include "Game/GameLoader.h"
+#include "Game/Game.h"
 #include "EngineAPI.h"
 
 #define NUM_ENGINE_API_FUNCTIONS (sizeof(RayGE_Engine_API_Current) / sizeof(void*))
@@ -88,11 +89,7 @@ static int32_t LoadAndRunGame(const RayGE_LaunchParams* params)
 		return RAYGE_LAUNCHER_EXIT_FAIL_GAME_LOAD;
 	}
 
-	INVOKE_CALLBACK(g_GameCallbacks.Game_StartUp);
-
-	// TODO: Run game here
-
-	INVOKE_CALLBACK(g_GameCallbacks.Game_ShutDown);
+	Game_Run();
 
 	GameLoader_UnloadLibrary(gameLib);
 	return RAYGE_LAUNCHER_EXIT_OK;
