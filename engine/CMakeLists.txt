@@ -24,6 +24,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	include/RayGE/Private/InterfaceUtils.h
 	include/RayGE/Private/Launcher.h
 
+	src/Game/GameData.h
+	src/Game/GameData.c
 	src/Game/GameLoader.h
 	src/Game/GameLoader.c
 	src/Game/GameWindow.h
@@ -46,6 +48,7 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Debugging.h
 	src/EngineAPI.h
 	src/EngineAPI.c
+	src/Utils.h
 )
 
 target_sources(${TARGETNAME_ENGINE}
