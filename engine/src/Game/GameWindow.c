@@ -33,24 +33,18 @@ void Gamewindow_SetTitle(const char* title)
 	}
 }
 
-void GameWindow_CreateStatic()
+void GameWindow_CreateAndRunToCompletion()
 {
-	if ( IsWindowReady() )
-	{
-		return;
-	}
-
 	InitWindow(g_WinDefaultDimensions.x, g_WinDefaultDimensions.y, g_WinDefaultTitle);
 
 	// TODO: Make this configurable?
 	SetTargetFPS(60);
-}
 
-void GameWindow_DestroyStatic()
-{
-	if ( !IsWindowReady() )
+	while ( !WindowShouldClose() )
 	{
-		return;
+		BeginDrawing();
+		ClearBackground(BLACK);
+		EndDrawing();
 	}
 
 	CloseWindow();

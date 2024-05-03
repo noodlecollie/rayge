@@ -91,11 +91,7 @@ static int32_t LoadAndRunGame(const RayGE_LaunchParams* params)
 
 	INVOKE_CALLBACK(g_GameLibCallbacks.game.StartUp);
 
-	GameWindow_CreateStatic();
-
-	// TODO: Actually run game here
-
-	GameWindow_DestroyStatic();
+	GameWindow_CreateAndRunToCompletion();
 
 	INVOKE_CALLBACK(g_GameLibCallbacks.game.ShutDown);
 

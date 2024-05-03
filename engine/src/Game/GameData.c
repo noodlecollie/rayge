@@ -8,8 +8,6 @@
 #include "wzl_cutl/string.h"
 #include "Utils.h"
 
-#define GAME_JSON_KEY_CLIENT_LIB "client_library"
-
 #if RAYGE_PLATFORM() == RAYGE_PLATFORM_LINUX
 #define GAME_JSON_KEY_PLATFORM_NAME "linux"
 #elif RAYGE_PLATFORM() == RAYGE_PLATFORM_WINDOWS
@@ -57,7 +55,7 @@ static cJSON* ParseJSONFromFile(const char* path)
 
 static bool LoadProp_ClientLibrary(cJSON* json)
 {
-	cJSON* libItem = JSONUtils_ExpectObjectItem("Game JSON", json, GAME_JSON_KEY_CLIENT_LIB);
+	cJSON* libItem = JSONUtils_ExpectObjectItem("Game JSON", json, "client_library");
 
 	if ( !libItem )
 	{
@@ -79,7 +77,7 @@ static bool LoadDataFromJSON(cJSON* json)
 {
 	typedef bool (*PropertyLoader)(cJSON*);
 
-	const PropertyLoader loadFuncs[] =
+	static const PropertyLoader loadFuncs[] =
 	{
 		LoadProp_ClientLibrary
 	};
