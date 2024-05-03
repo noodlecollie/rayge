@@ -17,5 +17,5 @@ typedef enum RayGE_Log_Level
 
 typedef struct RayGE_Log_API
 {
-	void (*printLine)(RayGE_Log_Level level, const char* format, ...);
+	void (*PrintLine)(RayGE_Log_Level level, const char* format, ...);
 } RayGE_Log_API;

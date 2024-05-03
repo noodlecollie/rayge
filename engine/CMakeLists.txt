@@ -24,10 +24,10 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	include/RayGE/Private/InterfaceUtils.h
 	include/RayGE/Private/Launcher.h
 
-	src/Game/Game.h
-	src/Game/Game.c
 	src/Game/GameLoader.h
 	src/Game/GameLoader.c
+	src/Game/GameWindow.h
+	src/Game/GameWindow.c
 	src/JSON/JSONUtils.h
 	src/JSON/JSONUtils.c
 	src/Launcher/Launcher.c

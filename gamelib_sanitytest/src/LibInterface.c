@@ -3,25 +3,42 @@
 
 static void Game_StartUp(void);
 static void Game_ShutDown(void);
+static void Scene_Begin(void);
+static void Scene_End(void);
 
 static const RayGE_Engine_API_V1* g_EngineAPI = NULL;
-
 static const RayGE_GameLib_Callbacks_V1 g_Callbacks = {
 	// Game
 	{
 		Game_StartUp,
 		Game_ShutDown,
+	},
+
+	// Scene
+	{
+		Scene_Begin,
+		Scene_End
 	}
 };
 
 static void Game_StartUp(void)
 {
-	g_EngineAPI->log.printLine(RAYGE_LOG_INFO, "Sanity test: Game_StartUp()");
+	g_EngineAPI->log.PrintLine(RAYGE_LOG_INFO, "Sanity test: Game_StartUp()");
 }
 
 static void Game_ShutDown(void)
 {
-	g_EngineAPI->log.printLine(RAYGE_LOG_INFO, "Sanity test: Game_ShutDown()");
+	g_EngineAPI->log.PrintLine(RAYGE_LOG_INFO, "Sanity test: Game_ShutDown()");
+}
+
+static void Scene_Begin(void)
+{
+	g_EngineAPI->log.PrintLine(RAYGE_LOG_INFO, "Sanity test: Scene_Begin()");
+}
+
+static void Scene_End(void)
+{
+	g_EngineAPI->log.PrintLine(RAYGE_LOG_INFO, "Sanity test: Scene_End()");
 }
 
 GAMELIB_SANITYTEST_PUBLIC(void) RayGE_GameLibrary_ExchangeAPIs(RayGE_Engine_GetAPIFunc getEngineAPIFunc)
@@ -48,5 +65,5 @@ GAMELIB_SANITYTEST_PUBLIC(void) RayGE_GameLibrary_ExchangeAPIs(RayGE_Engine_GetA
 	}
 
 	// We now know that the API is safe to use and matches what we expect.
-	g_EngineAPI->log.printLine(RAYGE_LOG_INFO, "Sanity test loaded RayGE API successfully.");
+	g_EngineAPI->log.PrintLine(RAYGE_LOG_INFO, "Sanity test loaded RayGE API successfully.");
 }
