@@ -29,10 +29,12 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Launcher/Launcher.c
 	src/Launcher/LaunchParams.h
 	src/Launcher/LaunchParams.c
-	src/Subsystems/LoggingSubsystem.h
-	src/Subsystems/LoggingSubsystem.c
 	src/Subsystems/FileSubsystem.h
 	src/Subsystems/FileSubsystem.c
+	src/Subsystems/LoggingSubsystem.h
+	src/Subsystems/LoggingSubsystem.c
+	src/Subsystems/MemPoolSubsystem.h
+	src/Subsystems/MemPoolSubsystem.c
 	src/Debugging.h
 	src/EngineAPI.h
 	src/EngineAPI.c

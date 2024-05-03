@@ -13,6 +13,7 @@
 #endif
 
 static inline void RayGE_EnsureTrue(
+	bool isFatal,
 	bool expression,
 	const char* expressionStr,
 	const char* file,
@@ -27,7 +28,7 @@ static inline void RayGE_EnsureTrue(
 		return;
 	}
 
-	char descBuffer[128];
+	char descBuffer[256];
 	descBuffer[0] = '\0';
 
 	if ( description )
@@ -39,7 +40,7 @@ static inline void RayGE_EnsureTrue(
 	}
 
 	LoggingSubsystem_PrintLine(
-		RAYGE_LOG_FATAL,
+		isFatal ? RAYGE_LOG_FATAL : RAYGE_LOG_WARNING,
 		"ASSERTION FAILED: %s:%d (%s): %s%s%s",
 		file ? file : "unknown-file",
 		line,
@@ -50,8 +51,23 @@ static inline void RayGE_EnsureTrue(
 	);
 }
 
+#define RAYGE_ENSURE_EX(isFatal, expr, ...) \
+	do \
+	{ \
+		bool exprResult = !!(expr); \
+		if ( !exprResult ) \
+		{ \
+			RayGE_EnsureTrue((isFatal), exprResult, (#expr), __FILE__, __LINE__, __func__, __VA_ARGS__); \
+		} \
+	} \
+	while ( false )
+
+#define RAYGE_ENSURE(expr, ...) RAYGE_ENSURE_EX(true, expr, __VA_ARGS__)
+#define RAYGE_EXPECT(expr, ...) RAYGE_ENSURE_EX(false, expr, __VA_ARGS__)
+
+// Only active in debug builds:
 #if RAYGE_DEBUG()
-#define RAYGE_ASSERT(expr, ...) RayGE_EnsureTrue((expr), (#expr), __FILE__, __LINE__, __func__, __VA_ARGS__)
+#define RAYGE_ASSERT(expr, ...) RAYGE_ENSURE(expr, __VA_ARGS__)
 #else
 #define RAYGE_ASSERT(expr, ...)
 #endif
