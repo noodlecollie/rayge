@@ -20,6 +20,7 @@ typedef struct RayGE_Engine_API_V1
 typedef struct RayGE_GameLib_Callbacks_V1
 {
 	RayGE_Game_Callbacks game;
+	RayGE_Scene_Callbacks scene;
 } RayGE_GameLib_Callbacks_V1;
 
 typedef const RayGE_Engine_API_V1*(RAYGE_ENGINE_CDECL* RayGE_Engine_GetAPIFunc)(

@@ -13,3 +13,9 @@ typedef struct RayGE_Scene_API
 	RayGE_Component_Camera* (*AddCameraComponent)(RayGE_Entity* entity);
 	RayGE_Component_Camera* (*GetCameraComponent)(RayGE_Entity* entity);
 } RayGE_Scene_API;
+
+typedef struct RayGE_Scene_Callbacks
+{
+	void (*SceneBegin)(void);
+	void (*SceneEnd)(void);
+} RayGE_Scene_Callbacks;

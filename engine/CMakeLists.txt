@@ -33,6 +33,10 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Launcher/Launcher.c
 	src/Launcher/LaunchParams.h
 	src/Launcher/LaunchParams.c
+	src/Scene/Scene.h
+	src/Scene/Scene.c
+	src/Scene/SceneAPI.h
+	src/Scene/SceneAPI.c
 	src/Subsystems/FileSubsystem.h
 	src/Subsystems/FileSubsystem.c
 	src/Subsystems/LoggingSubsystem.h

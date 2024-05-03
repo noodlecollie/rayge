@@ -2,11 +2,21 @@
 #include <stddef.h>
 #include "RayGE/Private/CurrentEngineAPI.h"
 #include "Subsystems/LoggingSubsystem.h"
+#include "Scene/SceneAPI.h"
 
 const RayGE_Engine_API_Current g_EngineAPI = {
 	// Logging
 	{
 		LoggingSubsystem_PrintLine,
+	},
+
+	// Scene
+	{
+		SceneAPI_CreateEntity,
+		SceneAPI_AddSpatialComponent,
+		SceneAPI_GetSpatialComponent,
+		SceneAPI_AddCameraComponent,
+		SceneAPI_GetCameraComponent
 	}
 };
 
