@@ -4,6 +4,7 @@
 #include "Subsystems/MemPoolSubsystem.h"
 #include "Engine/EngineAPI.h"
 #include "Game/GameWindow.h"
+#include "Scene/Scene.h"
 #include "Utils.h"
 
 // TODO: Remove this once we move the rendering elsewhere
@@ -72,6 +73,18 @@ static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 	}
 }
 
+static bool RunFrame(void)
+{
+	bool windowShouldClose = GameWindow_CloseRequested();
+
+	// TODO: Remove this once we move the rendering elsewhere
+	BeginDrawing();
+	ClearBackground(BLACK);
+	EndDrawing();
+
+	return windowShouldClose;
+}
+
 void Engine_StartUp(void)
 {
 	if ( g_Initialised )
@@ -115,20 +128,17 @@ void Engine_RunToCompletion(void)
 {
 	GameWindow_Create();
 
+	// TODO: Make this value canonical somehow?
+	Scene_CreateStatic(1024);
+
 	bool windowShouldClose = false;
 
-	while ( !windowShouldClose )
+	do
 	{
-		if ( GameWindow_CloseRequested() )
-		{
-			windowShouldClose = true;
-		}
-
-		// TODO: Remove this once we move the rendering elsewhere
-		BeginDrawing();
-		ClearBackground(BLACK);
-		EndDrawing();
+		windowShouldClose = RunFrame();
 	}
+	while ( !windowShouldClose );
 
+	Scene_DestroyStatic();
 	GameWindow_Destroy();
 }

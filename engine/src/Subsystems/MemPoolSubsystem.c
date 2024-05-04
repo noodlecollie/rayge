@@ -2,11 +2,18 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>
 #include "Subsystems/MemPoolSubsystem.h"
 #include "Debugging.h"
 
 #define HEAD_SENTINEL_VALUE 0xF9A23BAD
 #define TAIL_SENTINEL_VALUE ~(HEAD_SENTINEL_VALUE)
+
+#if RAYGE_DEBUG()
+#define DEBUGGING_DEFAULT_VALUE true
+#else
+#define DEBUGGING_DEFAULT_VALUE false
+#endif
 
 struct MemPool;
 
@@ -35,10 +42,13 @@ typedef struct MemPool
 	MemPool_Category category;
 	MemPoolItemHead* head;
 	MemPoolItemHead* tail;
+	size_t totalClientMemory;  // Sizes of all allocations requested
+	size_t totalMemory;  // Total memory used, including head and tail structs.
 } MemPool;
 
 static MemPool g_Pools[MEMPOOL__COUNT];
 static bool g_PoolsInitialised = false;
+static bool g_DebuggingEnabled = false;
 
 static void* ItemToMemPtr(MemPoolItemHead* item)
 {
@@ -61,17 +71,24 @@ static bool VerifyPoolValid(MemPool* pool)
 
 static void VerifyIntegrity(MemPoolItemHead* item, const char* file, int line)
 {
+	if ( !g_DebuggingEnabled )
+	{
+		return;
+	}
+
 	RAYGE_ENSURE(
-		item->sentinel != HEAD_SENTINEL_VALUE,
-		"Mem pool invocation from %s:%d: Head sentinel was trashed for 0x%p",
+		item->sentinel == HEAD_SENTINEL_VALUE,
+		"Mem pool invocation from %s:%d: Head sentinel was trashed for 0x%p. Expected 0x%08x, got 0x%08x.",
 		file,
 		line,
-		ItemToMemPtr(item)
+		ItemToMemPtr(item),
+		HEAD_SENTINEL_VALUE,
+		item->sentinel
 	);
 
 	RAYGE_ENSURE(
 		VerifyPoolValid(item->pool),
-		"Mem pool invocation from %s:%d: Mem pool pointer was trashed for 0x%p",
+		"Mem pool invocation from %s:%d: Mem pool pointer was trashed for 0x%p.",
 		file,
 		line,
 		ItemToMemPtr(item)
@@ -80,11 +97,13 @@ static void VerifyIntegrity(MemPoolItemHead* item, const char* file, int line)
 	MemPoolItemTail* tail = ItemTail(item);
 
 	RAYGE_ENSURE(
-		tail->sentinel != TAIL_SENTINEL_VALUE,
-		"Mem pool invocation from %s:%d: Tail sentinel was trashed for 0x%p",
+		tail->sentinel == TAIL_SENTINEL_VALUE,
+		"Mem pool invocation from %s:%d: Tail sentinel was trashed for 0x%p. Expected 0x%08x, got 0x%08x.",
 		file,
 		line,
-		ItemToMemPtr(item)
+		ItemToMemPtr(item),
+		TAIL_SENTINEL_VALUE,
+		tail->sentinel
 	);
 }
 
@@ -117,32 +136,53 @@ static void FreeChain(MemPoolItemHead* chain, const char* file, int line)
 	}
 }
 
-static MemPoolItemHead* CreateItem(size_t size, const char* file, int line)
-{
-	MemPoolItemHead* head = (MemPoolItemHead*)malloc(ItemAllocationSize(size));
-	MemPoolItemTail* tail = ItemTail(head);
-
-	memset(head, 0, sizeof(*head));
-
-	head->sentinel = HEAD_SENTINEL_VALUE;
-	tail->sentinel = TAIL_SENTINEL_VALUE;
-
-#if RAYGE_DEBUG()
-	head->allocFile = file;
-	head->allocLine = line;
-#endif
-
-	head->allocSize = size;
-
-	return head;
-}
-
 static MemPoolItemHead* CreateItemInPool(MemPool* pool, size_t size, const char* file, int line)
 {
-	MemPoolItemHead* item = CreateItem(size, file, line);
+	RAYGE_ENSURE(size > 0, "Mem pool invocation from %s:%d: Invalid request to allocate zero bytes", file, line);
+
+	RAYGE_ENSURE(
+		SIZE_MAX - pool->totalClientMemory >= size,
+		"Mem pool invocation from %s:%d: Request to allocate %zu bytes would overflow pool's client memory counter.",
+		file,
+		line,
+		size
+	);
+
+	size_t totalSize = ItemAllocationSize(size);
+
+	RAYGE_ENSURE(
+		SIZE_MAX - pool->totalMemory >= totalSize,
+		"Mem pool invocation from %s:%d: Request to allocate %zu total bytes would overflow pool's total memory "
+		"counter.",
+		file,
+		line,
+		size
+	);
+
+	MemPoolItemHead* item = (MemPoolItemHead*)malloc(totalSize);
+
+	RAYGE_ENSURE(
+		item,
+		"Mem pool invocation from %s:%d: Could not allocate %zu total bytes (%zu requested as payload)",
+		file,
+		line,
+		totalSize,
+		size
+	);
+
+	item->sentinel = HEAD_SENTINEL_VALUE;
+	item->allocSize = size;
+
+#if RAYGE_DEBUG()
+	item->allocFile = file;
+	item->allocLine = line;
+#endif
+
+	ItemTail(item)->sentinel = TAIL_SENTINEL_VALUE;
 
 	item->pool = pool;
 	item->prev = pool->tail;
+	item->next = NULL;
 
 	if ( pool->tail )
 	{
@@ -159,11 +199,38 @@ static MemPoolItemHead* CreateItemInPool(MemPool* pool, size_t size, const char*
 		pool->head = item;
 	}
 
+	// Keep track of how much memory is being used in this pool.
+	pool->totalClientMemory += item->allocSize;
+	pool->totalMemory += totalSize;
+
 	return item;
 }
 
-void DestroyItemInPool(MemPool* pool, MemPoolItemHead* item)
+void DestroyItemInPool(MemPool* pool, MemPoolItemHead* item, const char* file, int line)
 {
+	// If this happens, something's gone seriously wrong:
+	RAYGE_ENSURE(
+		item->allocSize <= pool->totalClientMemory,
+		"Mem pool invocation from %s:%d: Freeing %zu bytes underflows pool's client memory counter.",
+		file,
+		line,
+		item->allocSize
+	);
+
+	size_t totalBytesToFree = ItemAllocationSize(item->allocSize);
+
+	// If this happens, something's gone seriously wrong:
+	RAYGE_ENSURE(
+		totalBytesToFree <= pool->totalMemory,
+		"Mem pool invocation from %s:%d: Freeing %zu total bytes underflows pool's total memory counter.",
+		file,
+		line,
+		totalBytesToFree
+	);
+
+	pool->totalClientMemory -= item->allocSize;
+	pool->totalMemory -= ItemAllocationSize(item->allocSize);
+
 	if ( item->prev )
 	{
 		item->prev->next = item->next;
@@ -187,6 +254,16 @@ void DestroyItemInPool(MemPool* pool, MemPoolItemHead* item)
 	free(item);
 }
 
+bool MemPoolSubsystem_DebuggingEnabled(void)
+{
+	return g_DebuggingEnabled;
+}
+
+void MemPoolSubsystem_SetDebuggingEnabled(bool enabled)
+{
+	g_DebuggingEnabled = g_PoolsInitialised && enabled;
+}
+
 void MemPoolSubsystem_Init(void)
 {
 	if ( g_PoolsInitialised )
@@ -200,6 +277,7 @@ void MemPoolSubsystem_Init(void)
 		g_Pools[index].category = (MemPool_Category)index;
 	}
 
+	g_DebuggingEnabled = DEBUGGING_DEFAULT_VALUE;
 	g_PoolsInitialised = true;
 }
 
@@ -216,6 +294,7 @@ void MemPoolSubsystem_ShutDown(void)
 		memset(&g_Pools[index], 0, sizeof(MemPool));
 	}
 
+	g_DebuggingEnabled = false;
 	g_PoolsInitialised = false;
 }
 
@@ -223,7 +302,7 @@ void* MemPoolSubsystem_Malloc(const char* file, int line, MemPool_Category categ
 {
 	RAYGE_ENSURE(
 		(size_t)category < MEMPOOL__COUNT,
-		"%s:%d: Invalid category provided to MemPoolSubsystem_Malloc",
+		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolSubsystem_Malloc",
 		file,
 		line
 	);
@@ -242,7 +321,7 @@ void* MemPoolSubsystem_Calloc(
 {
 	RAYGE_ENSURE(
 		(size_t)category < MEMPOOL__COUNT,
-		"%s:%d: Invalid category provided to MemPoolSubsystem_Calloc",
+		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolSubsystem_Calloc",
 		file,
 		line
 	);
@@ -259,7 +338,7 @@ void* MemPoolSubsystem_Realloc(const char* file, int line, MemPool_Category cate
 {
 	RAYGE_ENSURE(
 		(size_t)category < MEMPOOL__COUNT,
-		"%s:%d: Invalid category provided to MemPoolSubsystem_Realloc",
+		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolSubsystem_Realloc",
 		file,
 		line
 	);
@@ -304,8 +383,8 @@ void* MemPoolSubsystem_Realloc(const char* file, int line, MemPool_Category cate
 
 void MemPoolSubsystem_Free(const char* file, int line, void* memory)
 {
-	RAYGE_ENSURE(memory, "%s:%d: Null pointer provided to MemPoolSubsystem_Free", file, line);
+	RAYGE_ENSURE(memory, "Mem pool invocation from %s:%d: Null pointer provided to MemPoolSubsystem_Free", file, line);
 
 	MemPoolItemHead* item = MemPtrToItemChecked(memory, file, line);
-	DestroyItemInPool(item->pool, item);
+	DestroyItemInPool(item->pool, item, file, line);
 }

@@ -41,12 +41,17 @@ static inline void RayGE_EnsureTrue(
 
 	LoggingSubsystem_PrintLine(
 		isFatal ? RAYGE_LOG_FATAL : RAYGE_LOG_WARNING,
-		"ASSERTION FAILED: %s:%d (%s): %s%s%s",
+		"\n"
+		"**** ASSERTION FAILED ****\n"
+		"  File: %s:%d\n"
+		"  Function: %s\n"
+		"  Expression: %s"
+		"%s%s",
 		file ? file : "unknown-file",
 		line,
 		function ? function : "unknown-function",
 		expressionStr ? expressionStr : "unknown-expression",
-		descBuffer[0] ? " - " : "",
+		descBuffer[0] ? "\n  " : "",
 		descBuffer[0] ? descBuffer : ""
 	);
 }

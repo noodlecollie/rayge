@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "Launcher/LaunchParams.h"
 #include "Subsystems/LoggingSubsystem.h"
+#include "Subsystems/MemPoolSubsystem.h"
 #include "cargs.h"
 
 static const struct cag_option LaunchOptionDefs[] = {
@@ -15,7 +16,14 @@ static const struct cag_option LaunchOptionDefs[] = {
 		.access_letters = NULL,
 		.access_name = "dev",
 		.value_name = "DEV_LEVEL",
-		.description = "Sets the developer level (defaults to 0). Higher levels make more debugging features available.",
+		.description =
+			"Sets the developer level (defaults to 0). Higher levels make more debugging features available.",
+	},
+	{
+		.identifier = 'm',
+		.access_letters = NULL,
+		.access_name = "debug-mempool",
+		.description = "Enables debugging of memory pool allocations. This may affect performance",
 	}
 };
 
@@ -54,7 +62,6 @@ bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 				const char* value = cag_option_get_value(&context);
 				int level = value ? atoi(value) : 0;
 
-				// TODO: Move this to some static state manager.
 				if ( level >= 3 )
 				{
 					LoggingSubsystem_SetBackendDebugLogsEnabled(true);
@@ -76,6 +83,12 @@ bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 					LoggingSubsystem_SetLogLevel(RAYGE_LOG_INFO);
 				}
 
+				break;
+			}
+
+			case 'm':
+			{
+				MemPoolSubsystem_SetDebuggingEnabled(true);
 				break;
 			}
 		}
