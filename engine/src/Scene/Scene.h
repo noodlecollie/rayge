@@ -10,3 +10,4 @@ bool Scene_IsCreated(void);
 
 size_t Scene_GetMaxEntities(void);
 RayGE_Entity* Scene_CreateEntity(void);
+RayGE_Entity* Scene_GetActiveEntity(size_t index);

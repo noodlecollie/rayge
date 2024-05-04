@@ -5,6 +5,7 @@
 #include "Engine/EngineAPI.h"
 #include "Game/GameWindow.h"
 #include "Scene/Scene.h"
+#include "Scene/Entity.h"
 #include "Utils.h"
 
 // TODO: Remove this once we move the rendering elsewhere
@@ -28,15 +29,9 @@ typedef void (*SubsystemFuncPtr)(void);
 // The following exclude the logging subsystem, since this is handled independently.
 // Subsystems are initialised and shut down in the order of the arrays.
 
-static const SubsystemFuncPtr g_SubsystemInitFuncs[] =
-{
-	MemPoolSubsystem_Init
-};
+static const SubsystemFuncPtr g_SubsystemInitFuncs[] = {MemPoolSubsystem_Init};
 
-static const SubsystemFuncPtr g_SubsystemShutdownFuncs[] =
-{
-	MemPoolSubsystem_ShutDown
-};
+static const SubsystemFuncPtr g_SubsystemShutdownFuncs[] = {MemPoolSubsystem_ShutDown};
 
 static bool g_Initialised = false;
 
@@ -80,6 +75,57 @@ static bool RunFrame(void)
 	// TODO: Remove this once we move the rendering elsewhere
 	BeginDrawing();
 	ClearBackground(BLACK);
+
+	Camera3D camera = {0};
+
+	camera.position = (Vector3) {20.0f, -20.0f, 5.0f};
+	camera.target = (Vector3) {0.0f, 0.0f, 0.0f};
+	camera.up = (Vector3) {0.0f, 0.0f, 1.0f};
+	camera.fovy = 45.0f;
+	camera.projection = CAMERA_PERSPECTIVE;
+
+	BeginMode3D(camera);
+
+	size_t maxEntities = Scene_GetMaxEntities();
+
+	for ( size_t index = 0; index < maxEntities; ++index )
+	{
+		RayGE_Entity* entity = Scene_GetActiveEntity(index);
+
+		if ( !entity )
+		{
+			continue;
+		}
+
+		RayGE_ComponentImpl_Spatial* spatial =
+			COMPONENTCAST_SPATIAL(Entity_GetFirstComponentOfType(entity, RAYGE_COMPONENTTYPE_SPATIAL), false);
+
+		if ( !spatial )
+		{
+			continue;
+		}
+
+		Vector3 start = {0, 0, 0};
+		Vector3 end = {0, 0, 0};
+
+		start = Vector3Add(spatial->data.position, (Vector3) {-3, 0, 0});
+		end = Vector3Add(spatial->data.position, (Vector3) {3, 0, 0});
+		DrawLine3D(start, end, RED);
+		DrawCircle3D(end, 0.5f, (Vector3){ 1, 0, 0 }, 0.0f, RED);
+
+		start = Vector3Add(spatial->data.position, (Vector3) {0, -3, 0});
+		end = Vector3Add(spatial->data.position, (Vector3) {0, 3, 0});
+		DrawLine3D(start, end, GREEN);
+		DrawCircle3D(end, 0.5f, (Vector3){ 0, 1, 0 }, 0.0f, GREEN);
+
+		start = Vector3Add(spatial->data.position, (Vector3) {0, 0, -3});
+		end = Vector3Add(spatial->data.position, (Vector3) {0, 0, 3});
+		DrawLine3D(start, end, BLUE);
+		DrawCircle3D(end, 0.5f, (Vector3){ 0, 0, 1 }, 0.0f, BLUE);
+	}
+
+	EndMode3D();
+
 	EndDrawing();
 
 	return windowShouldClose;

@@ -99,3 +99,14 @@ RayGE_Entity* Scene_CreateEntity(void)
 
 	return ent;
 }
+
+RayGE_Entity* Scene_GetActiveEntity(size_t index)
+{
+	if ( !g_Scene || index >= g_Scene->maxEntities )
+	{
+		return NULL;
+	}
+
+	RayGE_Entity* entity = Entity_Get(g_Scene->entities, g_Scene->maxEntities, index);
+	return Entity_IsInUse(entity) ? entity : NULL;
+}

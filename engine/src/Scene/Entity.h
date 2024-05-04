@@ -5,6 +5,7 @@
 
 RayGE_Entity* Entity_AllocateList(size_t count);
 void Entity_FreeList(RayGE_Entity* entities, size_t count);
+RayGE_Entity* Entity_Get(RayGE_Entity* entities, size_t count, size_t index);
 
 void Entity_Acquire(RayGE_Entity* entity);
 void Entity_Release(RayGE_Entity* entity);

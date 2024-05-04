@@ -49,7 +49,7 @@ static void Scene_Begin(void)
 	g_CameraEntity = g_EngineAPI->scene.CreateEntity();
 
 	RayGE_Component_Spatial* cameraPos = g_EngineAPI->scene.AddSpatialComponent(g_CameraEntity);
-	cameraPos->position.x = 10.0f;
+	cameraPos->position.x = 0.0f;
 
 	RayGE_Component_Camera* camera = g_EngineAPI->scene.AddCameraComponent(g_CameraEntity);
 	camera->fieldOfView = 80.0f;

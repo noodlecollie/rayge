@@ -42,6 +42,11 @@ void Entity_FreeList(RayGE_Entity* entities, size_t count)
 	MEMPOOL_FREE(entities);
 }
 
+RayGE_Entity* Entity_Get(RayGE_Entity* entities, size_t count, size_t index)
+{
+	return (entities && index < count) ? (entities + index) : NULL;
+}
+
 void Entity_Acquire(RayGE_Entity* entity)
 {
 	if ( !entity )
