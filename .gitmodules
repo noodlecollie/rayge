@@ -1,3 +1,6 @@
 [submodule "thirdparty/wzl-cutl/wzl-cutl"]
 	path = thirdparty/wzl-cutl/wzl-cutl
 	url = https://github.com/noodlecollie/wzl-cutl.git
+[submodule "thirdparty/debugbreak-1.0/debugbreak-1.0"]
+	path = thirdparty/debugbreak-1.0/debugbreak-1.0
+	url = https://github.com/scottt/debugbreak.git
