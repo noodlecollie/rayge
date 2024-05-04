@@ -1,9 +1,8 @@
 #include "Scene/SceneAPI.h"
 #include "Subsystems/LoggingSubsystem.h"
 
-RayGE_Entity* SceneAPI_CreateEntity(RayGE_Entity* parent)
+RayGE_Entity* SceneAPI_CreateEntity(void)
 {
-	(void)parent;
 	LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "SceneAPI_CreateEntity is unimplemented");
 	return NULL;
 }
