@@ -3,7 +3,11 @@
 #include "Subsystems/LoggingSubsystem.h"
 #include "Subsystems/MemPoolSubsystem.h"
 #include "Engine/EngineAPI.h"
+#include "Game/GameWindow.h"
 #include "Utils.h"
+
+// TODO: Remove this once we move the rendering elsewhere
+#include "raylib.h"
 
 #define NUM_ENGINE_API_FUNCTIONS (sizeof(RayGE_Engine_API_Current) / sizeof(void*))
 
@@ -105,4 +109,26 @@ void Engine_ShutDown(void)
 	LoggingSubsystem_ShutDown();
 
 	g_Initialised = false;
+}
+
+void Engine_RunToCompletion(void)
+{
+	GameWindow_Create();
+
+	bool windowShouldClose = false;
+
+	while ( !windowShouldClose )
+	{
+		if ( GameWindow_CloseRequested() )
+		{
+			windowShouldClose = true;
+		}
+
+		// TODO: Remove this once we move the rendering elsewhere
+		BeginDrawing();
+		ClearBackground(BLACK);
+		EndDrawing();
+	}
+
+	GameWindow_Destroy();
 }
