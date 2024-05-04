@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include "GameLib_SanityTest/LibInterface.h"
+#include "LibExport.h"
+#include "RayGE/APIs/Engine.h"
 
 static void Game_StartUp(void);
 static void Game_ShutDown(void);
@@ -21,6 +22,9 @@ static const RayGE_GameLib_Callbacks_V1 g_Callbacks = {
 	}
 };
 
+static RayGE_Entity* g_SubjectEntity = NULL;
+static RayGE_Entity* g_CameraEntity = NULL;
+
 static void Game_StartUp(void)
 {
 	g_EngineAPI->log.PrintLine(RAYGE_LOG_INFO, "Sanity test: Game_StartUp()");
@@ -34,6 +38,21 @@ static void Game_ShutDown(void)
 static void Scene_Begin(void)
 {
 	g_EngineAPI->log.PrintLine(RAYGE_LOG_INFO, "Sanity test: Scene_Begin()");
+
+	g_EngineAPI->log.PrintLine(RAYGE_LOG_INFO, "Sanity test: Adding subject entity");
+	g_SubjectEntity = g_EngineAPI->scene.CreateEntity();
+
+	RayGE_Component_Spatial* spatial = g_EngineAPI->scene.AddSpatialComponent(g_SubjectEntity);
+	spatial->position.x = -10.0f;
+
+	g_EngineAPI->log.PrintLine(RAYGE_LOG_INFO, "Sanity test: Adding camera entity");
+	g_CameraEntity = g_EngineAPI->scene.CreateEntity();
+
+	RayGE_Component_Spatial* cameraPos = g_EngineAPI->scene.AddSpatialComponent(g_CameraEntity);
+	cameraPos->position.x = 10.0f;
+
+	RayGE_Component_Camera* camera = g_EngineAPI->scene.AddCameraComponent(g_CameraEntity);
+	camera->fieldOfView = 80.0f;
 }
 
 static void Scene_End(void)
