@@ -23,6 +23,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	include/RayGE/Private/InterfaceUtils.h
 	include/RayGE/Private/Launcher.h
 
+	src/BinaryResources/DMMono_Regular.h
+	src/BinaryResources/DMMono_Regular.c
 	src/Engine/Engine.h
 	src/Engine/Engine.c
 	src/Engine/EngineAPI.h
@@ -31,8 +33,6 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Game/GameData.c
 	src/Game/GameLoader.h
 	src/Game/GameLoader.c
-	src/Game/GameWindow.h
-	src/Game/GameWindow.c
 	src/JSON/JSONUtils.h
 	src/JSON/JSONUtils.c
 	src/Launcher/Launcher.c
@@ -52,6 +52,10 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Subsystems/LoggingSubsystem.c
 	src/Subsystems/MemPoolSubsystem.h
 	src/Subsystems/MemPoolSubsystem.c
+	src/Subsystems/RendererSubsystem.h
+	src/Subsystems/RendererSubsystem.c
+	src/Subsystems/SubsystemManager.h
+	src/Subsystems/SubsystemManager.c
 	src/Debugging.h
 	src/Debugging.c
 	src/Utils.h

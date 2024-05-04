@@ -1,14 +1,13 @@
 #include <stdbool.h>
 #include "Engine/Engine.h"
 #include "Subsystems/LoggingSubsystem.h"
-#include "Subsystems/MemPoolSubsystem.h"
+#include "Subsystems/SubsystemManager.h"
 #include "Engine/EngineAPI.h"
-#include "Game/GameWindow.h"
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
-#include "Utils.h"
 
 // TODO: Remove this once we move the rendering elsewhere
+#include "Subsystems/RendererSubsystem.h"
 #include "raylib.h"
 
 #define NUM_ENGINE_API_FUNCTIONS (sizeof(RayGE_Engine_API_Current) / sizeof(void*))
@@ -23,15 +22,6 @@ typedef union EngineAPIVerifyWrapper
 	const RayGE_Engine_API_Current* apiPtr;
 	const EngineAPIOpaqueFunctionTable* funcTablePtr;
 } EngineAPIVerifyWrapper;
-
-typedef void (*SubsystemFuncPtr)(void);
-
-// The following exclude the logging subsystem, since this is handled independently.
-// Subsystems are initialised and shut down in the order of the arrays.
-
-static const SubsystemFuncPtr g_SubsystemInitFuncs[] = {MemPoolSubsystem_Init};
-
-static const SubsystemFuncPtr g_SubsystemShutdownFuncs[] = {MemPoolSubsystem_ShutDown};
 
 static bool g_Initialised = false;
 
@@ -70,7 +60,7 @@ static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 
 static bool RunFrame(void)
 {
-	bool windowShouldClose = GameWindow_CloseRequested();
+	bool windowShouldClose = RenderSubsystem_WindowCloseRequested();
 
 	// TODO: Remove this once we move the rendering elsewhere
 	BeginDrawing();
@@ -111,20 +101,22 @@ static bool RunFrame(void)
 		start = Vector3Add(spatial->data.position, (Vector3) {-3, 0, 0});
 		end = Vector3Add(spatial->data.position, (Vector3) {3, 0, 0});
 		DrawLine3D(start, end, RED);
-		DrawCircle3D(end, 0.5f, (Vector3){ 1, 0, 0 }, 0.0f, RED);
+		DrawCircle3D(end, 0.5f, (Vector3) {1, 0, 0}, 0.0f, RED);
 
 		start = Vector3Add(spatial->data.position, (Vector3) {0, -3, 0});
 		end = Vector3Add(spatial->data.position, (Vector3) {0, 3, 0});
 		DrawLine3D(start, end, GREEN);
-		DrawCircle3D(end, 0.5f, (Vector3){ 0, 1, 0 }, 0.0f, GREEN);
+		DrawCircle3D(end, 0.5f, (Vector3) {0, 1, 0}, 0.0f, GREEN);
 
 		start = Vector3Add(spatial->data.position, (Vector3) {0, 0, -3});
 		end = Vector3Add(spatial->data.position, (Vector3) {0, 0, 3});
 		DrawLine3D(start, end, BLUE);
-		DrawCircle3D(end, 0.5f, (Vector3){ 0, 0, 1 }, 0.0f, BLUE);
+		DrawCircle3D(end, 0.5f, (Vector3) {0, 0, 1}, 0.0f, BLUE);
 	}
 
 	EndMode3D();
+
+	RendererSubsystem_DrawTextDev("This is some text", 20, 20, WHITE);
 
 	EndDrawing();
 
@@ -142,10 +134,7 @@ void Engine_StartUp(void)
 	LoggingSubsystem_Init();
 	VerifyAllEngineAPIFunctionPointersAreValid();
 
-	for ( size_t index = 0; index < RAYGE_ARRAY_SIZE(g_SubsystemInitFuncs); ++index )
-	{
-		(g_SubsystemInitFuncs[index])();
-	}
+	SubsystemManager_InitAll();
 
 	g_Initialised = true;
 	LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, "RayGE engine initialised.");
@@ -159,11 +148,7 @@ void Engine_ShutDown(void)
 	}
 
 	LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, "RayGE engine shutting down.");
-
-	for ( size_t index = 0; index < RAYGE_ARRAY_SIZE(g_SubsystemShutdownFuncs); ++index )
-	{
-		(g_SubsystemShutdownFuncs[index])();
-	}
+	SubsystemManager_ShutDownAll();
 
 	LoggingSubsystem_ShutDown();
 
@@ -172,8 +157,6 @@ void Engine_ShutDown(void)
 
 void Engine_RunToCompletion(void)
 {
-	GameWindow_Create();
-
 	// TODO: Make this value canonical somehow?
 	Scene_CreateStatic(1024);
 
@@ -186,5 +169,4 @@ void Engine_RunToCompletion(void)
 	while ( !windowShouldClose );
 
 	Scene_DestroyStatic();
-	GameWindow_Destroy();
 }
