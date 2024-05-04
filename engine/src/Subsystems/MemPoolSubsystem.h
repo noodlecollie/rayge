@@ -9,8 +9,8 @@ typedef enum MemPool_Category
 	MEMPOOL__COUNT
 } MemPool_Category;
 
-void MemPoolSubsystem_Init();
-void MemPoolSubsystem_ShutDown();
+void MemPoolSubsystem_Init(void);
+void MemPoolSubsystem_ShutDown(void);
 
 void* MemPoolSubsystem_Malloc(const char* file, int line, MemPool_Category category, size_t size);
 void* MemPoolSubsystem_Calloc(

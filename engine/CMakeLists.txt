@@ -20,10 +20,13 @@ generate_export_header_template(
 )
 
 target_sources(${TARGETNAME_ENGINE} PRIVATE
-	include/RayGE/Private/CurrentEngineAPI.h
 	include/RayGE/Private/InterfaceUtils.h
 	include/RayGE/Private/Launcher.h
 
+	src/Engine/Engine.h
+	src/Engine/Engine.c
+	src/Engine/EngineAPI.h
+	src/Engine/EngineAPI.c
 	src/Game/GameData.h
 	src/Game/GameData.c
 	src/Game/GameLoader.h
@@ -46,8 +49,6 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Subsystems/MemPoolSubsystem.h
 	src/Subsystems/MemPoolSubsystem.c
 	src/Debugging.h
-	src/EngineAPI.h
-	src/EngineAPI.c
 	src/Utils.h
 )
 

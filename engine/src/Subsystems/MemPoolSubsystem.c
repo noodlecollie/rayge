@@ -187,7 +187,7 @@ void DestroyItemInPool(MemPool* pool, MemPoolItemHead* item)
 	free(item);
 }
 
-void MemPoolSubsystem_Init()
+void MemPoolSubsystem_Init(void)
 {
 	if ( g_PoolsInitialised )
 	{
@@ -203,7 +203,7 @@ void MemPoolSubsystem_Init()
 	g_PoolsInitialised = true;
 }
 
-void MemPoolSubsystem_ShutDown()
+void MemPoolSubsystem_ShutDown(void)
 {
 	if ( !g_PoolsInitialised )
 	{

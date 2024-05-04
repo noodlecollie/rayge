@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include <stddef.h>
-#include "RayGE/Private/CurrentEngineAPI.h"
+#include "Engine/EngineAPI.h"
 #include "Subsystems/LoggingSubsystem.h"
 #include "Scene/SceneAPI.h"
 
@@ -20,11 +20,11 @@ const RayGE_Engine_API_Current g_EngineAPI = {
 	}
 };
 
-RayGE_GameLib_Callbacks_V1 g_GameLibCallbacks;
+RayGE_GameLib_Callbacks_Current g_GameLibCallbacks;
 
-const RayGE_Engine_API_V1* RAYGE_ENGINE_CDECL EngineAPI_ExchangeAPIsWithGame(
+const RayGE_Engine_API_Current* RAYGE_ENGINE_CDECL EngineAPI_ExchangeAPIsWithGame(
 	uint16_t requestedVersion,
-	const RayGE_GameLib_Callbacks_V1* callbacks,
+	const RayGE_GameLib_Callbacks_Current* callbacks,
 	uint16_t* outSupportedVersion
 )
 {
