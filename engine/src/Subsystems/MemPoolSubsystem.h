@@ -6,6 +6,7 @@ typedef enum MemPool_Category
 {
 	MEMPOOL_UNCATEGORISED = 0,
 	MEMPOOL_SCENE,
+	MEMPOOL_ENTITY,
 
 	MEMPOOL__COUNT
 } MemPool_Category;
