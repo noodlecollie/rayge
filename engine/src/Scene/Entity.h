@@ -1,13 +1,15 @@
 #pragma once
 
+#include <stdbool.h>
 #include "Scene/Component.h"
 
-struct RayGE_Entity
-{
-	bool isInUse;
-	RayGE_ComponentHeader* componentList;
-	size_t componentCount;
-};
+RayGE_Entity* Entity_AllocateList(size_t count);
+void Entity_FreeList(RayGE_Entity* entities, size_t count);
 
-void RayGE_AcquireEntity(RayGE_Entity* entity);
-void RayGE_ReleaseEntity(RayGE_Entity* entity);
+void Entity_Acquire(RayGE_Entity* entity);
+void Entity_Release(RayGE_Entity* entity);
+bool Entity_IsInUse(RayGE_Entity* entity);
+RayGE_Entity* Entity_FindFirstFree(RayGE_Entity* entities, size_t count);
+
+bool Entity_AddComponent(RayGE_Entity* entity, RayGE_ComponentHeader* component);
+RayGE_ComponentHeader* Entity_GetFirstComponentOfType(RayGE_Entity* entity, RayGE_ComponentType type);

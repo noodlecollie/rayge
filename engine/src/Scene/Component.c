@@ -12,7 +12,7 @@ static void* CallocComponent(RayGE_ComponentType type, size_t size)
 
 #define CALLOC_COMPONENT(structType, componentType) ((structType*)CallocComponent((componentType), sizeof(structType)))
 
-void RayGE_Component_FreeList(RayGE_ComponentHeader* head)
+void Component_FreeList(RayGE_ComponentHeader* head)
 {
 	while ( head )
 	{
@@ -22,17 +22,17 @@ void RayGE_Component_FreeList(RayGE_ComponentHeader* head)
 	}
 }
 
-RayGE_ComponentImpl_Spatial* RayGE_Component_CreateSpatial(void)
+RayGE_ComponentImpl_Spatial* Component_CreateSpatial(void)
 {
 	return CALLOC_COMPONENT(RayGE_ComponentImpl_Spatial, RAYGE_COMPONENTTYPE_SPATIAL);
 }
 
-RayGE_ComponentImpl_Camera* RayGE_Component_CreateCamera(void)
+RayGE_ComponentImpl_Camera* Component_CreateCamera(void)
 {
 	return CALLOC_COMPONENT(RayGE_ComponentImpl_Camera, RAYGE_COMPONENTTYPE_CAMERA);
 }
 
-void* RayGE_Component_CastImpl(
+void* Component_CastImpl(
 	RayGE_ComponentHeader* header,
 	RayGE_ComponentType toType,
 	bool ensureTypeMatches,

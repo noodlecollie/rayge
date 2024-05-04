@@ -53,6 +53,7 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Subsystems/MemPoolSubsystem.h
 	src/Subsystems/MemPoolSubsystem.c
 	src/Debugging.h
+	src/Debugging.c
 	src/Utils.h
 )
 
@@ -82,6 +83,7 @@ target_link_libraries(${TARGETNAME_ENGINE}
 	raylib
 	cwalk
 	cargs
+	debugbreak
 )
 
 target_compile_definitions(${TARGETNAME_ENGINE}

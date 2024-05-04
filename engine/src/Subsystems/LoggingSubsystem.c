@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "RayGE/Private/Launcher.h"
 #include "Subsystems/LoggingSubsystem.h"
+#include "Debugging.h"
 #include "raylib.h"
 #include "wzl_cutl/string.h"
 
@@ -93,6 +94,8 @@ static void PrintLogMessageLine(RayGE_Log_Level level, const char* source, const
 
 	if ( level == RAYGE_LOG_FATAL )
 	{
+		RayGE_DebugBreak();
+
 		// This isn't ideal given this is a library,
 		// but unsure what else we can do. Receiving
 		// a fatal log message implies that the engine

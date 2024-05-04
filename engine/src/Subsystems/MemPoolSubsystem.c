@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
+#include <ctype.h>
 #include "Subsystems/MemPoolSubsystem.h"
+#include "Subsystems/LoggingSubsystem.h"
 #include "Debugging.h"
 
 #define HEAD_SENTINEL_VALUE 0xF9A23BAD
@@ -50,6 +52,46 @@ static MemPool g_Pools[MEMPOOL__COUNT];
 static bool g_PoolsInitialised = false;
 static bool g_DebuggingEnabled = false;
 
+static const char* SafeFileNameString(MemPoolItemHead* item)
+{
+#if RAYGE_DEBUG()
+	static const char* const CORRUPTED = "<corrupted>";
+	static const size_t MAX_LENGTH = 128;
+
+	if ( !item->allocFile )
+	{
+		return "<null>";
+	}
+
+	for ( size_t index = 0; index < MAX_LENGTH; ++index )
+	{
+		if ( !item->allocFile[index] )
+		{
+			// We found a null, so everything was OK.
+			return item->allocFile;
+		}
+
+		if ( !isprint(item->allocFile[index]) )
+		{
+			return CORRUPTED;
+		}
+	}
+
+	return CORRUPTED;
+#else
+	return "<unavailable>";
+#endif
+}
+
+static int SafeFileLineNumber(MemPoolItemHead* item)
+{
+#if RAYGE_DEBUG()
+	return item->allocLine;
+#else
+	return 0;
+#endif
+}
+
 static void* ItemToMemPtr(MemPoolItemHead* item)
 {
 	return (void*)((uint8_t*)item + sizeof(MemPoolItemHead));
@@ -78,30 +120,38 @@ static void VerifyIntegrity(MemPoolItemHead* item, const char* file, int line)
 
 	RAYGE_ENSURE(
 		item->sentinel == HEAD_SENTINEL_VALUE,
-		"Mem pool invocation from %s:%d: Head sentinel was trashed for 0x%p. Expected 0x%08x, got 0x%08x.",
+		"Mem pool invocation from %s:%d: Head sentinel was trashed for 0x%p allocated from %s:%d. Expected 0x%08x, got "
+		"0x%08x.",
 		file,
 		line,
 		ItemToMemPtr(item),
+		SafeFileNameString(item),
+		SafeFileLineNumber(item),
 		HEAD_SENTINEL_VALUE,
 		item->sentinel
 	);
 
 	RAYGE_ENSURE(
 		VerifyPoolValid(item->pool),
-		"Mem pool invocation from %s:%d: Mem pool pointer was trashed for 0x%p.",
+		"Mem pool invocation from %s:%d: Mem pool pointer was trashed for 0x%p allocated from %s:%d.",
 		file,
 		line,
-		ItemToMemPtr(item)
+		ItemToMemPtr(item),
+		SafeFileNameString(item),
+		SafeFileLineNumber(item)
 	);
 
 	MemPoolItemTail* tail = ItemTail(item);
 
 	RAYGE_ENSURE(
 		tail->sentinel == TAIL_SENTINEL_VALUE,
-		"Mem pool invocation from %s:%d: Tail sentinel was trashed for 0x%p. Expected 0x%08x, got 0x%08x.",
+		"Mem pool invocation from %s:%d: Tail sentinel was trashed for 0x%p allocated from %s:%d. Expected 0x%08x, got "
+		"0x%08x.",
 		file,
 		line,
 		ItemToMemPtr(item),
+		SafeFileNameString(item),
+		SafeFileLineNumber(item),
 		TAIL_SENTINEL_VALUE,
 		tail->sentinel
 	);
@@ -300,6 +350,8 @@ void MemPoolSubsystem_ShutDown(void)
 
 void* MemPoolSubsystem_Malloc(const char* file, int line, MemPool_Category category, size_t size)
 {
+	RAYGE_ENSURE(g_PoolsInitialised, "Mem pool must be initialised before calling this function.");
+
 	RAYGE_ENSURE(
 		(size_t)category < MEMPOOL__COUNT,
 		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolSubsystem_Malloc",
@@ -319,6 +371,8 @@ void* MemPoolSubsystem_Calloc(
 	size_t elementSize
 )
 {
+	RAYGE_ENSURE(g_PoolsInitialised, "Mem pool must be initialised before calling this function.");
+
 	RAYGE_ENSURE(
 		(size_t)category < MEMPOOL__COUNT,
 		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolSubsystem_Calloc",
@@ -336,6 +390,8 @@ void* MemPoolSubsystem_Calloc(
 
 void* MemPoolSubsystem_Realloc(const char* file, int line, MemPool_Category category, void* memory, size_t newSize)
 {
+	RAYGE_ENSURE(g_PoolsInitialised, "Mem pool must be initialised before calling this function.");
+
 	RAYGE_ENSURE(
 		(size_t)category < MEMPOOL__COUNT,
 		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolSubsystem_Realloc",
@@ -383,8 +439,36 @@ void* MemPoolSubsystem_Realloc(const char* file, int line, MemPool_Category cate
 
 void MemPoolSubsystem_Free(const char* file, int line, void* memory)
 {
+	RAYGE_ENSURE(g_PoolsInitialised, "Mem pool must be initialised before calling this function.");
 	RAYGE_ENSURE(memory, "Mem pool invocation from %s:%d: Null pointer provided to MemPoolSubsystem_Free", file, line);
 
 	MemPoolItemHead* item = MemPtrToItemChecked(memory, file, line);
 	DestroyItemInPool(item->pool, item, file, line);
+}
+
+void MemPool_DumpAllocInfo(void* memory)
+{
+	RAYGE_ENSURE(g_PoolsInitialised, "Mem pool must be initialised before calling this function.");
+	RAYGE_ASSERT(g_DebuggingEnabled, "Mem pool debugging must be enabled to use this function.");
+
+	if ( !g_DebuggingEnabled )
+	{
+		return;
+	}
+
+	RAYGE_ENSURE(memory, "Cannot dump allocation info for null pointer.");
+
+	MemPoolItemHead* item = MemPtrToItem(memory);
+	MemPoolItemTail* tail = ItemTail(item);
+
+#define LOG(...) LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, __VA_ARGS__)
+
+	LOG("==== Allocation info for 0x%p ====", memory);
+	LOG("  Head sentinel: 0x%08x", item->sentinel);
+	LOG("  Tail sentinel: 0x%08x", tail->sentinel);
+	LOG("  Pool: %d", item->pool ? item->pool->category : -1);
+	LOG("  Requested allocation size: %zu bytes", item->allocSize);
+	LOG("  Allocated from: %s:%d", SafeFileNameString(item), SafeFileLineNumber(item));
+
+#undef LOG
 }

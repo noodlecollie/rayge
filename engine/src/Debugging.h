@@ -12,6 +12,8 @@
 #define RAYGE_DEBUG() 0
 #endif
 
+void RayGE_DebugBreak(void);
+
 static inline void RayGE_EnsureTrue(
 	bool isFatal,
 	bool expression,
