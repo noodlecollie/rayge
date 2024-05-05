@@ -3,6 +3,14 @@
 #include <math.h>
 #include "RayGE/Math.h"
 
+// References for angles:
+// (0, 0, 0) is looking along +X, with up pointing along +Z.
+// (0, 90, 0) is a counter-clockwise rotation from above: looks along +Y.
+// (0, -90, 0) is a clockwise rotation from above: looks along -Y.
+// (90, 0, 0) points down: looks along -Z.
+// (-90, 0, 0) points up: looks along +Z.
+// (0, 0, 15) rotates clockwise (right) along forward axis.
+// (0, 0, -15) rotates counter-clockwise (left) along forward axis.
 typedef struct EulerAngles
 {
 	float pitch;
@@ -29,9 +37,9 @@ static inline float NormaliseDegreeValue(float val)
 }
 
 // Normalises angles as follows:
-// - Pitch converted to [-90 90)
+// - Pitch converted to [-90 90]
 // - Yaw converted to [0 360)
-// - Roll converted to [-180 180)
+// - Roll converted to [-180 180]
 static inline EulerAngles NormaliseEulerAngles(EulerAngles angles)
 {
 	// Roll is easy.
@@ -42,7 +50,7 @@ static inline EulerAngles NormaliseEulerAngles(EulerAngles angles)
 	angles.pitch = NormaliseDegreeValue(angles.pitch) - 180.0f;
 
 	// Is the pitch wild enough to flip our yaw?
-	if ( angles.pitch <= -90.0f )
+	if ( angles.pitch < -90.0f )
 	{
 		angles.pitch = -(180.0f + angles.pitch);
 
@@ -108,4 +116,43 @@ static inline Vector3 EulerAnglesToDirection(EulerAngles angles)
 	Vector3 forward;
 	EulerAnglesToBasis(angles, &forward, NULL, NULL);
 	return forward;
+}
+
+static inline EulerAngles DirectionToEulerAngles(Vector3 direction)
+{
+	if ( direction.x == 0.0f && direction.y == 0.0f )
+	{
+		float pitch = 0.0f;
+
+		if ( direction.z > 0 )
+		{
+			pitch = -90.0f;
+		}
+		else if ( direction.z < 0 )
+		{
+			pitch = 90.0f;
+		}
+
+		return (EulerAngles) {pitch, 0.0f, 0.0f};
+	}
+
+	float yaw = atan2f(direction.y, direction.x) * RAD2DEG;
+
+	// Will never be less than -360, so we can just do this:
+	if ( yaw < 360.0f )
+	{
+		yaw += 360.0f;
+	}
+
+	// TODO: We need to check that this calculates pitch
+	// in the correct direction.
+	float hyp = sqrtf((direction.x * direction.x) + (direction.y * direction.y));
+	float pitch = atan2f(direction.z, hyp) * RAD2DEG;
+
+	if ( pitch < 0 )
+	{
+		pitch += 360;
+	}
+
+	return (EulerAngles) {pitch, yaw, 0};
 }

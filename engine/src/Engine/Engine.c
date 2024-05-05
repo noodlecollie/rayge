@@ -8,6 +8,7 @@
 
 // TODO: Remove this once we move the rendering elsewhere
 #include "Subsystems/RendererSubsystem.h"
+#include "Rendering/Renderer.h"
 #include "raylib.h"
 
 #define NUM_ENGINE_API_FUNCTIONS (sizeof(RayGE_Engine_API_Current) / sizeof(void*))
@@ -122,7 +123,7 @@ static bool RunFrame(void)
 
 	EndMode3D();
 
-	RendererSubsystem_DrawTextDev("This is some text", 20, 20, WHITE);
+	Renderer_DrawTextDev("This is some text", 20, 20, WHITE);
 
 	EndDrawing();
 

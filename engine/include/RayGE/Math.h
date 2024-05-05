@@ -18,6 +18,6 @@
 
 typedef struct Vector2i
 {
-	int32_t x;
-	int32_t y;
+	int x;
+	int y;
 } Vector2i;

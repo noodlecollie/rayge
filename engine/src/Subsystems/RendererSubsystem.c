@@ -59,16 +59,12 @@ bool RenderSubsystem_WindowCloseRequested(void)
 	return g_Data && WindowShouldClose();
 }
 
-void RendererSubsystem_DrawTextDev(const char* text, int posX, int posY, Color color)
+Font RenderSubsystem_GetDefaultFont(void)
 {
-	RAYGE_ASSERT(g_Data, "Renderer subsystem is not initialised");
-
 	if ( !g_Data )
 	{
-		return;
+		return (Font) {0};
 	}
 
-	// This is basically what Raylib does under the hood, but we want to use our own font.
-	// I really don't like their pixelated style, it's very hard to read.
-	DrawTextEx(g_Data->defaultFont, text, (Vector2) {(float)posX, (float)posY}, DEFAULT_FONT_SIZE, 1.0f, color);
+	return g_Data->defaultFont;
 }
