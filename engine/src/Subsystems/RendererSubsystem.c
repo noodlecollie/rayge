@@ -54,6 +54,11 @@ void RendererSubsystem_ShutDown(void)
 	g_Data = NULL;
 }
 
+bool RendererSubsystem_IsInitialised(void)
+{
+	return g_Data != NULL;
+}
+
 bool RenderSubsystem_WindowCloseRequested(void)
 {
 	return g_Data && WindowShouldClose();

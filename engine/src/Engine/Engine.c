@@ -59,11 +59,10 @@ static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 	}
 }
 
-static bool RunFrame(void)
+// TODO: Remove this once we move the rendering elsewhere
+static void VisualiseEntities(void)
 {
-	bool windowShouldClose = RenderSubsystem_WindowCloseRequested();
-
-	// TODO: Remove this once we move the rendering elsewhere
+	Renderer_AddDebugFlags(RENDERER_DBG_DRAW_LOCATIONS);
 	BeginDrawing();
 	ClearBackground(BLACK);
 
@@ -77,7 +76,7 @@ static bool RunFrame(void)
 
 	BeginMode3D(camera);
 
-	size_t maxEntities = Scene_GetMaxEntities();
+	const size_t maxEntities = Scene_GetMaxEntities();
 
 	for ( size_t index = 0; index < maxEntities; ++index )
 	{
@@ -88,44 +87,20 @@ static bool RunFrame(void)
 			continue;
 		}
 
-		RayGE_ComponentImpl_Spatial* spatial =
-			COMPONENTCAST_SPATIAL(Entity_GetFirstComponentOfType(entity, RAYGE_COMPONENTTYPE_SPATIAL), false);
-
-		if ( !spatial )
-		{
-			continue;
-		}
-
-		Vector3 forward;
-		Vector3 right;
-		Vector3 up;
-
-		EulerAnglesToBasis(spatial->data.angles, &forward, &right, &up);
-
-		Vector3 start = {0, 0, 0};
-		Vector3 end = {0, 0, 0};
-
-		start = Vector3Add(spatial->data.position, Vector3Scale(forward, -3.0f));
-		end = Vector3Add(spatial->data.position, Vector3Scale(forward, 3.0f));
-		DrawLine3D(start, end, RED);
-		DrawCircle3D(end, 0.5f, (Vector3) {1, 0, 0}, 0.0f, RED);
-
-		start = Vector3Add(spatial->data.position, Vector3Scale(right, -3.0f));
-		end = Vector3Add(spatial->data.position, Vector3Scale(right, 3.0f));
-		DrawLine3D(start, end, GREEN);
-		DrawCircle3D(end, 0.5f, (Vector3) {0, 1, 0}, 0.0f, GREEN);
-
-		start = Vector3Add(spatial->data.position, Vector3Scale(up, -3.0f));
-		end = Vector3Add(spatial->data.position, Vector3Scale(up, 3.0f));
-		DrawLine3D(start, end, BLUE);
-		DrawCircle3D(end, 0.5f, (Vector3) {0, 0, 1}, 0.0f, BLUE);
+		Renderer_DrawEntity(entity);
 	}
 
 	EndMode3D();
 
-	Renderer_DrawTextDev("This is some text", 20, 20, WHITE);
+	Renderer_FormatTextDev(20, 20, WHITE, "Scene has %zu active entities", Scene_GetActiveEntities());
 
 	EndDrawing();
+}
+
+static bool RunFrame(void)
+{
+	bool windowShouldClose = RenderSubsystem_WindowCloseRequested();
+	VisualiseEntities();
 
 	return windowShouldClose;
 }

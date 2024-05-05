@@ -72,6 +72,11 @@ size_t Scene_GetMaxEntities(void)
 	return g_Scene ? g_Scene->maxEntities : 0;
 }
 
+size_t Scene_GetActiveEntities(void)
+{
+	return g_Scene ? g_Scene->entityCount : 0;
+}
+
 RayGE_Entity* Scene_CreateEntity(void)
 {
 	if ( !g_Scene )
