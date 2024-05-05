@@ -1,7 +1,7 @@
 {
 	"client_library":
 	{
-		"linux": "libgamelib_sanitytest.so",
-		"windows": "gamelib_sanitytest.dll"
+		"linux": "libgamelib-sanitytest.so",
+		"windows": "gamelib-sanitytest.dll"
 	}
 }

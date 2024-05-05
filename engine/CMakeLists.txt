@@ -60,6 +60,7 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Subsystems/SubsystemManager.c
 	src/Debugging.h
 	src/Debugging.c
+	src/Testing.h
 	src/Utils.h
 )
 
@@ -96,4 +97,5 @@ target_link_libraries(${TARGETNAME_ENGINE}
 target_compile_definitions(${TARGETNAME_ENGINE}
 	PRIVATE
 	RAYGE_PRODUCER
+	$<$<BOOL:BUILD_TESTING>:RAYGE_BUILD_TESTING_FLAG>
 )
