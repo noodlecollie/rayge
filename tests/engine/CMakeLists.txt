@@ -1,8 +1,9 @@
 add_executable(${TARGETNAME_ENGINE_TESTS}
-	Main.cpp
+	Angles.cpp
 )
 
 target_link_libraries(${TARGETNAME_ENGINE_TESTS} PRIVATE
+	${TARGETNAME_ENGINE}
 	Catch2::Catch2WithMain
 )
 

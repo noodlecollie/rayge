@@ -63,6 +63,18 @@ static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 // TODO: Remove this once we move the rendering elsewhere
 static void VisualiseEntities(void)
 {
+	RayGE_Entity* firstEnt = Scene_GetActiveEntity(0);
+
+	if ( firstEnt )
+	{
+		RayGE_ComponentHeader* cmpHeader = Entity_GetFirstComponentOfType(firstEnt, RAYGE_COMPONENTTYPE_SPATIAL);
+
+		if ( cmpHeader )
+		{
+			COMPONENTDATA_SPATIAL(cmpHeader)->angles.yaw += 3.0f;
+		}
+	}
+
 	Renderer_AddDebugFlags(RENDERER_DBG_DRAW_LOCATIONS);
 	BeginDrawing();
 	ClearBackground(BLACK);

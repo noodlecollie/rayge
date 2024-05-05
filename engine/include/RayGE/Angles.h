@@ -133,7 +133,8 @@ static inline EulerAngles DirectionToEulerAngles(Vector3 direction)
 			pitch = 90.0f;
 		}
 
-		return (EulerAngles) {pitch, 0.0f, 0.0f};
+		EulerAngles outAngles = {pitch, 0.0f, 0.0f};
+		return outAngles;
 	}
 
 	float yaw = atan2f(direction.y, direction.x) * RAD2DEG;
@@ -144,5 +145,6 @@ static inline EulerAngles DirectionToEulerAngles(Vector3 direction)
 	float pitch = atan2f(-direction.z, hyp) * RAD2DEG;
 	pitch = NormaliseDegreeValue(pitch + 180.0f) - 180.0f;
 
-	return (EulerAngles) {pitch, yaw, 0};
+	EulerAngles outAngles = {pitch, yaw, 0};
+	return outAngles;
 }
