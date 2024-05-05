@@ -95,21 +95,27 @@ static bool RunFrame(void)
 			continue;
 		}
 
+		Vector3 forward;
+		Vector3 right;
+		Vector3 up;
+
+		EulerAnglesToBasis(spatial->data.angles, &forward, &right, &up);
+
 		Vector3 start = {0, 0, 0};
 		Vector3 end = {0, 0, 0};
 
-		start = Vector3Add(spatial->data.position, (Vector3) {-3, 0, 0});
-		end = Vector3Add(spatial->data.position, (Vector3) {3, 0, 0});
+		start = Vector3Add(spatial->data.position, Vector3Scale(forward, -3.0f));
+		end = Vector3Add(spatial->data.position, Vector3Scale(forward, 3.0f));
 		DrawLine3D(start, end, RED);
 		DrawCircle3D(end, 0.5f, (Vector3) {1, 0, 0}, 0.0f, RED);
 
-		start = Vector3Add(spatial->data.position, (Vector3) {0, -3, 0});
-		end = Vector3Add(spatial->data.position, (Vector3) {0, 3, 0});
+		start = Vector3Add(spatial->data.position, Vector3Scale(right, -3.0f));
+		end = Vector3Add(spatial->data.position, Vector3Scale(right, 3.0f));
 		DrawLine3D(start, end, GREEN);
 		DrawCircle3D(end, 0.5f, (Vector3) {0, 1, 0}, 0.0f, GREEN);
 
-		start = Vector3Add(spatial->data.position, (Vector3) {0, 0, -3});
-		end = Vector3Add(spatial->data.position, (Vector3) {0, 0, 3});
+		start = Vector3Add(spatial->data.position, Vector3Scale(up, -3.0f));
+		end = Vector3Add(spatial->data.position, Vector3Scale(up, 3.0f));
 		DrawLine3D(start, end, BLUE);
 		DrawCircle3D(end, 0.5f, (Vector3) {0, 0, 1}, 0.0f, BLUE);
 	}
