@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <math.h>
 #include "RayGE/Math.h"
 
@@ -70,6 +71,8 @@ static inline EulerAngles NormaliseEulerAngles(EulerAngles angles)
 
 	// Now normalise yaw.
 	angles.yaw = NormaliseDegreeValue(angles.yaw);
+
+	return angles;
 }
 
 static inline void EulerAnglesToBasis(EulerAngles angles, Vector3* forward, Vector3* right, Vector3* up)
@@ -147,4 +150,9 @@ static inline EulerAngles DirectionToEulerAngles(Vector3 direction)
 
 	EulerAngles outAngles = {pitch, yaw, 0};
 	return outAngles;
+}
+
+static inline bool EulerAnglesEqual(EulerAngles a, EulerAngles b)
+{
+	return FloatEquals(a.pitch, b.pitch) && FloatEquals(a.yaw, b.yaw) && FloatEquals(a.roll, b.roll);
 }

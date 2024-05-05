@@ -3,13 +3,74 @@
 
 static bool operator==(const Vector3& a, const Vector3& b)
 {
-	return Vector3Equals(a, b);
+	return ::Vector3Equals(a, b);
+}
+
+static bool operator==(const EulerAngles& a, const EulerAngles& b)
+{
+	return ::EulerAnglesEqual(a, b);
 }
 
 static std::ostream& operator<<(std::ostream& os, const Vector3& value)
 {
 	os << "(" << value.x << ", " << value.y << ", " << value.z << ")";
 	return os;
+}
+
+static std::ostream& operator<<(std::ostream& os, const EulerAngles& value)
+{
+	os << "(" << value.pitch << ", " << value.yaw << ", " << value.roll << ")";
+	return os;
+}
+
+static EulerAngles FromRaylibAngles(Vector3 in)
+{
+	return NormaliseEulerAngles(EulerAngles {RAD2DEG * in.y, RAD2DEG * in.z, RAD2DEG * in.x});
+}
+
+static EulerAngles MakeAnglesSimple(const Vector3& axis, float degrees)
+{
+	Vector3 out = QuaternionToEuler(QuaternionFromAxisAngle(axis, DEG2RAD * degrees));
+	return FromRaylibAngles(out);
+}
+
+TEST_CASE("Angle normalisation is correct", "[angles]")
+{
+	CHECK(NormaliseDegreeValue(0.0f) == 0.0f);
+	CHECK(NormaliseDegreeValue(-0.0f) == 0.0f);
+	CHECK(NormaliseDegreeValue(90.0f) == 90.0f);
+	CHECK(NormaliseDegreeValue(180.0f) == 180.0f);
+	CHECK(NormaliseDegreeValue(270.0f) == 270.0f);
+	CHECK(NormaliseDegreeValue(360.0f) == 0.0f);
+	CHECK(NormaliseDegreeValue(-90.0f) == 270.0f);
+	CHECK(NormaliseDegreeValue(-180.0f) == 180.0f);
+	CHECK(NormaliseDegreeValue(-270.0f) == 90.0f);
+	CHECK(NormaliseDegreeValue(-360.0f) == 0.0f);
+	CHECK(NormaliseDegreeValue(45.0f) == 45.0f);
+	CHECK(NormaliseDegreeValue(-45.0f) == 315.0f);
+
+	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, 0.0f, 0.0f}) == EulerAngles{0.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, 90.0f, 0.0f}) == EulerAngles{0.0f, 90.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, 180.0f, 0.0f}) == EulerAngles{0.0f, 180.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, 270.0f, 0.0f}) == EulerAngles{0.0f, 270.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, 360.0f, 0.0f}) == EulerAngles{0.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, -90.0f, 0.0f}) == EulerAngles{0.0f, 270.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, -180.0f, 0.0f}) == EulerAngles{0.0f, 180.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, -270.0f, 0.0f}) == EulerAngles{0.0f, 90.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, -360.0f, 0.0f}) == EulerAngles{0.0f, 0.0f, 0.0f});
+
+	CHECK(NormaliseEulerAngles(EulerAngles{90.0f, 0.0f, 0.0f}) == EulerAngles{90.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{-90.0f, 0.0f, 0.0f}) == EulerAngles{-90.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{180.0f, 0.0f, 0.0f}) == EulerAngles{0.0f, 180.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{-180.0f, 0.0f, 0.0f}) == EulerAngles{0.0f, 180.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{270.0f, 0.0f, 0.0f}) == EulerAngles{-90.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{-270.0f, 0.0f, 0.0f}) == EulerAngles{90.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{45.0f, 0.0f, 0.0f}) == EulerAngles{45.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{-45.0f, 0.0f, 0.0f}) == EulerAngles{-45.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{135.0f, 0.0f, 0.0f}) == EulerAngles{45.0f, 180.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles{-135.0f, 0.0f, 0.0f}) == EulerAngles{-45.0f, 180.0f, 0.0f});
+
+	// TODO: Roll
 }
 
 TEST_CASE("Angles convert to the correct direction vectors", "[angles]")
@@ -40,6 +101,12 @@ TEST_CASE("Angles convert to the correct direction vectors", "[angles]")
 	CHECK(EulerAnglesToDirection(EulerAngles {0.0f, -180.0f, 0.0f}) == Vector3 {-1.0f, 0.0f, 0.0f});
 	CHECK(EulerAnglesToDirection(EulerAngles {0.0f, -180.0f, 10.0f}) == Vector3 {-1.0f, 0.0f, 0.0f});
 
+	// Yaw 360 degrees
+	CHECK(EulerAnglesToDirection(EulerAngles {0.0f, 360.0f, 0.0f}) == Vector3 {1.0f, 0.0f, 0.0f});
+	CHECK(EulerAnglesToDirection(EulerAngles {0.0f, 360.0f, 10.0f}) == Vector3 {1.0f, 0.0f, 0.0f});
+	CHECK(EulerAnglesToDirection(EulerAngles {0.0f, -360.0f, 0.0f}) == Vector3 {1.0f, 0.0f, 0.0f});
+	CHECK(EulerAnglesToDirection(EulerAngles {0.0f, -360.0f, 10.0f}) == Vector3 {1.0f, 0.0f, 0.0f});
+
 	// Up
 	CHECK(EulerAnglesToDirection(EulerAngles {-90.0f, 0.0f, 0.0f}) == Vector3 {0.0f, 0.0f, 1.0f});
 	CHECK(EulerAnglesToDirection(EulerAngles {-90.0f, 0.0f, 10.0f}) == Vector3 {0.0f, 0.0f, 1.0f});
@@ -57,4 +124,29 @@ TEST_CASE("Angles convert to the correct direction vectors", "[angles]")
 	dirToRotate = Vector3RotateByAxisAngle(dirToRotate, Vector3 {0.0f, 0.0f, 1.0f}, DEG2RAD * OBLIQUE_YAW);
 
 	CHECK(EulerAnglesToDirection(EulerAngles {OBLIQUE_PITCH, OBLIQUE_YAW, 0.0f}) == dirToRotate);
+	CHECK(EulerAnglesToDirection(EulerAngles {OBLIQUE_PITCH, OBLIQUE_YAW, 10.0f}) == dirToRotate);
+}
+
+// This is to make sure that the Raylib functions produce the results we expect,
+// given they could be eg. a different handedness.
+TEST_CASE("Raylib Euler angle functions produce correct results", "[angles]")
+{
+	// Default
+	CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, 0.0f) == EulerAngles {0.0f, 0.0f, 0.0f});
+
+	// Yaw 90 degrees counter-clockwise
+	CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, 90.0f) == EulerAngles {0.0f, 90.0f, 0.0f});
+	CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, -270.0f) == EulerAngles {0.0f, 90.0f, 0.0f});
+
+	// Yaw 90 degrees clockwise
+	CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, 270.0f) == EulerAngles {0.0f, 270.0f, 0.0f});
+	CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, -90.0f) == EulerAngles {0.0f, 270.0f, 0.0f});
+
+	// Yaw 180 degrees
+	CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, 180.0f) == EulerAngles {0.0f, 180.0f, 0.0f});
+	CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, -180.0f) == EulerAngles {0.0f, 180.0f, 0.0f});
+
+	// // Yaw 360 degrees
+	// CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, 360.0f) == EulerAngles {0.0f, 0.0f, 0.0f});
+	// CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, -360.0f) == EulerAngles {0.0f, 0.0f, 0.0f});
 }
