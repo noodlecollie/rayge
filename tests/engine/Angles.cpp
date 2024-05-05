@@ -34,6 +34,14 @@ static EulerAngles MakeAnglesSimple(const Vector3& axis, float degrees)
 	return FromRaylibAngles(out);
 }
 
+static bool FuzzyEquals(const EulerAngles& a, const EulerAngles& b)
+{
+	static constexpr float COMPARE_EPSILON = 0.0001;
+
+	return fabsf(a.pitch - b.pitch) < COMPARE_EPSILON && fabsf(a.yaw - b.yaw) < COMPARE_EPSILON &&
+		fabsf(a.roll - b.roll) < COMPARE_EPSILON;
+}
+
 TEST_CASE("Angle normalisation is correct", "[angles]")
 {
 	CHECK(NormaliseDegreeValue(0.0f) == 0.0f);
@@ -49,26 +57,26 @@ TEST_CASE("Angle normalisation is correct", "[angles]")
 	CHECK(NormaliseDegreeValue(45.0f) == 45.0f);
 	CHECK(NormaliseDegreeValue(-45.0f) == 315.0f);
 
-	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, 0.0f, 0.0f}) == EulerAngles{0.0f, 0.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, 90.0f, 0.0f}) == EulerAngles{0.0f, 90.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, 180.0f, 0.0f}) == EulerAngles{0.0f, 180.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, 270.0f, 0.0f}) == EulerAngles{0.0f, 270.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, 360.0f, 0.0f}) == EulerAngles{0.0f, 0.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, -90.0f, 0.0f}) == EulerAngles{0.0f, 270.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, -180.0f, 0.0f}) == EulerAngles{0.0f, 180.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, -270.0f, 0.0f}) == EulerAngles{0.0f, 90.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{0.0f, -360.0f, 0.0f}) == EulerAngles{0.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 0.0f, 0.0f}) == EulerAngles {0.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 90.0f, 0.0f}) == EulerAngles {0.0f, 90.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 180.0f, 0.0f}) == EulerAngles {0.0f, 180.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 270.0f, 0.0f}) == EulerAngles {0.0f, 270.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 360.0f, 0.0f}) == EulerAngles {0.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, -90.0f, 0.0f}) == EulerAngles {0.0f, 270.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, -180.0f, 0.0f}) == EulerAngles {0.0f, 180.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, -270.0f, 0.0f}) == EulerAngles {0.0f, 90.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, -360.0f, 0.0f}) == EulerAngles {0.0f, 0.0f, 0.0f});
 
-	CHECK(NormaliseEulerAngles(EulerAngles{90.0f, 0.0f, 0.0f}) == EulerAngles{90.0f, 0.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{-90.0f, 0.0f, 0.0f}) == EulerAngles{-90.0f, 0.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{180.0f, 0.0f, 0.0f}) == EulerAngles{0.0f, 180.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{-180.0f, 0.0f, 0.0f}) == EulerAngles{0.0f, 180.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{270.0f, 0.0f, 0.0f}) == EulerAngles{-90.0f, 0.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{-270.0f, 0.0f, 0.0f}) == EulerAngles{90.0f, 0.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{45.0f, 0.0f, 0.0f}) == EulerAngles{45.0f, 0.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{-45.0f, 0.0f, 0.0f}) == EulerAngles{-45.0f, 0.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{135.0f, 0.0f, 0.0f}) == EulerAngles{45.0f, 180.0f, 0.0f});
-	CHECK(NormaliseEulerAngles(EulerAngles{-135.0f, 0.0f, 0.0f}) == EulerAngles{-45.0f, 180.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {90.0f, 0.0f, 0.0f}) == EulerAngles {90.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {-90.0f, 0.0f, 0.0f}) == EulerAngles {-90.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {180.0f, 0.0f, 0.0f}) == EulerAngles {0.0f, 180.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {-180.0f, 0.0f, 0.0f}) == EulerAngles {0.0f, 180.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {270.0f, 0.0f, 0.0f}) == EulerAngles {-90.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {-270.0f, 0.0f, 0.0f}) == EulerAngles {90.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {45.0f, 0.0f, 0.0f}) == EulerAngles {45.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {-45.0f, 0.0f, 0.0f}) == EulerAngles {-45.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {135.0f, 0.0f, 0.0f}) == EulerAngles {45.0f, 180.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {-135.0f, 0.0f, 0.0f}) == EulerAngles {-45.0f, 180.0f, 0.0f});
 
 	// TODO: Roll
 }
@@ -129,7 +137,7 @@ TEST_CASE("Angles convert to the correct direction vectors", "[angles]")
 
 // This is to make sure that the Raylib functions produce the results we expect,
 // given they could be eg. a different handedness.
-TEST_CASE("Raylib Euler angle functions produce correct results", "[angles]")
+TEST_CASE("Raylib Euler angle functions produce correct results", "[angles][debug_this]")
 {
 	// Default
 	CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, 0.0f) == EulerAngles {0.0f, 0.0f, 0.0f});
@@ -146,7 +154,7 @@ TEST_CASE("Raylib Euler angle functions produce correct results", "[angles]")
 	CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, 180.0f) == EulerAngles {0.0f, 180.0f, 0.0f});
 	CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, -180.0f) == EulerAngles {0.0f, 180.0f, 0.0f});
 
-	// // Yaw 360 degrees
-	// CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, 360.0f) == EulerAngles {0.0f, 0.0f, 0.0f});
-	// CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, -360.0f) == EulerAngles {0.0f, 0.0f, 0.0f});
+	// Yaw 360 degrees
+	CHECK(FuzzyEquals(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, 360.0f), EulerAngles {0.0f, 0.0f, 0.0f}));
+	CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, -360.0f) == EulerAngles {0.0f, 0.0f, 0.0f});
 }

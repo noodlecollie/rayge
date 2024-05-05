@@ -23,19 +23,32 @@ typedef struct EulerAngles
 // Ensures value is in range [0 360).
 static inline float NormaliseDegreeValue(float val)
 {
+	// Don't do this with tiny values as it can cause unexpected behaviour.
+	if ( FloatEquals(val, 0.0f) )
+	{
+		return 0.0f;
+	}
+
 	float modVal = fmodf(val, 360.0f);
 
-	if ( modVal >= 0.0f )
+	if ( modVal == 0.0f )
 	{
-		// We can just return this value as-is.
-		// This abs call may seem redundant, but it means that
-		// we always return +0 instead of -0.
-		return fabsf(modVal);
+		// Make sure the 0 we return is positive.
+		return 0.0f;
+	}
+	else if ( modVal > 0.0f  )
+	{
+		return modVal;
 	}
 
 	// Value is negative, and represents something we should
 	// subtract from 360 (by adding the negative number).
-	return 360.0f + modVal;
+	float outVal = 360.0f + modVal;
+
+	// Sometimes, if modVal is really small, the result
+	// of the above can just be 360. If this is the case,
+	// return 0 instead.
+	return FloatEquals(outVal, 360.0f) ? 0.0f : outVal;
 }
 
 // Normalises angles as follows:
