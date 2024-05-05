@@ -5,6 +5,10 @@ add_subdirectory(wzl-cutl)
 add_subdirectory(cargs-1.0.3)
 add_subdirectory(debugbreak-1.0)
 
+if(BUILD_TESTING)
+	add_subdirectory(catch2-3.5.4)
+endif()
+
 if(WIN32)
 	add_subdirectory(pthreads-win32)
 endif()

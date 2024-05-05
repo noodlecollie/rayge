@@ -1,18 +1,25 @@
 include(rayge_definitions)
 
-macro(generate_engine_install install_root)
-	install(TARGETS ${TARGETNAME_ENGINE}
-		# This is only for Windows.
-		# If games want to use the API, they will need the .lib file
-		# to be read by the linker. This is not the same as the
-		# engine being statically compiled - the shared engine
-		# library should live alongside the launcher, as specified below.
-		ARCHIVE DESTINATION ${install_root}/api/lib
+macro(generate_engine_install install_root runtime_only)
+	if(${runtime_only})
+		install(TARGETS ${TARGETNAME_ENGINE}
+			RUNTIME DESTINATION ${install_root}
+			LIBRARY DESTINATION ${install_root}
+		)
+	else()
+		install(TARGETS ${TARGETNAME_ENGINE}
+			# This is only for Windows.
+			# If games want to use the API, they will need the .lib file
+			# to be read by the linker. This is not the same as the
+			# engine being statically compiled - the shared engine
+			# library should live alongside the launcher, as specified below.
+			ARCHIVE DESTINATION ${install_root}/api/lib
 
-		RUNTIME DESTINATION ${install_root}
-		LIBRARY DESTINATION ${install_root}
-		FILE_SET HEADERS DESTINATION ${install_root}/api/include
-	)
+			RUNTIME DESTINATION ${install_root}
+			LIBRARY DESTINATION ${install_root}
+			FILE_SET HEADERS DESTINATION ${install_root}/api/include
+		)
+	endif()
 
 	install(TARGETS ${TARGETNAME_LAUNCHER}
 		DESTINATION ${install_root}

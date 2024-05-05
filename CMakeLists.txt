@@ -9,9 +9,14 @@ set(CMAKE_POSITION_INDEPENDENT_CODE YES)
 
 option(CMAKE_COMPILE_WARNING_AS_ERROR "If set, any compiler warnings are treated as errors." TRUE)
 option(INSTALL_SANITY_TEST "If set, a separate directory will be created under the install prefix for the sanity test game." FALSE)
+option(BUILD_TESTING "If set, builds tests for the engine" OFF)
 
 # This must go here, so that it is configured before the later options are set up.
 add_subdirectory(thirdparty)
+
+if(BUILD_TESTING)
+	enable_testing()
+endif()
 
 include(rayge_definitions)
 include(rayge_utilities)
@@ -49,8 +54,12 @@ add_subdirectory(engine)
 add_subdirectory(launcher)
 add_subdirectory(gamelib_sanitytest)
 
-generate_engine_install(${INSTALL_DEST})
+if(BUILD_TESTING)
+add_subdirectory(tests)
+endif()
+
+generate_engine_install(${INSTALL_DEST} FALSE)
 
 if(INSTALL_SANITY_TEST)
-	generate_engine_install(${INSTALL_DEST_SANITY_TEST})
+	generate_engine_install(${INSTALL_DEST_SANITY_TEST} TRUE)
 endif()

@@ -4,3 +4,6 @@
 [submodule "thirdparty/debugbreak-1.0/debugbreak-1.0"]
 	path = thirdparty/debugbreak-1.0/debugbreak-1.0
 	url = https://github.com/scottt/debugbreak.git
+[submodule "thirdparty/catch2-3.5.4/catch2-3.5.4"]
+	path = thirdparty/catch2-3.5.4/catch2-3.5.4
+	url = https://github.com/catchorg/Catch2.git
