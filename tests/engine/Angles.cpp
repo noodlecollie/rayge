@@ -25,7 +25,7 @@ static std::ostream& operator<<(std::ostream& os, const EulerAngles& value)
 
 static EulerAngles FromRaylibAngles(Vector3 in)
 {
-	return NormaliseEulerAngles(EulerAngles {RAD2DEG * in.y, RAD2DEG * in.z, RAD2DEG * in.x});
+	return NormaliseEulerAngles(CanonicalEulerAngles(in));
 }
 
 static EulerAngles MakeAnglesSimple(const Vector3& axis, float degrees)
@@ -57,6 +57,10 @@ TEST_CASE("Angle normalisation is correct", "[angles]")
 	CHECK(NormaliseDegreeValue(45.0f) == 45.0f);
 	CHECK(NormaliseDegreeValue(-45.0f) == 315.0f);
 
+	// Coalesce really small values:
+	CHECK(NormaliseDegreeValue(-0.0000001f) == 0.0f);
+	CHECK(NormaliseDegreeValue(0.0000001f) == 0.0f);
+
 	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 0.0f, 0.0f}) == EulerAngles {0.0f, 0.0f, 0.0f});
 	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 90.0f, 0.0f}) == EulerAngles {0.0f, 90.0f, 0.0f});
 	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 180.0f, 0.0f}) == EulerAngles {0.0f, 180.0f, 0.0f});
@@ -78,12 +82,19 @@ TEST_CASE("Angle normalisation is correct", "[angles]")
 	CHECK(NormaliseEulerAngles(EulerAngles {135.0f, 0.0f, 0.0f}) == EulerAngles {45.0f, 180.0f, 0.0f});
 	CHECK(NormaliseEulerAngles(EulerAngles {-135.0f, 0.0f, 0.0f}) == EulerAngles {-45.0f, 180.0f, 0.0f});
 
-	// TODO: Roll
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 0.0f, 90.0f}) == EulerAngles {0.0f, 0.0f, 90.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 0.0f, -90.0f}) == EulerAngles {0.0f, 0.0f, -90.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 0.0f, 180.0f}) == EulerAngles {0.0f, 0.0f, -180.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 0.0f, -180.0f}) == EulerAngles {0.0f, 0.0f, -180.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 0.0f, 270.0f}) == EulerAngles {0.0f, 0.0f, -90.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 0.0f, -270.0f}) == EulerAngles {0.0f, 0.0f, 90.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 0.0f, 360.0f}) == EulerAngles {0.0f, 0.0f, 0.0f});
+	CHECK(NormaliseEulerAngles(EulerAngles {0.0f, 0.0f, -360.0f}) == EulerAngles {0.0f, 0.0f, 0.0f});
 }
 
 TEST_CASE("Angles convert to the correct direction vectors", "[angles]")
 {
-	// Roll should not affect any of these
+	// Roll should not affect any of these.
 
 	// Default
 	CHECK(EulerAnglesToDirection(EulerAngles {0.0f, 0.0f, 0.0f}) == Vector3 {1.0f, 0.0f, 0.0f});
@@ -137,7 +148,7 @@ TEST_CASE("Angles convert to the correct direction vectors", "[angles]")
 
 // This is to make sure that the Raylib functions produce the results we expect,
 // given they could be eg. a different handedness.
-TEST_CASE("Raylib Euler angle functions produce correct results", "[angles][debug_this]")
+TEST_CASE("Raylib Euler angle functions produce correct results", "[angles]")
 {
 	// Default
 	CHECK(MakeAnglesSimple(Vector3 {0.0f, 0.0f, 1.0f}, 0.0f) == EulerAngles {0.0f, 0.0f, 0.0f});

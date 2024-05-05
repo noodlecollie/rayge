@@ -54,7 +54,7 @@ static inline float NormaliseDegreeValue(float val)
 // Normalises angles as follows:
 // - Pitch converted to [-90 90]
 // - Yaw converted to [0 360)
-// - Roll converted to [-180 180]
+// - Roll converted to [-180 180)
 static inline EulerAngles NormaliseEulerAngles(EulerAngles angles)
 {
 	// Roll is easy.
@@ -169,4 +169,13 @@ static inline EulerAngles DirectionToEulerAngles(Vector3 direction)
 static inline bool EulerAnglesEqual(EulerAngles a, EulerAngles b)
 {
 	return FloatEquals(a.pitch, b.pitch) && FloatEquals(a.yaw, b.yaw) && FloatEquals(a.roll, b.roll);
+}
+
+// Raymath has a couple of functions which return Euler angles, but these
+// have components in a different order, and whose angles are radians.
+// This function converts back to out canonical angle type.
+static inline EulerAngles CanonicalEulerAngles(Vector3 raymathAngles)
+{
+	EulerAngles outAngles =  {RAD2DEG * raymathAngles.y, RAD2DEG * raymathAngles.z, RAD2DEG * raymathAngles.x};
+	return outAngles;
 }
