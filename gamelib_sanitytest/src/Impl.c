@@ -18,7 +18,7 @@ static const RayGE_GameLib_Callbacks_V1 g_Callbacks = {
 	// Scene
 	{
 		Scene_Begin,
-		Scene_End
+		Scene_End,
 	}
 };
 

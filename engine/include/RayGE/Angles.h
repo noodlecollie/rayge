@@ -43,11 +43,11 @@ static inline float NormaliseDegreeValue(float val)
 static inline EulerAngles NormaliseEulerAngles(EulerAngles angles)
 {
 	// Roll is easy.
-	angles.roll = NormaliseDegreeValue(angles.roll) - 180.0f;
+	angles.roll = NormaliseDegreeValue(angles.roll + 180.0f) - 180.0f;
 
 	// Pitch may affect yaw.
 	// Begin with the interval [-180 180).
-	angles.pitch = NormaliseDegreeValue(angles.pitch) - 180.0f;
+	angles.pitch = NormaliseDegreeValue(angles.pitch + 180.0f) - 180.0f;
 
 	// Is the pitch wild enough to flip our yaw?
 	if ( angles.pitch < -90.0f )
@@ -137,22 +137,12 @@ static inline EulerAngles DirectionToEulerAngles(Vector3 direction)
 	}
 
 	float yaw = atan2f(direction.y, direction.x) * RAD2DEG;
+	yaw = NormaliseDegreeValue(yaw);
 
-	// Will never be less than -360, so we can just do this:
-	if ( yaw < 360.0f )
-	{
-		yaw += 360.0f;
-	}
-
-	// TODO: We need to check that this calculates pitch
-	// in the correct direction.
 	float hyp = sqrtf((direction.x * direction.x) + (direction.y * direction.y));
-	float pitch = atan2f(direction.z, hyp) * RAD2DEG;
 
-	if ( pitch < 0 )
-	{
-		pitch += 360;
-	}
+	float pitch = atan2f(-direction.z, hyp) * RAD2DEG;
+	pitch = NormaliseDegreeValue(pitch + 180.0f) - 180.0f;
 
 	return (EulerAngles) {pitch, yaw, 0};
 }
