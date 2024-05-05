@@ -70,6 +70,7 @@ target_sources(${TARGETNAME_ENGINE}
 	include/RayGE/APIs/Engine.h
 	include/RayGE/APIs/Logging.h
 	include/RayGE/APIs/Scene.h
+	include/RayGE/Angles.h
 	include/RayGE/Math.h
 	include/RayGE/Platform.h
 	include/RayGE/SceneTypes.h

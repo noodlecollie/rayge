@@ -147,20 +147,6 @@
     #error "C++11 or later is required. Add -std=c++11"
 #endif
 
-// NOTE: We set some defines with some data types declared by raylib
-// Other modules (raymath, rlgl) also require some of those types, so,
-// to be able to use those other modules as standalone (not depending on raylib)
-// this defines are very useful for internal check and avoid type (re)definitions
-#define RL_COLOR_TYPE
-#define RL_RECTANGLE_TYPE
-#ifndef RAYMATH_H
-#define RL_VECTOR2_TYPE
-#define RL_VECTOR3_TYPE
-#define RL_VECTOR4_TYPE
-#define RL_QUATERNION_TYPE
-#define RL_MATRIX_TYPE
-#endif // RAYMATH_H
-
 // Some Basic Colors
 // NOTE: Custom raylib color palette for amazing visuals on WHITE background
 #define LIGHTGRAY  CLITERAL(Color){ 200, 200, 200, 255 }   // Light Gray
@@ -202,20 +188,27 @@
     #define RL_BOOL_TYPE
 #endif
 
-#ifndef RAYMATH_H
+#ifndef RL_VECTOR2_TYPE
+#define RL_VECTOR2_TYPE
 // Vector2, 2 components
 typedef struct Vector2 {
     float x;                // Vector x component
     float y;                // Vector y component
 } Vector2;
+#endif // RL_VECTOR2_TYPE
 
+#ifndef RL_VECTOR3_TYPE
+#define RL_VECTOR3_TYPE
 // Vector3, 3 components
 typedef struct Vector3 {
     float x;                // Vector x component
     float y;                // Vector y component
     float z;                // Vector z component
 } Vector3;
+#endif // RL_VECTOR3_TYPE
 
+#ifndef RL_VECTOR4_TYPE
+#define RL_VECTOR4_TYPE
 // Vector4, 4 components
 typedef struct Vector4 {
     float x;                // Vector x component
@@ -223,10 +216,16 @@ typedef struct Vector4 {
     float z;                // Vector z component
     float w;                // Vector w component
 } Vector4;
+#endif // RL_VECTOR4_TYPE
 
+#ifndef RL_QUATERNION_TYPE
+#define RL_QUATERNION_TYPE
 // Quaternion, 4 components (Vector4 alias)
 typedef Vector4 Quaternion;
+#endif // RL_QUATERNION_TYPE
 
+#ifndef RL_MATRIX_TYPE
+#define RL_MATRIX_TYPE
 // Matrix, 4x4 components, column major, OpenGL style, right-handed
 typedef struct Matrix {
     float m0, m4, m8, m12;  // Matrix first row (4 components)
@@ -234,8 +233,10 @@ typedef struct Matrix {
     float m2, m6, m10, m14; // Matrix third row (4 components)
     float m3, m7, m11, m15; // Matrix fourth row (4 components)
 } Matrix;
-#endif // RAYMATH_H
+#endif // RL_MATRIX_TYPE
 
+#ifndef RL_COLOR_TYPE
+#define RL_COLOR_TYPE
 // Color, 4 components, R8G8B8A8 (32bit)
 typedef struct Color {
     unsigned char r;        // Color red value
@@ -243,7 +244,10 @@ typedef struct Color {
     unsigned char b;        // Color blue value
     unsigned char a;        // Color alpha value
 } Color;
+#endif // RL_COLOR_TYPE
 
+#ifndef RL_RECTANGLE_TYPE
+#define RL_RECTANGLE_TYPE
 // Rectangle, 4 components
 typedef struct Rectangle {
     float x;                // Rectangle top-left corner position x
@@ -251,6 +255,7 @@ typedef struct Rectangle {
     float width;            // Rectangle width
     float height;           // Rectangle height
 } Rectangle;
+#endif // RL_RECTANGLE_TYPE
 
 // Image, pixel data stored in CPU memory (RAM)
 typedef struct Image {
