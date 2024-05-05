@@ -466,7 +466,7 @@ void MemPool_DumpAllocInfo(void* memory)
 	LOG("==== Allocation info for 0x%p ====", memory);
 	LOG("  Head sentinel: 0x%08x", item->sentinel);
 	LOG("  Tail sentinel: 0x%08x", tail->sentinel);
-	LOG("  Pool: %d", item->pool ? item->pool->category : -1);
+	LOG("  Pool: %d", item->pool ? (int)item->pool->category : -1);
 	LOG("  Requested allocation size: %zu bytes", item->allocSize);
 	LOG("  Allocated from: %s:%d", SafeFileNameString(item), SafeFileLineNumber(item));
 

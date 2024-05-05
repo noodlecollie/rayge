@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdbool.h>
 #include <math.h>
 #include "RayGE/Math.h"

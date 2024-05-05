@@ -13,6 +13,8 @@ static const RayGE_GameLib_Callbacks_V1 g_Callbacks = {
 	{
 		Game_StartUp,
 		Game_ShutDown,
+		NULL,
+		NULL
 	},
 
 	// Scene
