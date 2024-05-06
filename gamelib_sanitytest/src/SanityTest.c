@@ -46,14 +46,16 @@ static void Scene_Begin(void)
 
 	RayGE_Component_Spatial* spatial = g_EngineAPI->scene.AddSpatialComponent(g_SubjectEntity);
 	spatial->position.x = -10.0f;
-	spatial->angles.pitch = -20.0f;
+	spatial->angles.pitch = 0.0f;
 
 	g_EngineAPI->log.PrintLine(RAYGE_LOG_INFO, "Sanity test: Adding camera entity");
 	g_CameraEntity = g_EngineAPI->scene.CreateEntity();
 
 	RayGE_Component_Spatial* cameraPos = g_EngineAPI->scene.AddSpatialComponent(g_CameraEntity);
 	cameraPos->position.x = 0.0f;
-	cameraPos->angles.roll = 45.0f;
+	cameraPos->angles.pitch = -20.0f;
+	cameraPos->angles.roll = 0.0f;
+	cameraPos->angles.yaw = 10.0f;
 
 	RayGE_Component_Camera* camera = g_EngineAPI->scene.AddCameraComponent(g_CameraEntity);
 	camera->fieldOfView = 80.0f;

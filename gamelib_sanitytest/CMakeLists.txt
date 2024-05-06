@@ -1,8 +1,8 @@
 include(rayge_install)
 
 add_library(${TARGETNAME_GAMELIB_SANITYTEST} SHARED
-	src/Impl.c
 	src/LibExport.h
+	src/SanityTest.c
 )
 
 target_link_libraries(${TARGETNAME_GAMELIB_SANITYTEST}
