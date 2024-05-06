@@ -146,6 +146,16 @@ TEST_CASE("Angles convert to the correct direction vectors", "[angles]")
 	CHECK(EulerAnglesToDirection(EulerAngles {OBLIQUE_PITCH, OBLIQUE_YAW, 10.0f}) == dirToRotate);
 }
 
+TEST_CASE("Direction vectors convert to the correct angles", "[angles]")
+{
+	CHECK(DirectionToEulerAngles(Vector3{1.0f, 0.0f, 0.0f}) == EulerAngles{0.0f, 0.0f, 0.0f});
+	CHECK(DirectionToEulerAngles(Vector3{-1.0f, 0.0f, 0.0f}) == EulerAngles{0.0f, 180.0f, 0.0f});
+	CHECK(DirectionToEulerAngles(Vector3{0.0f, 1.0f, 0.0f}) == EulerAngles{0.0f, 90.0f, 0.0f});
+	CHECK(DirectionToEulerAngles(Vector3{0.0f, -1.0f, 0.0f}) == EulerAngles{0.0f, 270.0f, 0.0f});
+	CHECK(DirectionToEulerAngles(Vector3{0.0f, 0.0f, 1.0f}) == EulerAngles{-90.0f, 0.0f, 0.0f});
+	CHECK(DirectionToEulerAngles(Vector3{0.0f, 0.0f, -1.0f}) == EulerAngles{90.0f, 0.0f, 0.0f});
+}
+
 // This is to make sure that the Raylib functions produce the results we expect,
 // given they could be eg. a different handedness.
 TEST_CASE("Raylib Euler angle functions produce correct results", "[angles]")
