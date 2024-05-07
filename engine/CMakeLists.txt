@@ -23,7 +23,11 @@ generate_export_header_template(
 	PRODUCER_DEFINE RAYGE_PRODUCER
 )
 
+configure_file(configure/VCS.h.in ${GENERATED_HEADER_DIR}/Identity/VCS.h)
+
 target_sources(${TARGETNAME_ENGINE} PRIVATE
+	${GENERATED_HEADER_DIR}/Identity/VCS.h
+
 	include/RayGE/Private/InterfaceUtils.h
 	include/RayGE/Private/Launcher.h
 
@@ -37,6 +41,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Game/GameData.c
 	src/Game/GameLoader.h
 	src/Game/GameLoader.c
+	src/Identity/Identity.h
+	src/Identity/Identity.c
 	src/JSON/JSONUtils.h
 	src/JSON/JSONUtils.c
 	src/Launcher/Launcher.c

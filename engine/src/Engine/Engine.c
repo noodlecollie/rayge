@@ -6,6 +6,7 @@
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
 #include "Testing.h"
+#include "Identity/Identity.h"
 
 // TODO: Remove this once we move the rendering elsewhere
 #include "Subsystems/RendererSubsystem.h"
@@ -132,7 +133,9 @@ void Engine_StartUp(void)
 	SubsystemManager_InitAll();
 
 	g_Initialised = true;
+
 	LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, "RayGE engine initialised.");
+	LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, "%s", Identity_GetBuildDescription());
 
 #if RAYGE_BUILD_TESTING()
 	LoggingSubsystem_PrintLine(RAYGE_LOG_WARNING, "Engine is built with test endpoints exposed.");

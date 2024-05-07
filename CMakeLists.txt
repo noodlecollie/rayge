@@ -28,6 +28,29 @@ include(rayge_utilities)
 # targets can make use of them.
 declare_dependent_file("${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib-5.0/raylib-5.0/src/raymath.h" RAYMATH_HEADER_PATH)
 
+set(VCS_COMMIT_ID "notset")
+set(VCS_TAG_ID "notset")
+
+find_package(Git QUIET)
+
+if(Git_FOUND)
+	execute_process(
+		COMMAND "${GIT_EXECUTABLE}" rev-parse --short HEAD
+		WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+		OUTPUT_VARIABLE VCS_COMMIT_ID
+		ERROR_QUIET
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+	)
+
+	execute_process(
+		COMMAND "${GIT_EXECUTABLE}" describe --tags
+		WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+		OUTPUT_VARIABLE VCS_TAG_ID
+		ERROR_QUIET
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+	)
+endif()
+
 if(MSVC)
 	add_compile_options(
 		/W4
