@@ -18,10 +18,13 @@ typedef struct RayGE_EntityHandle
 #define RAYGE_INIT_INVALID_ENT_HANDLE {~((size_t)0), 0}
 #define RAYGE_INVALID_ENT_HANDLE (RAYGE_TYPE_LITERAL(RayGE_EntityHandle) RAYGE_INIT_INVALID_ENT_HANDLE)
 
+typedef uint64_t RayGE_RenderableHandle;
+
 typedef enum RayGE_ComponentType
 {
 	RAYGE_COMPONENTTYPE_SPATIAL = 0,
 	RAYGE_COMPONENTTYPE_CAMERA,
+	RAYGE_COMPONENTTYPE_RENDERABLE,
 } RayGE_ComponentType;
 
 typedef struct RayGE_Component_Spatial
@@ -34,6 +37,11 @@ typedef struct RayGE_Component_Camera
 {
 	float fieldOfView;
 } RayGE_Component_Camera;
+
+typedef struct RayGE_Component_Renderable
+{
+	RayGE_RenderableHandle handle;
+} RayGE_Component_Renderable;
 
 // Computes whether a handle is valid.
 // This does not necessarily mean the entity that it

@@ -16,7 +16,9 @@ const RayGE_Engine_API_Current g_EngineAPI = {
 		SceneAPI_AddSpatialComponent,
 		SceneAPI_GetSpatialComponent,
 		SceneAPI_AddCameraComponent,
-		SceneAPI_GetCameraComponent
+		SceneAPI_GetCameraComponent,
+		SceneAPI_AddRenderableComponent,
+		SceneAPI_GetRenderableComponent,
 	}
 };
 

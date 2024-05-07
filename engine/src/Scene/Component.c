@@ -32,6 +32,11 @@ RayGE_ComponentImpl_Camera* Component_CreateCamera(void)
 	return CALLOC_COMPONENT(RayGE_ComponentImpl_Camera, RAYGE_COMPONENTTYPE_CAMERA);
 }
 
+RayGE_ComponentImpl_Renderable* Component_CreateRenderable(void)
+{
+	return CALLOC_COMPONENT(RayGE_ComponentImpl_Renderable, RAYGE_COMPONENTTYPE_RENDERABLE);
+}
+
 void* Component_CastImpl(
 	RayGE_ComponentHeader* header,
 	RayGE_ComponentType toType,

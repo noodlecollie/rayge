@@ -103,3 +103,44 @@ RayGE_Component_Camera* SceneAPI_GetCameraComponent(RayGE_EntityHandle entity)
 	RayGE_ComponentHeader* component = Entity_GetFirstComponentOfType(entPtr, RAYGE_COMPONENTTYPE_CAMERA);
 	return component ? COMPONENTDATA_CAMERA(component) : NULL;
 }
+
+RayGE_Component_Renderable* SceneAPI_AddRenderableComponent(RayGE_EntityHandle entity)
+{
+	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "AddRenderableComponent");
+
+	if ( !entPtr )
+	{
+		return NULL;
+	}
+
+	RayGE_ComponentHeader* existing = Entity_GetFirstComponentOfType(entPtr, RAYGE_COMPONENTTYPE_RENDERABLE);
+
+	if ( existing )
+	{
+		return COMPONENTDATA_RENDERABLE(existing);
+	}
+
+	RayGE_ComponentImpl_Renderable* component = Component_CreateRenderable();
+
+	if ( !Entity_AddComponent(entPtr, &component->header) )
+	{
+		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "AddRenderableComponent: failed to add component to entity.");
+		Component_FreeList(&component->header);
+		component = NULL;
+	}
+
+	return &component->data;
+}
+
+RayGE_Component_Renderable* SceneAPI_GetRenderableComponent(RayGE_EntityHandle entity)
+{
+	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "GetRenderableComponent");
+
+	if ( !entPtr )
+	{
+		return NULL;
+	}
+
+	RayGE_ComponentHeader* component = Entity_GetFirstComponentOfType(entPtr, RAYGE_COMPONENTTYPE_RENDERABLE);
+	return component ? COMPONENTDATA_RENDERABLE(component) : NULL;
+}

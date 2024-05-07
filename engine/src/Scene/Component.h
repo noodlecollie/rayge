@@ -30,10 +30,19 @@ typedef struct RayGE_ComponentImpl_Camera
 
 CHECK_COMPONENT_STRUCTURE(RayGE_ComponentImpl_Camera);
 
+typedef struct RayGE_ComponentImpl_Renderable
+{
+	RayGE_ComponentHeader header;
+	RayGE_Component_Renderable data;
+} RayGE_ComponentImpl_Renderable;
+
+CHECK_COMPONENT_STRUCTURE(RayGE_ComponentImpl_Renderable);
+
 void Component_FreeList(RayGE_ComponentHeader* head);
 
 RayGE_ComponentImpl_Spatial* Component_CreateSpatial(void);
 RayGE_ComponentImpl_Camera* Component_CreateCamera(void);
+RayGE_ComponentImpl_Renderable* Component_CreateRenderable(void);
 
 // Do not use this function directly - use the macros below instead.
 // If ensureTypeMatches is set, emits a fatal log error if the type does not match.
@@ -55,9 +64,14 @@ void* Component_CastImpl(
 	((RayGE_ComponentImpl_Camera*) \
 		 Component_CastImpl((header), RAYGE_COMPONENTTYPE_CAMERA, (mustSucceed), __FILE__, __LINE__))
 
+#define COMPONENTCAST_RENDERABLE(header, mustSucceed) \
+	((RayGE_ComponentImpl_Renderable*) \
+		 Component_CastImpl((header), RAYGE_COMPONENTTYPE_RENDERABLE, (mustSucceed), __FILE__, __LINE__))
+
 // The macros below cast from a component header to a data struct:
 
-#define GET_COMPONENT_DATA_PTR(header, typeName) (&COMPONENTCAST_##typeName(header, true)->data)
+#define GET_COMPONENT_DATA_PTR(header, castMacro) (&castMacro(header, true)->data)
 
-#define COMPONENTDATA_SPATIAL(header) GET_COMPONENT_DATA_PTR(header, SPATIAL)
-#define COMPONENTDATA_CAMERA(header) GET_COMPONENT_DATA_PTR(header, CAMERA)
+#define COMPONENTDATA_SPATIAL(header) GET_COMPONENT_DATA_PTR(header, COMPONENTCAST_SPATIAL)
+#define COMPONENTDATA_CAMERA(header) GET_COMPONENT_DATA_PTR(header, COMPONENTCAST_CAMERA)
+#define COMPONENTDATA_RENDERABLE(header) GET_COMPONENT_DATA_PTR(header, COMPONENTCAST_RENDERABLE)
