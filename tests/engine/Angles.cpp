@@ -36,7 +36,7 @@ static EulerAngles MakeAnglesSimple(const Vector3& axis, float degrees)
 
 static bool FuzzyEquals(const EulerAngles& a, const EulerAngles& b)
 {
-	static constexpr float COMPARE_EPSILON = 0.0001;
+	static constexpr float COMPARE_EPSILON = 0.0001f;
 
 	return fabsf(a.pitch - b.pitch) < COMPARE_EPSILON && fabsf(a.yaw - b.yaw) < COMPARE_EPSILON &&
 		fabsf(a.roll - b.roll) < COMPARE_EPSILON;
