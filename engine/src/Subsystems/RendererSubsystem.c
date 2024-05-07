@@ -24,11 +24,11 @@ void RendererSubsystem_Init(void)
 	g_Data = MEMPOOL_CALLOC_STRUCT(MEMPOOL_RENDERER, SubsystemData);
 
 	// TODO: Load title from game data
-	// TODO: Calculate most appropriate resolution
-	// based on preference for windowed/fullscreen
-	// and monitor resolution.
 	InitWindow(640, 480, "");
 	RAYGE_ENSURE(IsWindowReady(), "Could not create underlying window and OpenGL context");
+
+	// Must be done after window is created, or context will not be able to return the monitor dimensions.
+	SetWindowSize(GetMonitorWidth(0) / 2, GetMonitorHeight(0) / 2);
 
 	g_Data->defaultFont =
 		LoadFontFromMemory(".ttf", TTF_DMMono_Regular_Data, TTF_DMMONO_REGULAR_LENGTH, DEFAULT_FONT_SIZE, NULL, 0);
