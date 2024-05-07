@@ -8,9 +8,7 @@
 
 typedef struct Scene
 {
-	size_t maxEntities;
-	size_t entityCount;
-	RayGE_Entity* entities;
+	RayGE_EntityList* entities;
 } Scene;
 
 static Scene* g_Scene = NULL;
@@ -18,8 +16,7 @@ static Scene* g_Scene = NULL;
 static Scene* CreateScene(size_t maxEntities)
 {
 	Scene* scene = MEMPOOL_CALLOC_STRUCT(MEMPOOL_SCENE, Scene);
-	scene->maxEntities = RAYGE_MAX(maxEntities, 1);
-	scene->entities = Entity_AllocateList(scene->maxEntities);
+	scene->entities = Entity_AllocateList(RAYGE_MAX(maxEntities, 1));
 
 	return scene;
 }
@@ -33,7 +30,7 @@ static void DestroyScene(Scene* scene)
 
 	if ( scene->entities )
 	{
-		Entity_FreeList(scene->entities, scene->maxEntities);
+		Entity_FreeList(scene->entities);
 	}
 
 	MEMPOOL_FREE(scene);
@@ -69,12 +66,12 @@ bool Scene_IsCreated(void)
 
 size_t Scene_GetMaxEntities(void)
 {
-	return g_Scene ? g_Scene->maxEntities : 0;
+	return g_Scene ? Entity_GetListCapacity(g_Scene->entities) : 0;
 }
 
 size_t Scene_GetActiveEntities(void)
 {
-	return g_Scene ? g_Scene->entityCount : 0;
+	return g_Scene ? Entity_GetNumUsedSlots(g_Scene->entities) : 0;
 }
 
 RayGE_Entity* Scene_CreateEntity(void)
@@ -84,34 +81,38 @@ RayGE_Entity* Scene_CreateEntity(void)
 		return NULL;
 	}
 
-	if ( g_Scene->entityCount >= g_Scene->maxEntities )
+	if ( Entity_GetNumFreeSlots(g_Scene->entities) < 1 )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Max limit of %zu scene entities reached.", g_Scene->maxEntities);
+		LoggingSubsystem_PrintLine(
+			RAYGE_LOG_ERROR,
+			"Max limit of %zu scene entities reached.",
+			Entity_GetListCapacity(g_Scene->entities)
+		);
+
 		return NULL;
 	}
 
-	RayGE_Entity* ent = Entity_FindFirstFree(g_Scene->entities, g_Scene->maxEntities);
+	RayGE_Entity* ent = Entity_FindFirstFree(g_Scene->entities);
 
 	RAYGE_ENSURE(
 		ent,
 		"Expected to be able to find a free entity in scene with only %zu of %zu slots filled.",
-		g_Scene->entityCount,
-		g_Scene->maxEntities
+		Entity_GetNumFreeSlots(g_Scene->entities),
+		Entity_GetListCapacity(g_Scene->entities)
 	);
 
 	Entity_Acquire(ent);
-	++g_Scene->entityCount;
 
 	return ent;
 }
 
 RayGE_Entity* Scene_GetActiveEntity(size_t index)
 {
-	if ( !g_Scene || index >= g_Scene->maxEntities )
+	if ( !g_Scene || index >= Entity_GetListCapacity(g_Scene->entities) )
 	{
 		return NULL;
 	}
 
-	RayGE_Entity* entity = Entity_Get(g_Scene->entities, g_Scene->maxEntities, index);
+	RayGE_Entity* entity = Entity_Get(g_Scene->entities, index);
 	return Entity_IsInUse(entity) ? entity : NULL;
 }

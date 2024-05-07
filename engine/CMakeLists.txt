@@ -1,3 +1,7 @@
+# TODO: Rename the binaries if building in debug mode,
+# and allow launcher to use these if release binaries
+# are not found. This will allow us to swap out debug
+# and release versions of the engine when launching.
 add_library(${TARGETNAME_ENGINE} SHARED)
 
 include(generate_export_header_template)

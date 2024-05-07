@@ -36,7 +36,7 @@ void MemPoolSubsystem_Free(const char* file, int line, void* memory);
 // Debugging must be enabled (see MemPoolSubsystem_DebuggingEnabled()).
 void MemPool_DumpAllocInfo(void* memory);
 
-#define MEMPOOL_MALLOC(category, size) MemPoolSubsystem_Malloc(__FILE__, __LINE__, (category)(size))
+#define MEMPOOL_MALLOC(category, size) MemPoolSubsystem_Malloc(__FILE__, __LINE__, (category), (size))
 #define MEMPOOL_CALLOC(category, numElements, elementSize) \
 	MemPoolSubsystem_Calloc(__FILE__, __LINE__, (category), (numElements), (elementSize))
 #define MEMPOOL_REALLOC(category, memory, newSize) \
