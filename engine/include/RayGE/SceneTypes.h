@@ -16,7 +16,7 @@ typedef struct RayGE_EntityHandle
 // The first of these is valid in constant assignments.
 // The second (according to the -pedantic flag) is not.
 #define RAYGE_INIT_INVALID_ENT_HANDLE {~((size_t)0), 0}
-#define RAYGE_INVALID_ENT_HANDLE (RAYGE_TYPE_LITERAL(RayGE_EntityHandle) {~((size_t)0), 0})
+#define RAYGE_INVALID_ENT_HANDLE (RAYGE_TYPE_LITERAL(RayGE_EntityHandle) RAYGE_INIT_INVALID_ENT_HANDLE)
 
 typedef enum RayGE_ComponentType
 {

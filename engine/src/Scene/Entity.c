@@ -162,7 +162,7 @@ RayGE_EntityHandle Entity_CreateHandle(const RayGE_Entity* entity)
 	return (RayGE_EntityHandle) {entity->indexInParent, entity->key};
 }
 
-RayGE_Entity* Entity_GetEntityFromHandle(const RayGE_EntityList* list, RayGE_EntityHandle handle)
+RayGE_Entity* Entity_GetFromHandle(const RayGE_EntityList* list, RayGE_EntityHandle handle)
 {
 	if ( !list || !RayGE_EntityHandleIsValid(handle) )
 	{
@@ -170,7 +170,7 @@ RayGE_Entity* Entity_GetEntityFromHandle(const RayGE_EntityList* list, RayGE_Ent
 	}
 
 	RayGE_Entity* entity = Entity_Get(list, handle.index);
-	return entity && entity->key == handle.key ? entity : NULL;
+	return (entity && entity->isInUse && entity->key == handle.key) ? entity : NULL;
 }
 
 void Entity_Acquire(RayGE_Entity* entity)

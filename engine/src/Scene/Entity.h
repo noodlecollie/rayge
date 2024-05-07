@@ -15,7 +15,9 @@ RayGE_Entity* Entity_Get(const RayGE_EntityList* list, size_t index);
 RayGE_Entity* Entity_FindFirstFree(const RayGE_EntityList* list);
 
 RayGE_EntityHandle Entity_CreateHandle(const RayGE_Entity* entity);
-RayGE_Entity* Entity_GetEntityFromHandle(const RayGE_EntityList* list, RayGE_EntityHandle handle);
+
+// Entity must be in use, and the key must match.
+RayGE_Entity* Entity_GetFromHandle(const RayGE_EntityList* list, RayGE_EntityHandle handle);
 
 void Entity_Acquire(RayGE_Entity* entity);
 void Entity_Release(RayGE_Entity* entity);

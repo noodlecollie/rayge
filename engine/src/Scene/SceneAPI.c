@@ -10,13 +10,7 @@ static RayGE_Entity* GetEntityFromHandle(RayGE_EntityHandle handle, const char* 
 
 	if ( !entity )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Cannot %s using invalid entity handle.", operation);
-		return NULL;
-	}
-
-	if ( !Entity_IsInUse(entity) )
-	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Cannot %s for entity that is not in use.", operation);
+		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "%s: entity handle was not valid.", operation);
 		return NULL;
 	}
 
@@ -30,7 +24,7 @@ RayGE_EntityHandle SceneAPI_CreateEntity(void)
 
 RayGE_Component_Spatial* SceneAPI_AddSpatialComponent(RayGE_EntityHandle entity)
 {
-	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "add component");
+	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "AddSpatialComponent");
 
 	if ( !entPtr )
 	{
@@ -48,7 +42,7 @@ RayGE_Component_Spatial* SceneAPI_AddSpatialComponent(RayGE_EntityHandle entity)
 
 	if ( !Entity_AddComponent(entPtr, &component->header) )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Failed to add component to entity.");
+		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "AddSpatialComponent: failed to add component to entity.");
 		Component_FreeList(&component->header);
 		component = NULL;
 	}
@@ -58,7 +52,7 @@ RayGE_Component_Spatial* SceneAPI_AddSpatialComponent(RayGE_EntityHandle entity)
 
 RayGE_Component_Spatial* SceneAPI_GetSpatialComponent(RayGE_EntityHandle entity)
 {
-	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "get component");
+	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "GetSpatialComponent");
 
 	if ( !entPtr )
 	{
@@ -71,7 +65,7 @@ RayGE_Component_Spatial* SceneAPI_GetSpatialComponent(RayGE_EntityHandle entity)
 
 RayGE_Component_Camera* SceneAPI_AddCameraComponent(RayGE_EntityHandle entity)
 {
-	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "add component");
+	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "AddCameraComponent");
 
 	if ( !entPtr )
 	{
@@ -89,7 +83,7 @@ RayGE_Component_Camera* SceneAPI_AddCameraComponent(RayGE_EntityHandle entity)
 
 	if ( !Entity_AddComponent(entPtr, &component->header) )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Failed to add component to entity.");
+		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "AddCameraComponent: failed to add component to entity.");
 		Component_FreeList(&component->header);
 		component = NULL;
 	}
@@ -99,7 +93,7 @@ RayGE_Component_Camera* SceneAPI_AddCameraComponent(RayGE_EntityHandle entity)
 
 RayGE_Component_Camera* SceneAPI_GetCameraComponent(RayGE_EntityHandle entity)
 {
-	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "get component");
+	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "GetCameraComponent");
 
 	if ( !entPtr )
 	{

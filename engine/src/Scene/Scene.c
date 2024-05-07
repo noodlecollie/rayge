@@ -119,5 +119,5 @@ RayGE_Entity* Scene_GetActiveEntity(size_t index)
 
 RayGE_Entity* Scene_GetEntityFromHandle(RayGE_EntityHandle handle)
 {
-	return g_Scene ? Entity_GetEntityFromHandle(g_Scene->entities, handle) : NULL;
+	return g_Scene ? Entity_GetFromHandle(g_Scene->entities, handle) : NULL;
 }
