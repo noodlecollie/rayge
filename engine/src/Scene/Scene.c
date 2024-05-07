@@ -116,3 +116,8 @@ RayGE_Entity* Scene_GetActiveEntity(size_t index)
 	RayGE_Entity* entity = Entity_Get(g_Scene->entities, index);
 	return Entity_IsInUse(entity) ? entity : NULL;
 }
+
+RayGE_Entity* Scene_GetEntityFromHandle(RayGE_EntityHandle handle)
+{
+	return g_Scene ? Entity_GetEntityFromHandle(g_Scene->entities, handle) : NULL;
+}

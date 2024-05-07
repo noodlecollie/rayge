@@ -81,9 +81,11 @@ target_sources(${TARGETNAME_ENGINE}
 	${EXPORT_HEADER}
 	${RAYMATH_HEADER}
 	include/RayGE/APIs/Engine.h
+	include/RayGE/APIs/Game.h
 	include/RayGE/APIs/Logging.h
 	include/RayGE/APIs/Scene.h
 	include/RayGE/Angles.h
+	include/RayGE/InterfaceUtils.h
 	include/RayGE/Math.h
 	include/RayGE/Platform.h
 	include/RayGE/SceneTypes.h

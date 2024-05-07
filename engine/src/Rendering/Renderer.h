@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RayGE/SceneTypes.h"
+#include "Scene/Entity.h"
 #include "raylib.h"
 
 typedef enum Renderer_DebugFlag

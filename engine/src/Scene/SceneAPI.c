@@ -4,36 +4,40 @@
 #include "Scene/Entity.h"
 #include "Subsystems/LoggingSubsystem.h"
 
-static bool VerifyEntity(RayGE_Entity* entity, const char* operation)
+static RayGE_Entity* GetEntityFromHandle(RayGE_EntityHandle handle, const char* operation)
 {
+	RayGE_Entity* entity = Scene_GetEntityFromHandle(handle);
+
 	if ( !entity )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Cannot %s for null entity.", operation);
-		return false;
+		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Cannot %s using invalid entity handle.", operation);
+		return NULL;
 	}
 
 	if ( !Entity_IsInUse(entity) )
 	{
 		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Cannot %s for entity that is not in use.", operation);
-		return false;
+		return NULL;
 	}
 
-	return true;
+	return entity;
 }
 
-RayGE_Entity* SceneAPI_CreateEntity(void)
+RayGE_EntityHandle SceneAPI_CreateEntity(void)
 {
-	return Scene_CreateEntity();
+	return Entity_CreateHandle(Scene_CreateEntity());
 }
 
-RayGE_Component_Spatial* SceneAPI_AddSpatialComponent(RayGE_Entity* entity)
+RayGE_Component_Spatial* SceneAPI_AddSpatialComponent(RayGE_EntityHandle entity)
 {
-	if ( !VerifyEntity(entity, "add component") )
+	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "add component");
+
+	if ( !entPtr )
 	{
 		return NULL;
 	}
 
-	RayGE_ComponentHeader* existing = Entity_GetFirstComponentOfType(entity, RAYGE_COMPONENTTYPE_SPATIAL);
+	RayGE_ComponentHeader* existing = Entity_GetFirstComponentOfType(entPtr, RAYGE_COMPONENTTYPE_SPATIAL);
 
 	if ( existing )
 	{
@@ -42,7 +46,7 @@ RayGE_Component_Spatial* SceneAPI_AddSpatialComponent(RayGE_Entity* entity)
 
 	RayGE_ComponentImpl_Spatial* component = Component_CreateSpatial();
 
-	if ( !Entity_AddComponent(entity, &component->header) )
+	if ( !Entity_AddComponent(entPtr, &component->header) )
 	{
 		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Failed to add component to entity.");
 		Component_FreeList(&component->header);
@@ -52,25 +56,29 @@ RayGE_Component_Spatial* SceneAPI_AddSpatialComponent(RayGE_Entity* entity)
 	return &component->data;
 }
 
-RayGE_Component_Spatial* SceneAPI_GetSpatialComponent(RayGE_Entity* entity)
+RayGE_Component_Spatial* SceneAPI_GetSpatialComponent(RayGE_EntityHandle entity)
 {
-	if ( !VerifyEntity(entity, "get component") )
+	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "get component");
+
+	if ( !entPtr )
 	{
 		return NULL;
 	}
 
-	RayGE_ComponentHeader* component = Entity_GetFirstComponentOfType(entity, RAYGE_COMPONENTTYPE_SPATIAL);
+	RayGE_ComponentHeader* component = Entity_GetFirstComponentOfType(entPtr, RAYGE_COMPONENTTYPE_SPATIAL);
 	return component ? COMPONENTDATA_SPATIAL(component) : NULL;
 }
 
-RayGE_Component_Camera* SceneAPI_AddCameraComponent(RayGE_Entity* entity)
+RayGE_Component_Camera* SceneAPI_AddCameraComponent(RayGE_EntityHandle entity)
 {
-	if ( !VerifyEntity(entity, "add component") )
+	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "add component");
+
+	if ( !entPtr )
 	{
 		return NULL;
 	}
 
-	RayGE_ComponentHeader* existing = Entity_GetFirstComponentOfType(entity, RAYGE_COMPONENTTYPE_CAMERA);
+	RayGE_ComponentHeader* existing = Entity_GetFirstComponentOfType(entPtr, RAYGE_COMPONENTTYPE_CAMERA);
 
 	if ( existing )
 	{
@@ -79,7 +87,7 @@ RayGE_Component_Camera* SceneAPI_AddCameraComponent(RayGE_Entity* entity)
 
 	RayGE_ComponentImpl_Camera* component = Component_CreateCamera();
 
-	if ( !Entity_AddComponent(entity, &component->header) )
+	if ( !Entity_AddComponent(entPtr, &component->header) )
 	{
 		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Failed to add component to entity.");
 		Component_FreeList(&component->header);
@@ -89,13 +97,15 @@ RayGE_Component_Camera* SceneAPI_AddCameraComponent(RayGE_Entity* entity)
 	return &component->data;
 }
 
-RayGE_Component_Camera* SceneAPI_GetCameraComponent(RayGE_Entity* entity)
+RayGE_Component_Camera* SceneAPI_GetCameraComponent(RayGE_EntityHandle entity)
 {
-	if ( !VerifyEntity(entity, "get component") )
+	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "get component");
+
+	if ( !entPtr )
 	{
 		return NULL;
 	}
 
-	RayGE_ComponentHeader* component = Entity_GetFirstComponentOfType(entity, RAYGE_COMPONENTTYPE_CAMERA);
+	RayGE_ComponentHeader* component = Entity_GetFirstComponentOfType(entPtr, RAYGE_COMPONENTTYPE_CAMERA);
 	return component ? COMPONENTDATA_CAMERA(component) : NULL;
 }

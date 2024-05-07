@@ -3,14 +3,17 @@
 #include "Scene/Component.h"
 #include "Subsystems/MemPoolSubsystem.h"
 #include "Debugging.h"
+#include "raylib.h"
 
 struct RayGE_Entity
 {
 	RayGE_EntityList* parentList;
+	size_t indexInParent;
 	bool isInUse;
 	RayGE_ComponentHeader* componentsHead;
 	RayGE_ComponentHeader* componentsTail;
 	size_t componentCount;
+	uint64_t key;
 };
 
 struct RayGE_EntityList
@@ -19,6 +22,34 @@ struct RayGE_EntityList
 	size_t capacity;
 	size_t numInUse;
 };
+
+static uint64_t CrunchKey(uint64_t key, size_t index)
+{
+	return key ^ (0x1234BA55FACE4321 ^ ~index);
+}
+
+static uint64_t CreateEntityKey(size_t index)
+{
+	typedef union Timestamp
+	{
+		uint64_t key;
+		double timeElapsed;
+	} Timestamp;
+
+	Timestamp ts;
+	ts.timeElapsed = GetTime();
+
+	// Shouldn't happen, but may if the window has not been created yet for some reason.
+	RAYGE_ENSURE(ts.timeElapsed != 0.0f, "Cannot create entity key without access to underlying elapsed time");
+
+	// Make sure the key's value is affected by the index.
+	ts.key = CrunchKey(ts.key, index);
+
+	// I'd be amazed if this ever happened:
+	RAYGE_ENSURE(ts.key != 0, "Generated invalid entity key");
+
+	return ts.key;
+}
 
 RayGE_EntityList* Entity_AllocateList(size_t capacity)
 {
@@ -36,7 +67,11 @@ RayGE_EntityList* Entity_AllocateList(size_t capacity)
 
 	for ( size_t index = 0; index < list->capacity; ++index )
 	{
-		list->entities[index].parentList = list;
+		RayGE_Entity* entity = &list->entities[index];
+
+		entity->parentList = list;
+		entity->indexInParent = index;
+		entity->key = CreateEntityKey(index);
 	}
 
 	return list;
@@ -117,6 +152,27 @@ RayGE_Entity* Entity_FindFirstFree(const RayGE_EntityList* list)
 	return NULL;
 }
 
+RayGE_EntityHandle Entity_CreateHandle(const RayGE_Entity* entity)
+{
+	if ( !entity )
+	{
+		return RAYGE_INVALID_ENT_HANDLE;
+	}
+
+	return (RayGE_EntityHandle) {entity->indexInParent, entity->key};
+}
+
+RayGE_Entity* Entity_GetEntityFromHandle(const RayGE_EntityList* list, RayGE_EntityHandle handle)
+{
+	if ( !list || !RayGE_EntityHandleIsValid(handle) )
+	{
+		return NULL;
+	}
+
+	RayGE_Entity* entity = Entity_Get(list, handle.index);
+	return entity && entity->key == handle.key ? entity : NULL;
+}
+
 void Entity_Acquire(RayGE_Entity* entity)
 {
 	if ( !entity )
@@ -162,12 +218,22 @@ void Entity_Release(RayGE_Entity* entity)
 
 	entity->isInUse = false;
 
+	// Reset the key to make sure that entity handles referring to
+	// this index will no longer pass.
+	entity->key = CreateEntityKey(entity->indexInParent);
+
 	--entity->parentList->numInUse;
 }
 
 bool Entity_IsInUse(const RayGE_Entity* entity)
 {
 	return entity && entity->isInUse;
+}
+
+size_t Entity_GetIndex(const RayGE_Entity* entity)
+{
+	RAYGE_ASSERT(entity, "Cannot get index of null entity.");
+	return entity ? entity->indexInParent : ~((size_t)0);
 }
 
 bool Entity_AddComponent(RayGE_Entity* entity, RayGE_ComponentHeader* component)

@@ -24,8 +24,8 @@ static const RayGE_GameLib_Callbacks_V1 g_Callbacks = {
 	}
 };
 
-static RayGE_Entity* g_SubjectEntity = NULL;
-static RayGE_Entity* g_CameraEntity = NULL;
+static RayGE_EntityHandle g_SubjectEntity = RAYGE_INIT_INVALID_ENT_HANDLE;
+static RayGE_EntityHandle g_CameraEntity = RAYGE_INIT_INVALID_ENT_HANDLE;
 
 static void Game_StartUp(void)
 {

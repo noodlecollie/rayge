@@ -107,6 +107,7 @@ static void VisualiseEntities(void)
 	EndMode3D();
 
 	Renderer_FormatTextDev(20, 20, WHITE, "Scene has %zu active entities", Scene_GetActiveEntities());
+	Renderer_FormatTextDev(20, 40, WHITE, "FPS: %d", GetFPS());
 
 	EndDrawing();
 }
