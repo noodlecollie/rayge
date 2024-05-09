@@ -65,6 +65,7 @@ endif()
 
 add_compile_definitions(
 	LIBNAME_ENGINE="${TARGETNAME_ENGINE}"
+	LIBNAME_ENGINE_DEBUG="${TARGETNAME_ENGINE}-debug"
 
 	$<$<PLATFORM_ID:Linux>:LIB_PREFIX="lib">
 	$<$<PLATFORM_ID:Linux>:LIB_EXTENSION=".so">

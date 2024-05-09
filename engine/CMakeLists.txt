@@ -1,8 +1,6 @@
-# TODO: Rename the binaries if building in debug mode,
-# and allow launcher to use these if release binaries
-# are not found. This will allow us to swap out debug
-# and release versions of the engine when launching.
 add_library(${TARGETNAME_ENGINE} SHARED)
+
+set_target_properties(${TARGETNAME_ENGINE} PROPERTIES OUTPUT_NAME_DEBUG "${TARGETNAME_ENGINE}-debug")
 
 include(generate_export_header_template)
 include(rayge_install)
