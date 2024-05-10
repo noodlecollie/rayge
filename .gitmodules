@@ -7,3 +7,6 @@
 [submodule "thirdparty/catch2-3.5.4/catch2-3.5.4"]
 	path = thirdparty/catch2-3.5.4/catch2-3.5.4
 	url = https://github.com/catchorg/Catch2.git
+[submodule "thirdparty/nuklear-4.12.0/nuklear-4.12.0"]
+	path = thirdparty/nuklear-4.12.0/nuklear-4.12.0
+	url = https://github.com/Immediate-Mode-UI/Nuklear.git
