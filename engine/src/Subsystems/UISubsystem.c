@@ -5,6 +5,8 @@
 #include "raylib.h"
 
 static struct nk_context g_NKContext;
+static struct nk_user_font g_NKFont;
+static const RayGE_UIMenu* g_CurrentMenu = NULL;
 static bool g_Initialised = false;
 
 static void* LocalAllocate(nk_handle handle, void* ptr, nk_size size)
@@ -43,13 +45,14 @@ void UISubsystem_Init(void)
 		&LocalFree,
 	};
 
-	const struct nk_user_font font = {
-		0,
-		(float)RENDERSUBSYSTEM_DEFAULT_FONT_SIZE,
-		&ComputeTextWidthForDefaultFont,
-	};
+	memset(&g_NKFont, 0, sizeof(g_NKFont));
 
-	nk_init(&g_NKContext, &allocator, &font);
+	g_NKFont.width = &ComputeTextWidthForDefaultFont;
+	g_NKFont.height = (float)RENDERSUBSYSTEM_DEFAULT_FONT_SIZE;
+
+	// TODO: We need to hook up the NK draw commands to actually do something!
+	nk_init(&g_NKContext, &allocator, &g_NKFont);
+	g_CurrentMenu = NULL;
 	g_Initialised = true;
 }
 
@@ -60,6 +63,62 @@ void UISubsystem_ShutDown(void)
 		return;
 	}
 
+	g_CurrentMenu = NULL;
 	nk_free(&g_NKContext);
+
+	memset(&g_NKFont, 0, sizeof(g_NKFont));
+	memset(&g_NKContext, 0, sizeof(g_NKContext));
+
 	g_Initialised = false;
+}
+
+struct nk_context* UISubsystem_GetNuklearContext(void)
+{
+	return g_Initialised ? &g_NKContext : NULL;
+}
+
+void UISubsystem_SetCurrentMenu(const RayGE_UIMenu* menu)
+{
+	if ( !g_Initialised || menu == g_CurrentMenu )
+	{
+		return;
+	}
+
+	UISubsystem_ClearCurrentMenu();
+
+	g_CurrentMenu = menu;
+
+	if ( g_CurrentMenu && g_CurrentMenu->Show )
+	{
+		g_CurrentMenu->Show();
+	}
+}
+
+void UISubsystem_ClearCurrentMenu(void)
+{
+	if ( !g_Initialised )
+	{
+		return;
+	}
+
+	if ( g_CurrentMenu && g_CurrentMenu->Hide )
+	{
+		g_CurrentMenu->Hide();
+	}
+
+	g_CurrentMenu = NULL;
+}
+
+void UISubsystem_Poll(void)
+{
+	if ( !g_Initialised )
+	{
+		return;
+	}
+
+	if ( g_CurrentMenu && g_CurrentMenu->Poll )
+	{
+		g_CurrentMenu->Poll();
+		nk_clear(&g_NKContext);
+	}
 }

@@ -2,6 +2,7 @@
 #include "Engine/Engine.h"
 #include "Subsystems/LoggingSubsystem.h"
 #include "Subsystems/SubsystemManager.h"
+#include "Subsystems/UISubsystem.h"
 #include "Engine/EngineAPI.h"
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
@@ -12,6 +13,7 @@
 #include "Subsystems/RendererSubsystem.h"
 #include "Rendering/Renderer.h"
 #include "raylib.h"
+#include "UI/TestUI.h"
 
 #define NUM_ENGINE_API_FUNCTIONS (sizeof(RayGE_Engine_API_Current) / sizeof(void*))
 
@@ -110,12 +112,15 @@ static void VisualiseEntities(void)
 	Renderer_FormatTextDev(20, 40, WHITE, "FPS: %d", GetFPS());
 
 	EndDrawing();
+
+	UISubsystem_SetCurrentMenu(&Menu_TestUI);
 }
 
 static bool RunFrame(void)
 {
 	bool windowShouldClose = RendererSubsystem_WindowCloseRequested();
 	VisualiseEntities();
+	UISubsystem_Poll();
 
 	return windowShouldClose;
 }

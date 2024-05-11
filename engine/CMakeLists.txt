@@ -68,6 +68,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Subsystems/SubsystemManager.c
 	src/Subsystems/UISubsystem.h
 	src/Subsystems/UISubsystem.c
+	src/UI/TestUI.h
+	src/UI/TestUI.c
 	src/Debugging.h
 	src/Debugging.c
 	src/Testing.h
