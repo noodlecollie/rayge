@@ -66,6 +66,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Subsystems/RendererSubsystem.c
 	src/Subsystems/SubsystemManager.h
 	src/Subsystems/SubsystemManager.c
+	src/Subsystems/UISubsystem.h
+	src/Subsystems/UISubsystem.c
 	src/Debugging.h
 	src/Debugging.c
 	src/Testing.h
@@ -102,6 +104,7 @@ target_link_libraries(${TARGETNAME_ENGINE}
 	cwalk
 	cargs
 	debugbreak
+	nuklear
 )
 
 target_compile_definitions(${TARGETNAME_ENGINE}

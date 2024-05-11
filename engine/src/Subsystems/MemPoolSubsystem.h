@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdbool.h>
 
 typedef enum MemPool_Category
 {
@@ -8,6 +9,7 @@ typedef enum MemPool_Category
 	MEMPOOL_RENDERER,
 	MEMPOOL_SCENE,
 	MEMPOOL_ENTITY,
+	MEMPOOL_UI,
 
 	MEMPOOL__COUNT
 } MemPool_Category;

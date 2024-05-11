@@ -2,6 +2,7 @@
 #include "Subsystems/SubsystemManager.h"
 #include "Subsystems/MemPoolSubsystem.h"
 #include "Subsystems/RendererSubsystem.h"
+#include "Subsystems/UISubsystem.h"
 #include "Utils.h"
 
 typedef struct SubsystemInitAndShutdown
@@ -15,6 +16,7 @@ typedef struct SubsystemInitAndShutdown
 static const SubsystemInitAndShutdown g_Subsystems[] = {
 	{MemPoolSubsystem_Init, MemPoolSubsystem_ShutDown},
 	{RendererSubsystem_Init, RendererSubsystem_ShutDown},
+	{UISubsystem_Init, UISubsystem_ShutDown}
 };
 
 static bool g_Initialised = false;
