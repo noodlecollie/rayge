@@ -59,12 +59,12 @@ bool RendererSubsystem_IsInitialised(void)
 	return g_Data != NULL;
 }
 
-bool RenderSubsystem_WindowCloseRequested(void)
+bool RendererSubsystem_WindowCloseRequested(void)
 {
 	return g_Data && WindowShouldClose();
 }
 
-Font RenderSubsystem_GetDefaultFont(void)
+Font RendererSubsystem_GetDefaultFont(void)
 {
 	if ( !g_Data )
 	{

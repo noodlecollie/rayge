@@ -104,7 +104,7 @@ void Renderer_ClearDebugFlags(void)
 void Renderer_DrawTextDev(int posX, int posY, Color color, const char* text)
 {
 	DrawTextEx(
-		RenderSubsystem_GetDefaultFont(),
+		RendererSubsystem_GetDefaultFont(),
 		text,
 		(Vector2) {(float)posX, (float)posY},
 		RENDERSUBSYSTEM_DEFAULT_FONT_SIZE,

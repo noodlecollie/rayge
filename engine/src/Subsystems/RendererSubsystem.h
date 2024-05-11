@@ -11,6 +11,6 @@ bool RendererSubsystem_IsInitialised(void);
 
 // The close request usually comes from the underlying platform,
 // eg. if someone has pressed the close button.
-bool RenderSubsystem_WindowCloseRequested(void);
+bool RendererSubsystem_WindowCloseRequested(void);
 
-Font RenderSubsystem_GetDefaultFont(void);
+Font RendererSubsystem_GetDefaultFont(void);

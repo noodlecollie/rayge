@@ -114,7 +114,7 @@ static void VisualiseEntities(void)
 
 static bool RunFrame(void)
 {
-	bool windowShouldClose = RenderSubsystem_WindowCloseRequested();
+	bool windowShouldClose = RendererSubsystem_WindowCloseRequested();
 	VisualiseEntities();
 
 	return windowShouldClose;
