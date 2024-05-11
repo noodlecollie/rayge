@@ -44,8 +44,6 @@ static void NKDrawRectFilled(const struct nk_command_rect_filled* command)
 
 void NuklearCommand_Execute(const struct nk_command* command)
 {
-	static double lastFailLogTime = 0.0;
-
 	switch ( command->type )
 	{
 		case NK_COMMAND_NOP:

@@ -29,7 +29,7 @@ static void Poll(void)
 	}
 }
 
-extern const RayGE_UIMenu Menu_TestUI = {
+const RayGE_UIMenu Menu_TestUI = {
 	Show,
 	Hide,
 	Poll,

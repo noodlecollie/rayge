@@ -41,7 +41,7 @@ void UISubsystem_Init(void)
 	}
 
 	struct nk_allocator allocator = {
-		0,
+		{0},
 		&LocalAllocate,
 		&LocalFree,
 	};
