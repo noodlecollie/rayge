@@ -1,6 +1,7 @@
 #include "Subsystems/UISubsystem.h"
 #include "Subsystems/MemPoolSubsystem.h"
 #include "Subsystems/RendererSubsystem.h"
+#include "Rendering/NuklearCommandExecutor.h"
 #include "Debugging.h"
 #include "raylib.h"
 
@@ -119,6 +120,14 @@ void UISubsystem_Poll(void)
 	if ( g_CurrentMenu && g_CurrentMenu->Poll )
 	{
 		g_CurrentMenu->Poll();
+
+		const struct nk_command* cmd = 0;
+
+		nk_foreach(cmd, &g_NKContext)
+		{
+			NuklearCommand_Execute(cmd);
+		}
+
 		nk_clear(&g_NKContext);
 	}
 }

@@ -75,6 +75,13 @@ static inline void RayGE_EnsureTrue(
 // Only active in debug builds:
 #if RAYGE_DEBUG()
 #define RAYGE_ASSERT(expr, ...) RAYGE_ENSURE(expr, __VA_ARGS__)
+#define RAYGE_ASSERT_UNREACHABLE(...) \
+	do \
+	{ \
+		RayGE_EnsureTrue(true, false, "<Unreachable Code>", __FILE__, __LINE__, __func__, __VA_ARGS__); \
+	} \
+	while ( false )
 #else
 #define RAYGE_ASSERT(expr, ...)
+#define RAYGE_ASSERT_UNREACHABLE(...)
 #endif

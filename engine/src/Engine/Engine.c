@@ -111,16 +111,16 @@ static void VisualiseEntities(void)
 	Renderer_FormatTextDev(20, 20, WHITE, "Scene has %zu active entities", Scene_GetActiveEntities());
 	Renderer_FormatTextDev(20, 40, WHITE, "FPS: %d", GetFPS());
 
-	EndDrawing();
-
 	UISubsystem_SetCurrentMenu(&Menu_TestUI);
+	UISubsystem_Poll();
+
+	EndDrawing();
 }
 
 static bool RunFrame(void)
 {
 	bool windowShouldClose = RendererSubsystem_WindowCloseRequested();
 	VisualiseEntities();
-	UISubsystem_Poll();
 
 	return windowShouldClose;
 }

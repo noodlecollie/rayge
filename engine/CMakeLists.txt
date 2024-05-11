@@ -46,6 +46,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Launcher/Launcher.c
 	src/Launcher/LaunchParams.h
 	src/Launcher/LaunchParams.c
+	src/Rendering/NuklearCommandExecutor.h
+	src/Rendering/NuklearCommandExecutor.c
 	src/Rendering/Renderer.h
 	src/Rendering/Renderer.c
 	src/Scene/Component.h
