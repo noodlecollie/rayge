@@ -1,5 +1,6 @@
 #include "Rendering/NuklearCommandExecutor.h"
 #include "Subsystems/LoggingSubsystem.h"
+#include "Subsystems/RendererSubsystem.h"
 #include "Debugging.h"
 #include "raylib.h"
 
@@ -16,6 +17,11 @@ static Color NKToRaylibColor(struct nk_color colour)
 static Vector2 NKToRaylibVec2(struct nk_vec2i vec)
 {
 	return (Vector2) {(float)vec.x, (float)vec.y};
+}
+
+static void NKScissor(const struct nk_command_scissor* command)
+{
+	BeginScissorMode((int)command->x, (int)command->y, (int)command->w, (int)command->h);
 }
 
 static void NKDrawLine(const struct nk_command_line* command)
@@ -42,8 +48,25 @@ static void NKDrawRectFilled(const struct nk_command_rect_filled* command)
 	DrawRectangleRec(NKToRaylibRect(command->x, command->y, command->w, command->h), NKToRaylibColor(command->color));
 }
 
-void NuklearCommand_Execute(const struct nk_command* command)
+static void NKDrawText(const struct nk_command_text* command)
 {
+	// TODO: Needs a proper UI font
+	DrawTextPro(
+		RendererSubsystem_GetDefaultFont(),
+		command->string,
+		(Vector2) {(float)command->x, (float)command->y},
+		(Vector2) {0.0f, 0.0f},
+		0.0f,
+		command->font->height,
+		0.0f,
+		NKToRaylibColor(command->foreground)
+	);
+}
+
+static bool ProcessCommand(const struct nk_command* command)
+{
+	bool appliedScissor = false;
+
 	switch ( command->type )
 	{
 		case NK_COMMAND_NOP:
@@ -53,7 +76,8 @@ void NuklearCommand_Execute(const struct nk_command* command)
 
 		case NK_COMMAND_SCISSOR:
 		{
-			// TODO
+			NKScissor((const struct nk_command_scissor*)command);
+			appliedScissor = true;
 			break;
 		}
 
@@ -91,7 +115,17 @@ void NuklearCommand_Execute(const struct nk_command* command)
 		case NK_COMMAND_POLYGON:
 		case NK_COMMAND_POLYGON_FILLED:
 		case NK_COMMAND_POLYLINE:
+		{
+			// TODO
+			break;
+		}
+
 		case NK_COMMAND_TEXT:
+		{
+			NKDrawText((const struct nk_command_text*)command);
+			break;
+		}
+
 		case NK_COMMAND_IMAGE:
 		case NK_COMMAND_CUSTOM:
 		{
@@ -111,5 +145,35 @@ void NuklearCommand_Execute(const struct nk_command* command)
 
 			break;
 		}
+	}
+
+	return appliedScissor;
+}
+
+void NuklearCommand_ProcessCommands(struct nk_context* context)
+{
+	if ( !context )
+	{
+		return;
+	}
+
+	const struct nk_command* cmd = 0;
+	bool appliedScissor = false;
+
+	nk_foreach(cmd, context)
+	{
+		bool appliedScissor = ProcessCommand(cmd);
+
+		if ( ProcessCommand(cmd) && !appliedScissor )
+		{
+			appliedScissor = true;
+		}
+	}
+
+	nk_clear(context);
+
+	if ( appliedScissor )
+	{
+		EndScissorMode();
 	}
 }

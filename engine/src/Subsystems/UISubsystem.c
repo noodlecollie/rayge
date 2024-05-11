@@ -91,7 +91,7 @@ void UISubsystem_SetCurrentMenu(const RayGE_UIMenu* menu)
 
 	if ( g_CurrentMenu && g_CurrentMenu->Show )
 	{
-		g_CurrentMenu->Show();
+		g_CurrentMenu->Show(g_CurrentMenu->userData);
 	}
 }
 
@@ -104,7 +104,7 @@ void UISubsystem_ClearCurrentMenu(void)
 
 	if ( g_CurrentMenu && g_CurrentMenu->Hide )
 	{
-		g_CurrentMenu->Hide();
+		g_CurrentMenu->Hide(g_CurrentMenu->userData);
 	}
 
 	g_CurrentMenu = NULL;
@@ -119,15 +119,7 @@ void UISubsystem_Poll(void)
 
 	if ( g_CurrentMenu && g_CurrentMenu->Poll )
 	{
-		g_CurrentMenu->Poll();
-
-		const struct nk_command* cmd = 0;
-
-		nk_foreach(cmd, &g_NKContext)
-		{
-			NuklearCommand_Execute(cmd);
-		}
-
-		nk_clear(&g_NKContext);
+		g_CurrentMenu->Poll(g_CurrentMenu->userData);
+		NuklearCommand_ProcessCommands(&g_NKContext);
 	}
 }

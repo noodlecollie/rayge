@@ -4,9 +4,11 @@
 
 typedef struct RayGE_UIMenu
 {
-	void (*Show)(void);
-	void (*Hide)(void);
-	void (*Poll)(void);
+	void* userData;
+
+	void (*Show)(void* userData);
+	void (*Hide)(void* userData);
+	void (*Poll)(void* userData);
 } RayGE_UIMenu;
 
 void UISubsystem_Init(void);
