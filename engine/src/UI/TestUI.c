@@ -68,6 +68,8 @@ static void Poll(void* userData)
 		const char* comboValues[3] = { "First", "Second", "Third" };
 		nk_combo(ctx, comboValues, 3, 0, 20, (struct nk_vec2){100, 100});
 
+		nk_color_picker(ctx, (struct nk_colorf){1.0f, 0.0f, 0.0f, 1.0f}, NK_RGB);
+
 		nk_end(ctx);
 	}
 }

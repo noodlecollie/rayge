@@ -4,6 +4,21 @@
 #include "Debugging.h"
 #include "raylib.h"
 
+#define MAX_POLYGON_POINTS 64
+
+#define MARK_UNIMPLEMENTED(name) \
+	do \
+	{ \
+		static double lastLogTime = -3.0; \
+		double currentTime = GetTime(); \
+		if ( currentTime - lastLogTime >= 3.0 ) \
+		{ \
+			LoggingSubsystem_PrintLine(RAYGE_LOG_WARNING, "Nuklear draw command \"" name "\" not yet implemented"); \
+			lastLogTime = currentTime; \
+		} \
+	} \
+	while ( false )
+
 static Rectangle NKToRaylibRect(short x, short y, unsigned short w, unsigned short h)
 {
 	return (Rectangle) {(float)x, (float)y, (float)w, (float)h};
@@ -12,6 +27,16 @@ static Rectangle NKToRaylibRect(short x, short y, unsigned short w, unsigned sho
 static Color NKToRaylibColor(struct nk_color colour)
 {
 	return (Color) {colour.r, colour.g, colour.b, colour.a};
+}
+
+static Color NKColorBlendOpaque(struct nk_color a, struct nk_color b)
+{
+	return (Color) {
+		(unsigned char)(((float)a.r * 0.5f) + ((float)b.r * 0.5f)),
+		(unsigned char)(((float)a.g * 0.5f) + ((float)b.g * 0.5f)),
+		(unsigned char)(((float)a.b * 0.5f) + ((float)b.b * 0.5f)),
+		255,
+	};
 }
 
 static Vector2 NKToRaylibVec2(struct nk_vec2i vec)
@@ -34,6 +59,13 @@ static void NKDrawLine(const struct nk_command_line* command)
 	);
 }
 
+static void NKDrawCurve(const struct nk_command_curve* command)
+{
+	// TODO: Implement according to https://pomax.github.io/bezierinfo/#flattening
+	(void)command;
+	MARK_UNIMPLEMENTED("nk_command_curve");
+}
+
 static void NKDrawRect(const struct nk_command_rect* command)
 {
 	DrawRectangleLinesEx(
@@ -46,6 +78,12 @@ static void NKDrawRect(const struct nk_command_rect* command)
 static void NKDrawRectFilled(const struct nk_command_rect_filled* command)
 {
 	DrawRectangleRec(NKToRaylibRect(command->x, command->y, command->w, command->h), NKToRaylibColor(command->color));
+}
+
+static void NKDrawMulticolouredRect(const struct nk_command_rect_multi_color* command)
+{
+	(void)command;
+	MARK_UNIMPLEMENTED("nk_command_rect_multi_color");
 }
 
 static void NKDrawText(const struct nk_command_text* command)
@@ -92,6 +130,18 @@ static void NKDrawCircleFilled(const struct nk_command_circle_filled* command)
 	);
 }
 
+static void NKDrawArc(const struct nk_command_arc* command)
+{
+	(void)command;
+	MARK_UNIMPLEMENTED("nk_command_arc");
+}
+
+static void NKDrawArcFilled(const struct nk_command_arc_filled* command)
+{
+	(void)command;
+	MARK_UNIMPLEMENTED("nk_command_arc_filled");
+}
+
 static void NKDrawTriangle(const struct nk_command_triangle* command)
 {
 	// No ability to set line width here yet
@@ -111,6 +161,56 @@ static void NKDrawTriangleFilled(const struct nk_command_triangle_filled* comman
 		NKToRaylibVec2(command->a),
 		NKToRaylibColor(command->color)
 	);
+}
+
+static void NKDrawPolygon(const struct nk_command_polygon* command)
+{
+	(void)command;
+	MARK_UNIMPLEMENTED("nk_command_polygon");
+}
+
+// TODO: This is currently untested as I'm not sure which Nuklear
+// UI items actually use it. I'm assuming the Nuklear points are
+// provided the opposite way around to what Raylib requires, as
+// this was the case when drawing triangles, but this may not be
+// true and might need swapping. It may also not be a triangle
+// fan, and could be a strip or simply a number of sequential
+// triangles - again, evaluate.
+static void NKDrawPolygonFilled(const struct nk_command_polygon_filled* command)
+{
+	static Vector2 points[MAX_POLYGON_POINTS];
+
+	size_t numPoints = command->point_count;
+
+	if ( numPoints > MAX_POLYGON_POINTS )
+	{
+		numPoints = MAX_POLYGON_POINTS;
+	}
+
+	for ( unsigned short index = 0; index < numPoints; ++index )
+	{
+		points[index] = NKToRaylibVec2(command->points[numPoints - index - 1]);
+	}
+
+	DrawTriangleFan(points, (int)numPoints, NKToRaylibColor(command->color));
+}
+
+static void NKDrawPolyLine(const struct nk_command_polyline* command)
+{
+	(void)command;
+	MARK_UNIMPLEMENTED("nk_command_polyline");
+}
+
+static void NKDrawImage(const struct nk_command_image* command)
+{
+	(void)command;
+	MARK_UNIMPLEMENTED("nk_command_image");
+}
+
+static void NKDrawCustom(const struct nk_command_custom* command)
+{
+	(void)command;
+	MARK_UNIMPLEMENTED("nk_command_custom");
 }
 
 static bool ProcessCommand(const struct nk_command* command)
@@ -139,7 +239,7 @@ static bool ProcessCommand(const struct nk_command* command)
 
 		case NK_COMMAND_CURVE:
 		{
-			// TODO: Implement according to https://pomax.github.io/bezierinfo/#flattening
+			NKDrawCurve((const struct nk_command_curve*)command);
 			break;
 		}
 
@@ -157,7 +257,7 @@ static bool ProcessCommand(const struct nk_command* command)
 
 		case NK_COMMAND_RECT_MULTI_COLOR:
 		{
-			// TODO
+			NKDrawMulticolouredRect((const struct nk_command_rect_multi_color*)command);
 			break;
 		}
 
@@ -174,9 +274,14 @@ static bool ProcessCommand(const struct nk_command* command)
 		}
 
 		case NK_COMMAND_ARC:
+		{
+			NKDrawArc((const struct nk_command_arc*)command);
+			break;
+		}
+
 		case NK_COMMAND_ARC_FILLED:
 		{
-			// TODO
+			NKDrawArcFilled((const struct nk_command_arc_filled*)command);
 			break;
 		}
 
@@ -193,10 +298,20 @@ static bool ProcessCommand(const struct nk_command* command)
 		}
 
 		case NK_COMMAND_POLYGON:
+		{
+			NKDrawPolygon((const struct nk_command_polygon*)command);
+			break;
+		}
+
 		case NK_COMMAND_POLYGON_FILLED:
+		{
+			NKDrawPolygonFilled((const struct nk_command_polygon_filled*)command);
+			break;
+		}
+
 		case NK_COMMAND_POLYLINE:
 		{
-			// TODO
+			NKDrawPolyLine((const struct nk_command_polyline*)command);
 			break;
 		}
 
@@ -207,9 +322,14 @@ static bool ProcessCommand(const struct nk_command* command)
 		}
 
 		case NK_COMMAND_IMAGE:
+		{
+			NKDrawImage((const struct nk_command_image*)command);
+			break;
+		}
+
 		case NK_COMMAND_CUSTOM:
 		{
-			// TODO
+			NKDrawCustom((const struct nk_command_custom*)command);
 			break;
 		}
 
