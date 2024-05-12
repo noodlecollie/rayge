@@ -84,6 +84,6 @@ endif()
 
 generate_engine_install(${INSTALL_DEST} FALSE)
 
-if(INSTALL_SANITY_TEST)
+if(RAYGE_INSTALL_SANITY_TEST)
 	generate_engine_install(${INSTALL_DEST_SANITY_TEST} TRUE)
 endif()
