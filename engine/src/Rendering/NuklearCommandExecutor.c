@@ -63,6 +63,56 @@ static void NKDrawText(const struct nk_command_text* command)
 	);
 }
 
+static void NKDrawCircle(const struct nk_command_circle* command)
+{
+	const float radiusH = (float)command->w / 2.0f;
+	const float radiusV = (float)command->h / 2.0f;
+
+	// This doesn't currently support different line thicknesses
+	DrawEllipseLines(
+		command->x + (int)radiusH,
+		command->y + (int)radiusV,
+		radiusH,
+		radiusV,
+		NKToRaylibColor(command->color)
+	);
+}
+
+static void NKDrawCircleFilled(const struct nk_command_circle_filled* command)
+{
+	const float radiusH = (float)command->w / 2.0f;
+	const float radiusV = (float)command->h / 2.0f;
+
+	DrawEllipse(
+		command->x + (int)radiusH,
+		command->y + (int)radiusV,
+		radiusH,
+		radiusV,
+		NKToRaylibColor(command->color)
+	);
+}
+
+static void NKDrawTriangle(const struct nk_command_triangle* command)
+{
+	// No ability to set line width here yet
+	DrawTriangleLines(
+		NKToRaylibVec2(command->c),
+		NKToRaylibVec2(command->b),
+		NKToRaylibVec2(command->a),
+		NKToRaylibColor(command->color)
+	);
+}
+
+static void NKDrawTriangleFilled(const struct nk_command_triangle_filled* command)
+{
+	DrawTriangle(
+		NKToRaylibVec2(command->c),
+		NKToRaylibVec2(command->b),
+		NKToRaylibVec2(command->a),
+		NKToRaylibColor(command->color)
+	);
+}
+
 static bool ProcessCommand(const struct nk_command* command)
 {
 	bool appliedScissor = false;
@@ -89,7 +139,7 @@ static bool ProcessCommand(const struct nk_command* command)
 
 		case NK_COMMAND_CURVE:
 		{
-			// TODO
+			// TODO: Implement according to https://pomax.github.io/bezierinfo/#flattening
 			break;
 		}
 
@@ -106,12 +156,42 @@ static bool ProcessCommand(const struct nk_command* command)
 		}
 
 		case NK_COMMAND_RECT_MULTI_COLOR:
+		{
+			// TODO
+			break;
+		}
+
 		case NK_COMMAND_CIRCLE:
+		{
+			NKDrawCircle((const struct nk_command_circle*)command);
+			break;
+		}
+
 		case NK_COMMAND_CIRCLE_FILLED:
+		{
+			NKDrawCircleFilled((const struct nk_command_circle_filled*)command);
+			break;
+		}
+
 		case NK_COMMAND_ARC:
 		case NK_COMMAND_ARC_FILLED:
+		{
+			// TODO
+			break;
+		}
+
 		case NK_COMMAND_TRIANGLE:
+		{
+			NKDrawTriangle((const struct nk_command_triangle*)command);
+			break;
+		}
+
 		case NK_COMMAND_TRIANGLE_FILLED:
+		{
+			NKDrawTriangleFilled((const struct nk_command_triangle_filled*)command);
+			break;
+		}
+
 		case NK_COMMAND_POLYGON:
 		case NK_COMMAND_POLYGON_FILLED:
 		case NK_COMMAND_POLYLINE:
