@@ -10,7 +10,3 @@ add_subdirectory(nuklear-4.12.0)
 if(BUILD_TESTING)
 	add_subdirectory(catch2-3.5.4)
 endif()
-
-if(WIN32)
-	add_subdirectory(pthreads-win32)
-endif()
