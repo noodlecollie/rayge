@@ -1,4 +1,3 @@
-# TODO: Make all of these submodules
 add_subdirectory(cJSON-1.7.17)
 add_subdirectory(raylib-5.0)
 add_subdirectory(cwalk-1.2.9)
