@@ -16,3 +16,6 @@
 [submodule "thirdparty/cargs-1.1.0/cargs-1.1.0"]
 	path = thirdparty/cargs-1.1.0/cargs-1.1.0
 	url = https://github.com/likle/cargs.git
+[submodule "thirdparty/cwalk-1.2.9/cwalk-1.2.9"]
+	path = thirdparty/cwalk-1.2.9/cwalk-1.2.9
+	url = https://github.com/likle/cwalk.git
