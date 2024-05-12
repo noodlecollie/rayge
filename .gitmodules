@@ -10,3 +10,6 @@
 [submodule "thirdparty/nuklear-4.12.0/nuklear-4.12.0"]
 	path = thirdparty/nuklear-4.12.0/nuklear-4.12.0
 	url = https://github.com/Immediate-Mode-UI/Nuklear.git
+[submodule "thirdparty/cargs-1.0.3/cargs-1.1.0"]
+	path = thirdparty/cargs-1.0.3/cargs-1.1.0
+	url = https://github.com/likle/cargs.git

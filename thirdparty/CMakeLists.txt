@@ -3,7 +3,7 @@ add_subdirectory(cJSON)
 add_subdirectory(raylib-5.0)
 add_subdirectory(cwalk-1.2.7)
 add_subdirectory(wzl-cutl)
-add_subdirectory(cargs-1.0.3)
+add_subdirectory(cargs-1.1.0)
 add_subdirectory(debugbreak-1.0)
 add_subdirectory(nuklear-4.12.0)
 
