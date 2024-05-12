@@ -13,3 +13,6 @@
 [submodule "thirdparty/cargs-1.0.3/cargs-1.1.0"]
 	path = thirdparty/cargs-1.0.3/cargs-1.1.0
 	url = https://github.com/likle/cargs.git
+[submodule "thirdparty/cJSON-1.7.17/cJSON-1.7.17"]
+	path = thirdparty/cJSON-1.7.17/cJSON-1.7.17
+	url = https://github.com/DaveGamble/cJSON.git

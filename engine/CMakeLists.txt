@@ -103,7 +103,7 @@ target_include_directories(${TARGETNAME_ENGINE}
 target_link_libraries(${TARGETNAME_ENGINE}
 	PRIVATE
 	wzl-cutl
-	cJSON
+	cjson
 	raylib
 	cwalk
 	cargs

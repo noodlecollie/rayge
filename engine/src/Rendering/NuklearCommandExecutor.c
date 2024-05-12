@@ -162,8 +162,6 @@ void NuklearCommand_ProcessCommands(struct nk_context* context)
 
 	nk_foreach(cmd, context)
 	{
-		bool appliedScissor = ProcessCommand(cmd);
-
 		if ( ProcessCommand(cmd) && !appliedScissor )
 		{
 			appliedScissor = true;

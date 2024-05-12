@@ -1,7 +1,7 @@
 #include <string.h>
 #include "Game/GameData.h"
 #include "RayGE/Platform.h"
-#include "cJSON/cJSON.h"
+#include "cJSON.h"
 #include "JSON/JSONUtils.h"
 #include "Subsystems/FileSubsystem.h"
 #include "Subsystems/LoggingSubsystem.h"
