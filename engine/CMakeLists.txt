@@ -43,6 +43,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Game/GameLoader.c
 	src/Identity/Identity.h
 	src/Identity/Identity.c
+	src/Input/InputBuffer.h
+	src/Input/InputBuffer.c
 	src/JSON/JSONUtils.h
 	src/JSON/JSONUtils.c
 	src/Launcher/Launcher.c
