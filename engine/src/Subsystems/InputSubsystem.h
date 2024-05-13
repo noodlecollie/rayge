@@ -5,7 +5,7 @@
 
 typedef struct RayGE_InputCommand
 {
-	KeyboardKey key;
+	int id;
 	void (*PressFunction)(void);
 	void (*ReleaseFunction)(void);
 } RayGE_InputCommand;

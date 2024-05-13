@@ -22,7 +22,7 @@ typedef struct InputCommandItem
 typedef struct InputCommandCategory
 {
 	struct InputCommandCategory* next;
-	KeyboardKey key;
+	int id;
 	InputCommandItem* items;
 } InputCommandCategory;
 
@@ -86,11 +86,11 @@ static void SwapKeyBufferPointers(Data* data)
 	data->keysThisFrame = temp;
 }
 
-static InputCommandCategory* FindCategoryForKey(InputCommandCategory* head, KeyboardKey key)
+static InputCommandCategory* FindCategoryForKey(InputCommandCategory* head, int id)
 {
 	while ( head )
 	{
-		if ( head->key == key )
+		if ( head->id == id )
 		{
 			return head;
 		}
@@ -101,14 +101,14 @@ static InputCommandCategory* FindCategoryForKey(InputCommandCategory* head, Keyb
 	return NULL;
 }
 
-static InputCommandCategory* FindOrCreateCategoryForKey(InputCommandCategory** head, KeyboardKey key)
+static InputCommandCategory* FindOrCreateCategoryForKey(InputCommandCategory** head, int id)
 {
-	InputCommandCategory* found = FindCategoryForKey(*head, key);
+	InputCommandCategory* found = FindCategoryForKey(*head, id);
 
 	if ( !found )
 	{
 		found = MEMPOOL_CALLOC_STRUCT(MEMPOOL_INPUT, InputCommandCategory);
-		found->key = key;
+		found->id = id;
 		found->next = *head;
 		*head = found;
 	}
@@ -116,9 +116,9 @@ static InputCommandCategory* FindOrCreateCategoryForKey(InputCommandCategory** h
 	return found;
 }
 
-static void ExecuteCommand(KeyboardKey key, ButtonState state)
+static void ExecuteCommand(int id, ButtonState state)
 {
-	InputCommandCategory* category = FindCategoryForKey(g_Data->categories, key);
+	InputCommandCategory* category = FindCategoryForKey(g_Data->categories, id);
 
 	if ( !category )
 	{
@@ -138,16 +138,11 @@ static void ExecuteCommand(KeyboardKey key, ButtonState state)
 	}
 }
 
-static bool KeyIsInList(KeyboardKey key, int* list)
+static bool KeyIsInList(int id, int* list)
 {
-	if ( key == KEY_NULL )
-	{
-		return false;
-	}
-
 	for ( int index = 0; index < MAX_SIMULTANEOUS_KEYS; ++index )
 	{
-		if ( list[index] == key )
+		if ( list[index] == id )
 		{
 			return true;
 		}
@@ -191,12 +186,6 @@ static void InvokeForKeysNoLongerPresent(int* lastList, int* currentList, Button
 	{
 		int key = lastList[index];
 
-		if ( key == KEY_NULL )
-		{
-			// Reached end
-			break;
-		}
-
 		if ( !KeyIsInList(key, currentList) )
 		{
 			ExecuteCommand(key, stateToInvokeIfDifferent);
@@ -234,7 +223,7 @@ void InputSubsystem_RegisterCommand(RayGE_InputCommand command)
 		return;
 	}
 
-	InputCommandCategory* category = FindOrCreateCategoryForKey(&g_Data->categories, command.key);
+	InputCommandCategory* category = FindOrCreateCategoryForKey(&g_Data->categories, command.id);
 
 	InputCommandItem* item = MEMPOOL_CALLOC_STRUCT(MEMPOOL_INPUT, InputCommandItem);
 	item->command = command;
