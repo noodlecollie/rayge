@@ -102,7 +102,7 @@ static void ResetBufferForThisFrame(InputBuffer* buffer, int value)
 	memset(buffer->thisFrame, value, MAX_SIMULTANEOUS_INPUTS * sizeof(int));
 }
 
-static InputCommandCategory* FindCategoryForKey(InputCommandCategory* head, int id)
+static InputCommandCategory* FindCategoryForInput(InputCommandCategory* head, int id)
 {
 	while ( head )
 	{
@@ -117,9 +117,9 @@ static InputCommandCategory* FindCategoryForKey(InputCommandCategory* head, int 
 	return NULL;
 }
 
-static InputCommandCategory* FindOrCreateCategoryForKey(InputCommandCategory** head, int id)
+static InputCommandCategory* FindOrCreateCategoryForInput(InputCommandCategory** head, int id)
 {
-	InputCommandCategory* found = FindCategoryForKey(*head, id);
+	InputCommandCategory* found = FindCategoryForInput(*head, id);
 
 	if ( !found )
 	{
@@ -134,7 +134,7 @@ static InputCommandCategory* FindOrCreateCategoryForKey(InputCommandCategory** h
 
 static void ExecuteCommand(int id, ButtonState state)
 {
-	InputCommandCategory* category = FindCategoryForKey(g_Data->categories, id);
+	InputCommandCategory* category = FindCategoryForInput(g_Data->categories, id);
 
 	if ( !category )
 	{
@@ -154,7 +154,7 @@ static void ExecuteCommand(int id, ButtonState state)
 	}
 }
 
-static bool KeyIsInList(int id, int* list)
+static bool InputIsInList(int id, int* list)
 {
 	for ( int index = 0; index < MAX_SIMULTANEOUS_INPUTS; ++index )
 	{
@@ -196,13 +196,13 @@ static void BufferKeysThisFrame(Data* data)
 	}
 }
 
-static void InvokeForKeysNoLongerPresent(int* lastList, int* currentList, ButtonState stateToInvokeIfDifferent)
+static void InvokeForInputsNoLongerPresent(int* lastList, int* currentList, ButtonState stateToInvokeIfDifferent)
 {
 	for ( size_t index = 0; index < MAX_SIMULTANEOUS_INPUTS; ++index )
 	{
 		int key = lastList[index];
 
-		if ( !KeyIsInList(key, currentList) )
+		if ( !InputIsInList(key, currentList) )
 		{
 			ExecuteCommand(key, stateToInvokeIfDifferent);
 		}
@@ -239,7 +239,7 @@ void InputSubsystem_RegisterCommand(RayGE_InputCommand command)
 		return;
 	}
 
-	InputCommandCategory* category = FindOrCreateCategoryForKey(&g_Data->categories, command.id);
+	InputCommandCategory* category = FindOrCreateCategoryForInput(&g_Data->categories, command.id);
 
 	InputCommandItem* item = MEMPOOL_CALLOC_STRUCT(MEMPOOL_INPUT, InputCommandItem);
 	item->command = command;
@@ -257,13 +257,13 @@ void InputSubsystem_ProcessInput(void)
 	BufferKeysThisFrame(g_Data);
 
 	// Handle releasing existing keys before pressing new ones
-	InvokeForKeysNoLongerPresent(
+	InvokeForInputsNoLongerPresent(
 		g_Data->keyboardInputs.lastFrame,
 		g_Data->keyboardInputs.thisFrame,
 		BUTTONSTATE_RELEASED
 	);
 
-	InvokeForKeysNoLongerPresent(
+	InvokeForInputsNoLongerPresent(
 		g_Data->keyboardInputs.thisFrame,
 		g_Data->keyboardInputs.lastFrame,
 		BUTTONSTATE_PRESSED
@@ -279,7 +279,7 @@ void InputSubsystem_ReleaseAllKeys(void)
 
 	SwapAndClearKeys(g_Data);
 
-	InvokeForKeysNoLongerPresent(
+	InvokeForInputsNoLongerPresent(
 		g_Data->keyboardInputs.lastFrame,
 		g_Data->keyboardInputs.thisFrame,
 		BUTTONSTATE_RELEASED
