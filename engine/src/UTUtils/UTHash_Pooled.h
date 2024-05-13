@@ -13,4 +13,5 @@
 
 #define uthash_malloc(sz) MEMPOOL_MALLOC(UTHASH_POOLED_MEMPOOL, (sz))
 #define uthash_fatal(msg) RAYGE_FATAL(msg)
+
 #include "uthash.h"

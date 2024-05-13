@@ -63,6 +63,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Scene/Scene.c
 	src/Scene/SceneAPI.h
 	src/Scene/SceneAPI.c
+	src/Subsystems/CommandSubsystem.h
+	src/Subsystems/CommandSubsystem.c
 	src/Subsystems/FileSubsystem.h
 	src/Subsystems/FileSubsystem.c
 	src/Subsystems/InputSubsystem.h
