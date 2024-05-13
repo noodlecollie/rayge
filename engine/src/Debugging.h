@@ -72,15 +72,19 @@ static inline void RayGE_EnsureTrue(
 #define RAYGE_ENSURE(expr, ...) RAYGE_ENSURE_EX(true, expr, __VA_ARGS__)
 #define RAYGE_EXPECT(expr, ...) RAYGE_ENSURE_EX(false, expr, __VA_ARGS__)
 
+#define RAYGE_FATAL_EX(condition, ...) \
+	do \
+	{ \
+		RayGE_EnsureTrue(true, false, condition, __FILE__, __LINE__, __func__, __VA_ARGS__); \
+	} \
+	while ( false )
+
+#define RAYGE_FATAL(...) RAYGE_FATAL_EX("<Fatal Condition">, __VA_ARGS__)
+
 // Only active in debug builds:
 #if RAYGE_DEBUG()
 #define RAYGE_ASSERT(expr, ...) RAYGE_ENSURE(expr, __VA_ARGS__)
-#define RAYGE_ASSERT_UNREACHABLE(...) \
-	do \
-	{ \
-		RayGE_EnsureTrue(true, false, "<Unreachable Code>", __FILE__, __LINE__, __func__, __VA_ARGS__); \
-	} \
-	while ( false )
+#define RAYGE_ASSERT_UNREACHABLE(...) RAYGE_FATAL_EX("<Unreachable Code>", __VA_ARGS__)
 #else
 #define RAYGE_ASSERT(expr, ...)
 #define RAYGE_ASSERT_UNREACHABLE(...)

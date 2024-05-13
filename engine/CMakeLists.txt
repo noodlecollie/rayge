@@ -79,6 +79,7 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Subsystems/UISubsystem.c
 	src/UI/TestUI.h
 	src/UI/TestUI.c
+	src/UTUtils/UTHash_Pooled.h
 	src/Debugging.h
 	src/Debugging.c
 	src/Testing.h
@@ -116,6 +117,7 @@ target_link_libraries(${TARGETNAME_ENGINE}
 	cargs
 	debugbreak
 	nuklear
+	ut-utils
 )
 
 target_compile_definitions(${TARGETNAME_ENGINE}
