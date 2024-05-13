@@ -8,3 +8,7 @@ target_include_directories(nuklear PUBLIC
 	.
 	include
 )
+
+target_link_libraries(nuklear PUBLIC
+	raylib
+)
