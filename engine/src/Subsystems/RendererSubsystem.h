@@ -13,4 +13,5 @@ bool RendererSubsystem_IsInitialised(void);
 // eg. if someone has pressed the close button.
 bool RendererSubsystem_WindowCloseRequested(void);
 
-Font RendererSubsystem_GetDefaultFont(void);
+Font RendererSubsystem_GetDefaultMonoFont(void);
+Font RendererSubsystem_GetDefaultUIFont(void);

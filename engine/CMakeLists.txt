@@ -31,6 +31,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 
 	src/BinaryResources/DMMono_Regular.h
 	src/BinaryResources/DMMono_Regular.c
+	src/BinaryResources/OpenSans_Medium.h
+	src/BinaryResources/OpenSans_Medium.c
 	src/Engine/Engine.h
 	src/Engine/Engine.c
 	src/Engine/EngineAPI.h

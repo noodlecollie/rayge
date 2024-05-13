@@ -30,7 +30,7 @@ static float ComputeTextWidthForDefaultFont(nk_handle handle, float height, cons
 	(void)handle;
 	(void)textLength;
 
-	return MeasureTextEx(RendererSubsystem_GetDefaultFont(), text, height, 0.0f).x;
+	return MeasureTextEx(RendererSubsystem_GetDefaultUIFont(), text, height, 0.0f).x;
 }
 
 void UISubsystem_Init(void)
@@ -40,7 +40,7 @@ void UISubsystem_Init(void)
 		return;
 	}
 
-	g_NKContext = InitNuklearEx(RendererSubsystem_GetDefaultFont(), RENDERSUBSYSTEM_DEFAULT_FONT_SIZE);
+	g_NKContext = InitNuklearEx(RendererSubsystem_GetDefaultUIFont(), RENDERSUBSYSTEM_DEFAULT_FONT_SIZE);
 	RAYGE_ENSURE(g_NKContext, "Unable to create Nuklear context");
 
 	g_CurrentMenu = NULL;
