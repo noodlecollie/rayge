@@ -60,6 +60,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Scene/SceneAPI.c
 	src/Subsystems/FileSubsystem.h
 	src/Subsystems/FileSubsystem.c
+	src/Subsystems/InputSubsystem.h
+	src/Subsystems/InputSubsystem.c
 	src/Subsystems/LoggingSubsystem.h
 	src/Subsystems/LoggingSubsystem.c
 	src/Subsystems/MemPoolSubsystem.h

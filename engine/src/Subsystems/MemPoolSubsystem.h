@@ -10,6 +10,7 @@ typedef enum MemPool_Category
 	MEMPOOL_SCENE,
 	MEMPOOL_ENTITY,
 	MEMPOOL_UI,
+	MEMPOOL_INPUT,
 
 	MEMPOOL__COUNT
 } MemPool_Category;
