@@ -5,7 +5,7 @@
 
 // You've got 10 digits on your hands, anything more than
 // this is probably an unreasonable expectation for a human
-#define MAX_SIMULTANEOUS_KEYS 10
+#define MAX_SIMULTANEOUS_INPUTS 10
 
 typedef enum ButtonState
 {
@@ -26,13 +26,17 @@ typedef struct InputCommandCategory
 	InputCommandItem* items;
 } InputCommandCategory;
 
+typedef struct InputBuffer
+{
+	int activeInputs[2][MAX_SIMULTANEOUS_INPUTS];
+	int* lastFrame;
+	int* thisFrame;
+} InputBuffer;
+
 typedef struct Data
 {
 	InputCommandCategory* categories;
-
-	int pressedKeys[2][MAX_SIMULTANEOUS_KEYS];
-	int* keysThisFrame;
-	int* keysLastFrame;
+	InputBuffer keyboardInputs;
 } Data;
 
 static Data* g_Data = NULL;
@@ -79,11 +83,23 @@ static void FreeData(Data* data)
 	MEMPOOL_FREE(data);
 }
 
-static void SwapKeyBufferPointers(Data* data)
+static void InitBuffer(InputBuffer* buffer)
 {
-	int* temp = data->keysLastFrame;
-	data->keysLastFrame = data->keysThisFrame;
-	data->keysThisFrame = temp;
+	memset(buffer, 0, sizeof(*buffer));
+	buffer->lastFrame = buffer->activeInputs[0];
+	buffer->thisFrame = buffer->activeInputs[1];
+}
+
+static void SwapBufferPointers(InputBuffer* buffer)
+{
+	int* temp = buffer->lastFrame;
+	buffer->lastFrame = buffer->thisFrame;
+	buffer->thisFrame = temp;
+}
+
+static void ResetBufferForThisFrame(InputBuffer* buffer, int value)
+{
+	memset(buffer->thisFrame, value, MAX_SIMULTANEOUS_INPUTS * sizeof(int));
 }
 
 static InputCommandCategory* FindCategoryForKey(InputCommandCategory* head, int id)
@@ -140,7 +156,7 @@ static void ExecuteCommand(int id, ButtonState state)
 
 static bool KeyIsInList(int id, int* list)
 {
-	for ( int index = 0; index < MAX_SIMULTANEOUS_KEYS; ++index )
+	for ( int index = 0; index < MAX_SIMULTANEOUS_INPUTS; ++index )
 	{
 		if ( list[index] == id )
 		{
@@ -153,8 +169,8 @@ static bool KeyIsInList(int id, int* list)
 
 static void SwapAndClearKeys(Data* data)
 {
-	SwapKeyBufferPointers(data);
-	memset(data->keysThisFrame, KEY_NULL, MAX_SIMULTANEOUS_KEYS * sizeof(int));
+	SwapBufferPointers(&data->keyboardInputs);
+	ResetBufferForThisFrame(&data->keyboardInputs, KEY_NULL);
 }
 
 static void BufferKeysThisFrame(Data* data)
@@ -165,7 +181,7 @@ static void BufferKeysThisFrame(Data* data)
 
 	for ( int pressedKey = GetKeyPressed(); pressedKey != KEY_NULL; pressedKey = GetKeyPressed() )
 	{
-		if ( nextIndex >= MAX_SIMULTANEOUS_KEYS )
+		if ( nextIndex >= MAX_SIMULTANEOUS_INPUTS )
 		{
 			LoggingSubsystem_PrintLine(
 				RAYGE_LOG_WARNING,
@@ -176,13 +192,13 @@ static void BufferKeysThisFrame(Data* data)
 			continue;
 		}
 
-		data->keysThisFrame[nextIndex++] = pressedKey;
+		data->keyboardInputs.thisFrame[nextIndex++] = pressedKey;
 	}
 }
 
 static void InvokeForKeysNoLongerPresent(int* lastList, int* currentList, ButtonState stateToInvokeIfDifferent)
 {
-	for ( size_t index = 0; index < MAX_SIMULTANEOUS_KEYS; ++index )
+	for ( size_t index = 0; index < MAX_SIMULTANEOUS_INPUTS; ++index )
 	{
 		int key = lastList[index];
 
@@ -201,8 +217,8 @@ void InputSubsystem_Init(void)
 	}
 
 	g_Data = MEMPOOL_CALLOC_STRUCT(MEMPOOL_INPUT, Data);
-	g_Data->keysThisFrame = g_Data->pressedKeys[0];
-	g_Data->keysLastFrame = g_Data->pressedKeys[1];
+
+	InitBuffer(&g_Data->keyboardInputs);
 }
 
 void InputSubsystem_ShutDown(void)
@@ -241,8 +257,17 @@ void InputSubsystem_ProcessInput(void)
 	BufferKeysThisFrame(g_Data);
 
 	// Handle releasing existing keys before pressing new ones
-	InvokeForKeysNoLongerPresent(g_Data->keysLastFrame, g_Data->keysThisFrame, BUTTONSTATE_RELEASED);
-	InvokeForKeysNoLongerPresent(g_Data->keysThisFrame, g_Data->keysLastFrame, BUTTONSTATE_PRESSED);
+	InvokeForKeysNoLongerPresent(
+		g_Data->keyboardInputs.lastFrame,
+		g_Data->keyboardInputs.thisFrame,
+		BUTTONSTATE_RELEASED
+	);
+
+	InvokeForKeysNoLongerPresent(
+		g_Data->keyboardInputs.thisFrame,
+		g_Data->keyboardInputs.lastFrame,
+		BUTTONSTATE_PRESSED
+	);
 }
 
 void InputSubsystem_ReleaseAllKeys(void)
@@ -253,5 +278,10 @@ void InputSubsystem_ReleaseAllKeys(void)
 	}
 
 	SwapAndClearKeys(g_Data);
-	InvokeForKeysNoLongerPresent(g_Data->keysLastFrame, g_Data->keysThisFrame, BUTTONSTATE_RELEASED);
+
+	InvokeForKeysNoLongerPresent(
+		g_Data->keyboardInputs.lastFrame,
+		g_Data->keyboardInputs.thisFrame,
+		BUTTONSTATE_RELEASED
+	);
 }
