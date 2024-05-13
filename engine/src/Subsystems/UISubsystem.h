@@ -6,15 +6,18 @@ typedef struct RayGE_UIMenu
 {
 	void* userData;
 
-	void (*Show)(void* userData);
-	void (*Hide)(void* userData);
-	void (*Poll)(void* userData);
+	void (*Show)(struct nk_context* context, void* userData);
+	void (*Hide)(struct nk_context* context, void* userData);
+	void (*Poll)(struct nk_context* context, void* userData);
 } RayGE_UIMenu;
 
 void UISubsystem_Init(void);
 void UISubsystem_ShutDown(void);
-struct nk_context* UISubsystem_GetNuklearContext(void);
 
 void UISubsystem_SetCurrentMenu(const RayGE_UIMenu* menu);
 void UISubsystem_ClearCurrentMenu(void);
-void UISubsystem_Poll(void);
+bool UISubsystem_HasCurrentMenu(void);
+void UISubsystem_PollCurrentMenu(void);
+
+void UISubsystem_ProcessInput(void);
+void UISubsystem_Draw(void);

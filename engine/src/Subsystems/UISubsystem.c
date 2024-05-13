@@ -62,11 +62,6 @@ void UISubsystem_ShutDown(void)
 	g_Initialised = false;
 }
 
-struct nk_context* UISubsystem_GetNuklearContext(void)
-{
-	return g_Initialised ? g_NKContext : NULL;
-}
-
 void UISubsystem_SetCurrentMenu(const RayGE_UIMenu* menu)
 {
 	if ( !g_Initialised || menu == g_CurrentMenu )
@@ -80,7 +75,7 @@ void UISubsystem_SetCurrentMenu(const RayGE_UIMenu* menu)
 
 	if ( g_CurrentMenu && g_CurrentMenu->Show )
 	{
-		g_CurrentMenu->Show(g_CurrentMenu->userData);
+		g_CurrentMenu->Show(g_NKContext, g_CurrentMenu->userData);
 	}
 }
 
@@ -93,10 +88,45 @@ void UISubsystem_ClearCurrentMenu(void)
 
 	if ( g_CurrentMenu && g_CurrentMenu->Hide )
 	{
-		g_CurrentMenu->Hide(g_CurrentMenu->userData);
+		g_CurrentMenu->Hide(g_NKContext, g_CurrentMenu->userData);
 	}
 
 	g_CurrentMenu = NULL;
+}
+
+bool UISubsystem_HasCurrentMenu(void)
+{
+	return g_Initialised && g_CurrentMenu;
+}
+
+void UISubsystem_PollCurrentMenu(void)
+{
+	if ( !g_Initialised || !g_CurrentMenu || !g_CurrentMenu->Poll )
+	{
+		return;
+	}
+
+	g_CurrentMenu->Poll(g_NKContext, g_CurrentMenu->userData);
+}
+
+void UISubsystem_ProcessInput(void)
+{
+	if ( !g_Initialised )
+	{
+		return;
+	}
+
+	UpdateNuklear(g_NKContext);
+}
+
+void UISubsystem_Draw(void)
+{
+	if ( !g_Initialised )
+	{
+		return;
+	}
+
+	DrawNuklear(g_NKContext);
 }
 
 void UISubsystem_Poll(void)
@@ -115,7 +145,7 @@ void UISubsystem_Poll(void)
 
 	if ( g_CurrentMenu->Poll )
 	{
-		g_CurrentMenu->Poll(g_CurrentMenu->userData);
+		g_CurrentMenu->Poll(g_NKContext, g_CurrentMenu->userData);
 	}
 
 	DrawNuklear(g_NKContext);

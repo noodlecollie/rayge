@@ -79,7 +79,6 @@ static void VisualiseEntities(void)
 	}
 
 	Renderer_AddDebugFlags(RENDERER_DBG_DRAW_LOCATIONS);
-	BeginDrawing();
 	ClearBackground(BLACK);
 
 	Camera3D camera = {0};
@@ -110,9 +109,35 @@ static void VisualiseEntities(void)
 
 	Renderer_FormatTextDev(20, 20, WHITE, "Scene has %zu active entities", Scene_GetActiveEntities());
 	Renderer_FormatTextDev(20, 40, WHITE, "FPS: %d", GetFPS());
+}
 
-	UISubsystem_SetCurrentMenu(&Menu_TestUI);
-	UISubsystem_Poll();
+static void RunFrameInput(void)
+{
+	// If UI is open, hook in and process input.
+	// Otherwise, game engine should process input.
+	if ( UISubsystem_HasCurrentMenu() )
+	{
+		UISubsystem_ProcessInput();
+		UISubsystem_PollCurrentMenu();
+	}
+	else
+	{
+		// TODO: Engine should get input here
+	}
+}
+
+static void RunFrameRender(void)
+{
+	BeginDrawing();
+
+	// Render scene
+	VisualiseEntities();
+
+	// Poll and render UI
+	if ( UISubsystem_HasCurrentMenu() )
+	{
+		UISubsystem_Draw();
+	}
 
 	EndDrawing();
 }
@@ -120,7 +145,12 @@ static void VisualiseEntities(void)
 static bool RunFrame(void)
 {
 	bool windowShouldClose = RendererSubsystem_WindowCloseRequested();
-	VisualiseEntities();
+
+	// TODO: Remove this once we're done testing
+	UISubsystem_SetCurrentMenu(&Menu_TestUI);
+
+	RunFrameInput();
+	RunFrameRender();
 
 	return windowShouldClose;
 }
