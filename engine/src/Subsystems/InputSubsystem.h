@@ -14,4 +14,5 @@ void InputSubsystem_Init(void);
 void InputSubsystem_ShutDown(void);
 
 void InputSubsystem_RegisterCommand(RayGE_InputCommand command);
-void InputSubsystem_ExecuteCommand(KeyboardKey key, bool pressed);
+void InputSubsystem_ProcessInput(void);
+void InputSubsystem_ReleaseAllKeys(void);

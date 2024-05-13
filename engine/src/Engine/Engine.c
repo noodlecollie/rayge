@@ -3,6 +3,7 @@
 #include "Subsystems/LoggingSubsystem.h"
 #include "Subsystems/SubsystemManager.h"
 #include "Subsystems/UISubsystem.h"
+#include "Subsystems/InputSubsystem.h"
 #include "Engine/EngineAPI.h"
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
@@ -117,12 +118,16 @@ static void RunFrameInput(void)
 	// Otherwise, game engine should process input.
 	if ( UISubsystem_HasCurrentMenu() )
 	{
+		// It's OK to do this here since the Nuklear layer
+		// doesn't use the GetKeyPressed() queue, so it won't interfere.
+		InputSubsystem_ReleaseAllKeys();
+
 		UISubsystem_ProcessInput();
 		UISubsystem_PollCurrentMenu();
 	}
 	else
 	{
-		// TODO: Engine should get input here
+		InputSubsystem_ProcessInput();
 	}
 }
 
@@ -145,9 +150,6 @@ static void RunFrameRender(void)
 static bool RunFrame(void)
 {
 	bool windowShouldClose = RendererSubsystem_WindowCloseRequested();
-
-	// TODO: Remove this once we're done testing
-	UISubsystem_SetCurrentMenu(&Menu_TestUI);
 
 	RunFrameInput();
 	RunFrameRender();
