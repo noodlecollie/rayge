@@ -19,6 +19,3 @@
 [submodule "thirdparty/cwalk-1.2.9/cwalk-1.2.9"]
 	path = thirdparty/cwalk-1.2.9/cwalk-1.2.9
 	url = https://github.com/likle/cwalk.git
-[submodule "thirdparty/uthash-2.3.0/uthash-2.3.0"]
-	path = thirdparty/uthash-2.3.0/uthash-2.3.0
-	url = https://github.com/troydhanson/uthash.git
