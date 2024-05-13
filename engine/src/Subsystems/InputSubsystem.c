@@ -7,11 +7,11 @@
 // this is probably an unreasonable expectation for a human
 #define MAX_SIMULTANEOUS_KEYS 10
 
-typedef enum KeyState
+typedef enum ButtonState
 {
-	KEYSTATE_RELEASED = 0,
-	KEYSTATE_PRESSED
-} KeyState;
+	BUTTONSTATE_RELEASED = 0,
+	BUTTONSTATE_PRESSED
+} ButtonState;
 
 typedef struct InputCommandItem
 {
@@ -116,7 +116,7 @@ static InputCommandCategory* FindOrCreateCategoryForKey(InputCommandCategory** h
 	return found;
 }
 
-static void ExecuteCommand(KeyboardKey key, KeyState state)
+static void ExecuteCommand(KeyboardKey key, ButtonState state)
 {
 	InputCommandCategory* category = FindCategoryForKey(g_Data->categories, key);
 
@@ -127,11 +127,11 @@ static void ExecuteCommand(KeyboardKey key, KeyState state)
 
 	for ( InputCommandItem* item = category->items; item; item = item->next )
 	{
-		if ( state == KEYSTATE_PRESSED && item->command.PressFunction )
+		if ( state == BUTTONSTATE_PRESSED && item->command.PressFunction )
 		{
 			item->command.PressFunction();
 		}
-		else if ( state == KEYSTATE_RELEASED && item->command.ReleaseFunction )
+		else if ( state == BUTTONSTATE_RELEASED && item->command.ReleaseFunction )
 		{
 			item->command.ReleaseFunction();
 		}
@@ -185,7 +185,7 @@ static void BufferKeysThisFrame(Data* data)
 	}
 }
 
-static void InvokeForKeysNoLongerPresent(int* lastList, int* currentList, KeyState stateToInvokeIfDifferent)
+static void InvokeForKeysNoLongerPresent(int* lastList, int* currentList, ButtonState stateToInvokeIfDifferent)
 {
 	for ( size_t index = 0; index < MAX_SIMULTANEOUS_KEYS; ++index )
 	{
@@ -252,8 +252,8 @@ void InputSubsystem_ProcessInput(void)
 	BufferKeysThisFrame(g_Data);
 
 	// Handle releasing existing keys before pressing new ones
-	InvokeForKeysNoLongerPresent(g_Data->keysLastFrame, g_Data->keysThisFrame, KEYSTATE_RELEASED);
-	InvokeForKeysNoLongerPresent(g_Data->keysThisFrame, g_Data->keysLastFrame, KEYSTATE_PRESSED);
+	InvokeForKeysNoLongerPresent(g_Data->keysLastFrame, g_Data->keysThisFrame, BUTTONSTATE_RELEASED);
+	InvokeForKeysNoLongerPresent(g_Data->keysThisFrame, g_Data->keysLastFrame, BUTTONSTATE_PRESSED);
 }
 
 void InputSubsystem_ReleaseAllKeys(void)
@@ -264,5 +264,5 @@ void InputSubsystem_ReleaseAllKeys(void)
 	}
 
 	SwapAndClearKeys(g_Data);
-	InvokeForKeysNoLongerPresent(g_Data->keysLastFrame, g_Data->keysThisFrame, KEYSTATE_RELEASED);
+	InvokeForKeysNoLongerPresent(g_Data->keysLastFrame, g_Data->keysThisFrame, BUTTONSTATE_RELEASED);
 }

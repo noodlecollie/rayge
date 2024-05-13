@@ -114,6 +114,19 @@ static void VisualiseEntities(void)
 
 static void RunFrameInput(void)
 {
+	// TODO: Remove this once finished testing
+	if ( IsKeyPressed(KEY_GRAVE) )
+	{
+		if ( !UISubsystem_HasCurrentMenu() )
+		{
+			UISubsystem_SetCurrentMenu(&Menu_TestUI);
+		}
+		else
+		{
+			UISubsystem_ClearCurrentMenu();
+		}
+	}
+
 	// If UI is open, hook in and process input.
 	// Otherwise, game engine should process input.
 	if ( UISubsystem_HasCurrentMenu() )
