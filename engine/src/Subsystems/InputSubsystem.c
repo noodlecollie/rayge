@@ -178,15 +178,15 @@ static bool InputIsInList(int id, const int* list)
 	return false;
 }
 
-static void SwapAndClearKeys(Data* data)
+static void SwapAndClearKeys(InputBuffer* state, int clearValue)
 {
-	SwapBufferPointers(&data->inputClasses[INPUT_TYPE_KEYBOARD].inputState);
-	ResetBufferForThisFrame(&data->inputClasses[INPUT_TYPE_KEYBOARD].inputState, KEY_NULL);
+	SwapBufferPointers(state);
+	ResetBufferForThisFrame(state, clearValue);
 }
 
 static void BufferKeysThisFrame(Data* data)
 {
-	SwapAndClearKeys(data);
+	SwapAndClearKeys(&data->inputClasses[INPUT_TYPE_KEYBOARD].inputState, KEY_NULL);
 
 	size_t nextIndex = 0;
 
@@ -313,7 +313,7 @@ void InputSubsystem_ReleaseAllKeys(void)
 		return;
 	}
 
-	SwapAndClearKeys(g_Data);
+	SwapAndClearKeys(&g_Data->inputClasses[INPUT_TYPE_KEYBOARD].inputState, KEY_NULL);
 
 	for ( size_t index = 0; index < INPUT_TYPE__COUNT; ++index )
 	{
