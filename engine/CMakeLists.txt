@@ -45,6 +45,9 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Identity/Identity.c
 	src/Input/InputBuffer.h
 	src/Input/InputBuffer.c
+	src/Input/InputBufferKeyboard.h
+	src/Input/InputBufferKeyboard.c
+	src/Input/KeyboardModifiers.h
 	src/JSON/JSONUtils.h
 	src/JSON/JSONUtils.c
 	src/Launcher/Launcher.c

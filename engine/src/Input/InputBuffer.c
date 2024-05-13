@@ -19,9 +19,42 @@ static void SetValues(int* buffer, size_t length, int value)
 	}
 }
 
+static bool InputIsInList(const int* list, size_t length, int value)
+{
+	for ( size_t index = 0; index < length; ++index )
+	{
+		if ( list[index] == value )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static void InvokeForInputsInFirstListAndNotInSecond(
+	const int* firstList,
+	const int* secondList,
+	size_t length,
+	RayGE_InputState state,
+	RayGE_InputBufferTriggerFunc callback,
+	void* userData
+)
+{
+	for ( size_t index = 0; index < length; ++index )
+	{
+		int id = secondList[index];
+
+		if ( !InputIsInList(firstList, length, id) )
+		{
+			callback(id, state, userData);
+		}
+	}
+}
+
 RayGE_InputBuffer* InputBuffer_Create(size_t maxSimultaneousInputs)
 {
-	RAYGE_ASSERT(maxSimultaneousInputs > 0 , "Expected max simultaneous input count to be greater than zero");
+	RAYGE_ASSERT(maxSimultaneousInputs > 0, "Expected max simultaneous input count to be greater than zero");
 
 	if ( maxSimultaneousInputs < 1 )
 	{
@@ -92,4 +125,41 @@ void InputBuffer_Swap(RayGE_InputBuffer* buffer)
 	}
 
 	buffer->currentIndex = OTHER_BUFFER_INDEX(buffer->currentIndex);
+}
+
+void InputBuffer_TriggerForAllInputsNowActive(
+	RayGE_InputBuffer* buffer,
+	RayGE_InputBufferTriggerFunc callback,
+	void* userData
+)
+{
+	if ( !buffer || !callback )
+	{
+		return;
+	}
+
+	InvokeForInputsInFirstListAndNotInSecond(
+		buffer->buffers[buffer->currentIndex],
+		buffer->buffers[OTHER_BUFFER_INDEX(buffer->currentIndex)],
+		buffer->bufferLength,
+		INPUT_STATE_ACTIVE,
+		callback,
+		userData
+	);
+}
+
+void InputBuffer_TriggerForAllInputsNowInactive(
+	RayGE_InputBuffer* buffer,
+	RayGE_InputBufferTriggerFunc callback,
+	void* userData
+)
+{
+	InvokeForInputsInFirstListAndNotInSecond(
+		buffer->buffers[OTHER_BUFFER_INDEX(buffer->currentIndex)],
+		buffer->buffers[buffer->currentIndex],
+		buffer->bufferLength,
+		INPUT_STATE_INACTIVE,
+		callback,
+		userData
+	);
 }
