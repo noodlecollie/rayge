@@ -1,11 +1,11 @@
 #include "Subsystems/UISubsystem.h"
 #include "Subsystems/MemPoolSubsystem.h"
 #include "Subsystems/RendererSubsystem.h"
-#include "Rendering/NuklearCommandExecutor.h"
 #include "Debugging.h"
 #include "raylib.h"
+#include "Nuklear/Nuklear.h"
 
-static struct nk_context g_NKContext;
+static struct nk_context* g_NKContext = NULL;
 static struct nk_user_font g_NKFont;
 static const RayGE_UIMenu* g_CurrentMenu = NULL;
 static bool g_Initialised = false;
@@ -40,19 +40,9 @@ void UISubsystem_Init(void)
 		return;
 	}
 
-	struct nk_allocator allocator = {
-		{0},
-		&LocalAllocate,
-		&LocalFree,
-	};
+	g_NKContext = InitNuklearEx(RendererSubsystem_GetDefaultFont(), RENDERSUBSYSTEM_DEFAULT_FONT_SIZE);
+	RAYGE_ENSURE(g_NKContext, "Unable to create Nuklear context");
 
-	memset(&g_NKFont, 0, sizeof(g_NKFont));
-
-	g_NKFont.width = &ComputeTextWidthForDefaultFont;
-	g_NKFont.height = (float)RENDERSUBSYSTEM_DEFAULT_FONT_SIZE;
-
-	// TODO: We need to hook up the NK draw commands to actually do something!
-	nk_init(&g_NKContext, &allocator, &g_NKFont);
 	g_CurrentMenu = NULL;
 	g_Initialised = true;
 }
@@ -65,17 +55,16 @@ void UISubsystem_ShutDown(void)
 	}
 
 	g_CurrentMenu = NULL;
-	nk_free(&g_NKContext);
 
-	memset(&g_NKFont, 0, sizeof(g_NKFont));
-	memset(&g_NKContext, 0, sizeof(g_NKContext));
+	UnloadNuklear(g_NKContext);
+	g_NKContext = NULL;
 
 	g_Initialised = false;
 }
 
 struct nk_context* UISubsystem_GetNuklearContext(void)
 {
-	return g_Initialised ? &g_NKContext : NULL;
+	return g_Initialised ? g_NKContext : NULL;
 }
 
 void UISubsystem_SetCurrentMenu(const RayGE_UIMenu* menu)
@@ -117,9 +106,17 @@ void UISubsystem_Poll(void)
 		return;
 	}
 
-	if ( g_CurrentMenu && g_CurrentMenu->Poll )
+	UpdateNuklear(g_NKContext);
+
+	if ( !g_CurrentMenu )
+	{
+		return;
+	}
+
+	if ( g_CurrentMenu->Poll )
 	{
 		g_CurrentMenu->Poll(g_CurrentMenu->userData);
-		NuklearCommand_ProcessCommands(&g_NKContext);
 	}
+
+	DrawNuklear(g_NKContext);
 }
