@@ -2,6 +2,7 @@
 #include "Subsystems/InputSubsystem.h"
 #include "Subsystems/MemPoolSubsystem.h"
 #include "Subsystems/LoggingSubsystem.h"
+#include "Debugging.h"
 
 // You've got 10 digits on your hands, anything more than
 // this is probably an unreasonable expectation for a human
@@ -33,10 +34,16 @@ typedef struct InputBuffer
 	int* thisFrame;
 } InputBuffer;
 
+typedef struct InputClass
+{
+	RayGE_InputType type;
+	InputCommandCategory* commandCategories;
+	InputBuffer inputState;
+} InputClass;
+
 typedef struct Data
 {
-	InputCommandCategory* categories;
-	InputBuffer keyboardInputs;
+	InputClass inputClasses[INPUT_TYPE__COUNT];
 } Data;
 
 static Data* g_Data = NULL;
@@ -79,7 +86,11 @@ static void FreeData(Data* data)
 		return;
 	}
 
-	FreeCategoryChain(data->categories);
+	for ( size_t index = 0; index < INPUT_TYPE__COUNT; ++index )
+	{
+		FreeCategoryChain(data->inputClasses[index].commandCategories);
+	}
+
 	MEMPOOL_FREE(data);
 }
 
@@ -132,9 +143,9 @@ static InputCommandCategory* FindOrCreateCategoryForInput(InputCommandCategory**
 	return found;
 }
 
-static void ExecuteCommand(int id, ButtonState state)
+static void ExecuteCommand(InputClass* inputClass, int id, ButtonState state)
 {
-	InputCommandCategory* category = FindCategoryForInput(g_Data->categories, id);
+	InputCommandCategory* category = FindCategoryForInput(inputClass->commandCategories, id);
 
 	if ( !category )
 	{
@@ -154,7 +165,7 @@ static void ExecuteCommand(int id, ButtonState state)
 	}
 }
 
-static bool InputIsInList(int id, int* list)
+static bool InputIsInList(int id, const int* list)
 {
 	for ( int index = 0; index < MAX_SIMULTANEOUS_INPUTS; ++index )
 	{
@@ -169,8 +180,8 @@ static bool InputIsInList(int id, int* list)
 
 static void SwapAndClearKeys(Data* data)
 {
-	SwapBufferPointers(&data->keyboardInputs);
-	ResetBufferForThisFrame(&data->keyboardInputs, KEY_NULL);
+	SwapBufferPointers(&data->inputClasses[INPUT_TYPE_KEYBOARD].inputState);
+	ResetBufferForThisFrame(&data->inputClasses[INPUT_TYPE_KEYBOARD].inputState, KEY_NULL);
 }
 
 static void BufferKeysThisFrame(Data* data)
@@ -192,11 +203,16 @@ static void BufferKeysThisFrame(Data* data)
 			continue;
 		}
 
-		data->keyboardInputs.thisFrame[nextIndex++] = pressedKey;
+		data->inputClasses[INPUT_TYPE_KEYBOARD].inputState.thisFrame[nextIndex++] = pressedKey;
 	}
 }
 
-static void InvokeForInputsNoLongerPresent(int* lastList, int* currentList, ButtonState stateToInvokeIfDifferent)
+static void InvokeForInputsNoLongerPresent(
+	InputClass* inputClass,
+	const int* lastList,
+	const int* currentList,
+	ButtonState stateToInvokeIfDifferent
+)
 {
 	for ( size_t index = 0; index < MAX_SIMULTANEOUS_INPUTS; ++index )
 	{
@@ -204,7 +220,7 @@ static void InvokeForInputsNoLongerPresent(int* lastList, int* currentList, Butt
 
 		if ( !InputIsInList(key, currentList) )
 		{
-			ExecuteCommand(key, stateToInvokeIfDifferent);
+			ExecuteCommand(inputClass, key, stateToInvokeIfDifferent);
 		}
 	}
 }
@@ -218,7 +234,11 @@ void InputSubsystem_Init(void)
 
 	g_Data = MEMPOOL_CALLOC_STRUCT(MEMPOOL_INPUT, Data);
 
-	InitBuffer(&g_Data->keyboardInputs);
+	for ( size_t index = 0; index < INPUT_TYPE__COUNT; ++index )
+	{
+		g_Data->inputClasses[index].type = (RayGE_InputType)index;
+		InitBuffer(&g_Data->inputClasses[index].inputState);
+	}
 }
 
 void InputSubsystem_ShutDown(void)
@@ -239,7 +259,15 @@ void InputSubsystem_RegisterCommand(RayGE_InputCommand command)
 		return;
 	}
 
-	InputCommandCategory* category = FindOrCreateCategoryForInput(&g_Data->categories, command.id);
+	RAYGE_ASSERT(command.type < INPUT_TYPE__COUNT, "Unexpected input type value %d", command.type);
+
+	if ( command.type >= INPUT_TYPE__COUNT )
+	{
+		return;
+	}
+
+	InputCommandCategory* category =
+		FindOrCreateCategoryForInput(&g_Data->inputClasses[command.type].commandCategories, command.id);
 
 	InputCommandItem* item = MEMPOOL_CALLOC_STRUCT(MEMPOOL_INPUT, InputCommandItem);
 	item->command = command;
@@ -257,17 +285,25 @@ void InputSubsystem_ProcessInput(void)
 	BufferKeysThisFrame(g_Data);
 
 	// Handle releasing existing keys before pressing new ones
-	InvokeForInputsNoLongerPresent(
-		g_Data->keyboardInputs.lastFrame,
-		g_Data->keyboardInputs.thisFrame,
-		BUTTONSTATE_RELEASED
-	);
+	for ( size_t index = 0; index < INPUT_TYPE__COUNT; ++index )
+	{
+		InvokeForInputsNoLongerPresent(
+			&g_Data->inputClasses[index],
+			g_Data->inputClasses[index].inputState.lastFrame,
+			g_Data->inputClasses[index].inputState.thisFrame,
+			BUTTONSTATE_RELEASED
+		);
+	}
 
-	InvokeForInputsNoLongerPresent(
-		g_Data->keyboardInputs.thisFrame,
-		g_Data->keyboardInputs.lastFrame,
-		BUTTONSTATE_PRESSED
-	);
+	for ( size_t index = 0; index < INPUT_TYPE__COUNT; ++index )
+	{
+		InvokeForInputsNoLongerPresent(
+			&g_Data->inputClasses[index],
+			g_Data->inputClasses[index].inputState.thisFrame,
+			g_Data->inputClasses[index].inputState.lastFrame,
+			BUTTONSTATE_PRESSED
+		);
+	}
 }
 
 void InputSubsystem_ReleaseAllKeys(void)
@@ -279,9 +315,13 @@ void InputSubsystem_ReleaseAllKeys(void)
 
 	SwapAndClearKeys(g_Data);
 
-	InvokeForInputsNoLongerPresent(
-		g_Data->keyboardInputs.lastFrame,
-		g_Data->keyboardInputs.thisFrame,
-		BUTTONSTATE_RELEASED
-	);
+	for ( size_t index = 0; index < INPUT_TYPE__COUNT; ++index )
+	{
+		InvokeForInputsNoLongerPresent(
+			&g_Data->inputClasses[index],
+			g_Data->inputClasses[index].inputState.lastFrame,
+			g_Data->inputClasses[index].inputState.thisFrame,
+			BUTTONSTATE_RELEASED
+		);
+	}
 }
