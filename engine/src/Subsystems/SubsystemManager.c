@@ -17,6 +17,7 @@ typedef struct SubsystemInitAndShutdown
 // Subsystems are initialised in order, and shut down in reverse order.
 static const SubsystemInitAndShutdown g_Subsystems[] = {
 	{MemPoolSubsystem_Init, MemPoolSubsystem_ShutDown},
+	// TODO: File subsystem here, and make it use its own mempool
 	{RendererSubsystem_Init, RendererSubsystem_ShutDown},
 	{InputSubsystem_Init, InputSubsystem_ShutDown},
 	{UISubsystem_Init, UISubsystem_ShutDown},

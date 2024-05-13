@@ -79,7 +79,7 @@ static inline void RayGE_EnsureTrue(
 	} \
 	while ( false )
 
-#define RAYGE_FATAL(...) RAYGE_FATAL_EX("<Fatal Condition">, __VA_ARGS__)
+#define RAYGE_FATAL(...) RAYGE_FATAL_EX("<Fatal Condition", __VA_ARGS__)
 
 // Only active in debug builds:
 #if RAYGE_DEBUG()
