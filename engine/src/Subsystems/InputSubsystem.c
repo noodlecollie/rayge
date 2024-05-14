@@ -9,13 +9,6 @@
 // this is probably an unreasonable expectation for a human
 #define MAX_SIMULTANEOUS_INPUTS 10
 
-typedef enum InputSource
-{
-	INPUT_SOURCE_KEYBOARD = 0,
-
-	INPUT_SOURCE__COUNT
-} InputSource;
-
 typedef struct InputClass
 {
 	RayGE_InputBuffer* buffer;
@@ -90,9 +83,14 @@ void InputSubsystem_ClearAllInputThisFrame(void)
 	g_Data->clearAllInputThisFrame = true;
 }
 
-const RayGE_InputBuffer* InputSubsystem_GetKeyboardBuffer(void)
+const RayGE_InputBuffer* InputSubsystem_GetInputForSource(RayGE_InputSource source)
 {
-	return g_Data ? g_Data->inputClasses[INPUT_SOURCE_KEYBOARD].buffer : NULL;
+	if ( !g_Data || source >= INPUT_SOURCE__COUNT )
+	{
+		return NULL;
+	}
+
+	return g_Data->inputClasses[source].buffer;
 }
 
 void InputSubsystem_NewFrame(void)

@@ -71,6 +71,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Subsystems/CommandSubsystem.c
 	src/Subsystems/FileSubsystem.h
 	src/Subsystems/FileSubsystem.c
+	src/Subsystems/InputHookSubsystem.h
+	src/Subsystems/InputHookSubsystem.c
 	src/Subsystems/InputSubsystem.h
 	src/Subsystems/InputSubsystem.c
 	src/Subsystems/LoggingSubsystem.h

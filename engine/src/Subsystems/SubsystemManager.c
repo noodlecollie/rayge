@@ -5,6 +5,7 @@
 #include "Subsystems/UISubsystem.h"
 #include "Subsystems/InputSubsystem.h"
 #include "Subsystems/CommandSubsystem.h"
+#include "Subsystems/InputHookSubsystem.h"
 #include "Utils.h"
 
 typedef struct SubsystemInitAndShutdown
@@ -22,6 +23,7 @@ static const SubsystemInitAndShutdown g_Subsystems[] = {
 	{InputSubsystem_Init, InputSubsystem_ShutDown},
 	{UISubsystem_Init, UISubsystem_ShutDown},
 	{CommandSubsystem_Init, CommandSubsystem_ShutDown},
+	{InputHookSubsystem_Init, InputHookSubsystem_ShutDown},
 };
 
 static bool g_Initialised = false;

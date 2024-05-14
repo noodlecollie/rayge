@@ -4,6 +4,7 @@
 #include "Subsystems/SubsystemManager.h"
 #include "Subsystems/UISubsystem.h"
 #include "Subsystems/InputSubsystem.h"
+#include "Subsystems/InputHookSubsystem.h"
 #include "Hooks/HookManager.h"
 #include "Engine/EngineAPI.h"
 #include "Scene/Scene.h"
@@ -124,6 +125,7 @@ static void RunFrameInput(void)
 	}
 
 	InputSubsystem_ProcessInput();
+	InputHookSubsystem_ProcessInput();
 }
 
 static void RunFrameUIInput(void)

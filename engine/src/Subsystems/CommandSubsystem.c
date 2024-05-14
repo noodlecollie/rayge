@@ -45,7 +45,7 @@ static void FreeAllCommandItems(CommandRegistry* registry)
 	HASH_ITER(hh, registry->commandHash, item, tmp)
 	{
 		HASH_DEL(registry->commandHash, item);
-		MEMPOOL_FREE(item);
+		FreeCommandItem(item);
 	}
 }
 
