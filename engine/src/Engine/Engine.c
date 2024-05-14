@@ -114,6 +114,19 @@ static void VisualiseEntities(void)
 
 static void RunFrameInput(void)
 {
+	InputSubsystem_NewFrame();
+
+	// Don't allow any in-game keys to be pressed if UI is active.
+	if ( UISubsystem_HasCurrentMenu() )
+	{
+		InputSubsystem_ClearAllInputThisFrame();
+	}
+
+	InputSubsystem_ProcessInput();
+}
+
+static void RunFrameUIInput(void)
+{
 	// TODO: Remove this once finished testing
 	if ( IsKeyPressed(KEY_GRAVE) )
 	{
@@ -127,20 +140,10 @@ static void RunFrameInput(void)
 		}
 	}
 
-	// If UI is open, hook in and process input.
-	// Otherwise, game engine should process input.
 	if ( UISubsystem_HasCurrentMenu() )
 	{
-		// It's OK to do this here since the Nuklear layer
-		// doesn't use the GetKeyPressed() queue, so it won't interfere.
-		InputSubsystem_ReleaseAllKeys();
-
 		UISubsystem_ProcessInput();
 		UISubsystem_PollCurrentMenu();
-	}
-	else
-	{
-		InputSubsystem_ProcessInput();
 	}
 }
 
@@ -165,6 +168,7 @@ static bool RunFrame(void)
 	bool windowShouldClose = RendererSubsystem_WindowCloseRequested();
 
 	RunFrameInput();
+	RunFrameUIInput();
 	RunFrameRender();
 
 	return windowShouldClose;

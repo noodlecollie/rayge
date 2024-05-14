@@ -92,7 +92,17 @@ int* InputBuffer_GetCurrentBuffer(RayGE_InputBuffer* buffer)
 	return buffer ? buffer->buffers[buffer->currentIndex] : NULL;
 }
 
+const int* InputBuffer_GetCurrentBufferConst(const RayGE_InputBuffer* buffer)
+{
+	return buffer ? buffer->buffers[buffer->currentIndex] : NULL;
+}
+
 int* InputBuffer_GetLastBuffer(RayGE_InputBuffer* buffer)
+{
+	return buffer ? buffer->buffers[OTHER_BUFFER_INDEX(buffer->currentIndex)] : NULL;
+}
+
+const int* InputBuffer_GetLastBufferConst(const RayGE_InputBuffer* buffer)
 {
 	return buffer ? buffer->buffers[OTHER_BUFFER_INDEX(buffer->currentIndex)] : NULL;
 }
@@ -128,7 +138,7 @@ void InputBuffer_Swap(RayGE_InputBuffer* buffer)
 }
 
 void InputBuffer_TriggerForAllInputsNowActive(
-	RayGE_InputBuffer* buffer,
+	const RayGE_InputBuffer* buffer,
 	RayGE_InputBufferTriggerFunc callback,
 	void* userData
 )
@@ -149,7 +159,7 @@ void InputBuffer_TriggerForAllInputsNowActive(
 }
 
 void InputBuffer_TriggerForAllInputsNowInactive(
-	RayGE_InputBuffer* buffer,
+	const RayGE_InputBuffer* buffer,
 	RayGE_InputBufferTriggerFunc callback,
 	void* userData
 )

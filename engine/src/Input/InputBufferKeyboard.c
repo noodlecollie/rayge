@@ -34,7 +34,6 @@ void InputBuffer_PopulateFromKeyboard(RayGE_InputBuffer* buffer)
 		return;
 	}
 
-	InputBuffer_Swap(buffer);
 	InputBuffer_SetCurrentBufferValues(buffer, KEY_NULL);
 
 	int* bufferData = InputBuffer_GetCurrentBuffer(buffer);
@@ -59,17 +58,17 @@ void InputBuffer_PopulateFromKeyboard(RayGE_InputBuffer* buffer)
 	}
 }
 
-RayGE_KeyboardModifiers InputBuffer_GetCurrentKeyboardModifiers(RayGE_InputBuffer* buffer)
+RayGE_KeyboardModifiers InputBuffer_GetCurrentKeyboardModifiers(const RayGE_InputBuffer* buffer)
 {
 	if ( !buffer )
 	{
 		return KEYMOD_NONE;
 	}
 
-	return GetKeyboardModifiers(InputBuffer_GetCurrentBuffer(buffer), InputBuffer_GetMaxLength(buffer));
+	return GetKeyboardModifiers(InputBuffer_GetCurrentBufferConst(buffer), InputBuffer_GetMaxLength(buffer));
 }
 
-RayGE_KeyboardModifiers InputBuffer_GetKeyboardModifiersPressed(RayGE_InputBuffer* buffer)
+RayGE_KeyboardModifiers InputBuffer_GetKeyboardModifiersPressed(const RayGE_InputBuffer* buffer)
 {
 	if ( !buffer )
 	{
@@ -77,15 +76,15 @@ RayGE_KeyboardModifiers InputBuffer_GetKeyboardModifiersPressed(RayGE_InputBuffe
 	}
 
 	RayGE_KeyboardModifiers oldModifiers =
-		GetKeyboardModifiers(InputBuffer_GetLastBuffer(buffer), InputBuffer_GetMaxLength(buffer));
+		GetKeyboardModifiers(InputBuffer_GetLastBufferConst(buffer), InputBuffer_GetMaxLength(buffer));
 
 	RayGE_KeyboardModifiers newModifiers =
-		GetKeyboardModifiers(InputBuffer_GetCurrentBuffer(buffer), InputBuffer_GetMaxLength(buffer));
+		GetKeyboardModifiers(InputBuffer_GetCurrentBufferConst(buffer), InputBuffer_GetMaxLength(buffer));
 
 	return newModifiers & (~oldModifiers);
 }
 
-RayGE_KeyboardModifiers InputBuffer_GetKeyboardModifiersReleased(RayGE_InputBuffer* buffer)
+RayGE_KeyboardModifiers InputBuffer_GetKeyboardModifiersReleased(const RayGE_InputBuffer* buffer)
 {
 	if ( !buffer )
 	{
@@ -93,10 +92,10 @@ RayGE_KeyboardModifiers InputBuffer_GetKeyboardModifiersReleased(RayGE_InputBuff
 	}
 
 	RayGE_KeyboardModifiers oldModifiers =
-		GetKeyboardModifiers(InputBuffer_GetLastBuffer(buffer), InputBuffer_GetMaxLength(buffer));
+		GetKeyboardModifiers(InputBuffer_GetLastBufferConst(buffer), InputBuffer_GetMaxLength(buffer));
 
 	RayGE_KeyboardModifiers newModifiers =
-		GetKeyboardModifiers(InputBuffer_GetCurrentBuffer(buffer), InputBuffer_GetMaxLength(buffer));
+		GetKeyboardModifiers(InputBuffer_GetCurrentBufferConst(buffer), InputBuffer_GetMaxLength(buffer));
 
 	return oldModifiers & (~newModifiers);
 }

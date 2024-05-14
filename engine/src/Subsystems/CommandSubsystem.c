@@ -11,6 +11,7 @@ typedef struct CommandItem
 {
 	char* name;
 	CommandSubsystem_Callback callback;
+	void* userData;
 	UT_hash_handle hh;
 } CommandItem;
 
@@ -76,11 +77,12 @@ static CommandItem* FindCommandByName(CommandRegistry* registry, const char* nam
 	return item;
 }
 
-static void AddCommand(CommandRegistry* registry, char* name, CommandSubsystem_Callback callback)
+static void AddCommand(CommandRegistry* registry, char* name, CommandSubsystem_Callback callback, void* userData)
 {
 	CommandItem* item = MEMPOOL_CALLOC_STRUCT(MEMPOOL_COMMANDS, CommandItem);
 	item->name = name;
 	item->callback = callback;
+	item->userData = userData;
 
 	HASH_ADD_STR(registry->commandHash, name, item);
 }
@@ -108,7 +110,7 @@ void CommandSubsystem_ShutDown(void)
 	g_Registry = NULL;
 }
 
-bool CommandSubsystem_AddCommand(const char* name, CommandSubsystem_Callback callback)
+bool CommandSubsystem_AddCommand(const char* name, CommandSubsystem_Callback callback, void* userData)
 {
 	RAYGE_ASSERT(g_Registry, "Command subsystem was not initialised");
 
@@ -151,7 +153,7 @@ bool CommandSubsystem_AddCommand(const char* name, CommandSubsystem_Callback cal
 			break;
 		}
 
-		AddCommand(g_Registry, trimmedName, callback);
+		AddCommand(g_Registry, trimmedName, callback, userData);
 		return true;
 	}
 	while ( false );
@@ -166,23 +168,27 @@ bool CommandSubsystem_AddCommand(const char* name, CommandSubsystem_Callback cal
 	return false;
 }
 
-CommandSubsystem_Callback CommandSubsystem_GetCallback(const char* commandName)
+bool CommandSubsystem_InvokeCommand(const char* commandName)
 {
 	RAYGE_ASSERT(g_Registry, "Command subsystem was not initialised");
 
 	if ( !g_Registry )
 	{
-		return NULL;
+		return false;
 	}
 
 	if ( !commandName || !(*commandName) )
 	{
-		return NULL;
+		return false;
 	}
 
-	char* trimmedName = TrimCommandName(commandName);
-	CommandItem* item = FindCommandByName(g_Registry, trimmedName);
-	MEMPOOL_FREE(trimmedName);
+	CommandItem* item = FindCommandByName(g_Registry, commandName);
 
-	return item ? item->callback : NULL;
+	if ( !item || !item->callback )
+	{
+		return false;
+	}
+
+	item->callback(item->userData);
+	return true;
 }
