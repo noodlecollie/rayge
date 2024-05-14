@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 
-typedef void (*CommandSubsystem_Callback)(void* userData);
+typedef void (*CommandSubsystem_Callback)(const char* commandName, void* userData);
 
 void CommandSubsystem_Init(void);
 void CommandSubsystem_ShutDown(void);

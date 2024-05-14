@@ -189,6 +189,6 @@ bool CommandSubsystem_InvokeCommand(const char* commandName)
 		return false;
 	}
 
-	item->callback(item->userData);
+	item->callback(item->name, item->userData);
 	return true;
 }

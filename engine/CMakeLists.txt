@@ -41,6 +41,10 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Game/GameData.c
 	src/Game/GameLoader.h
 	src/Game/GameLoader.c
+	src/Hooks/HookManager.h
+	src/Hooks/HookManager.c
+	src/Hooks/MenuHooks.h
+	src/Hooks/MenuHooks.c
 	src/Identity/Identity.h
 	src/Identity/Identity.c
 	src/Input/InputBuffer.h

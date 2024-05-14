@@ -4,6 +4,7 @@
 #include "Subsystems/SubsystemManager.h"
 #include "Subsystems/UISubsystem.h"
 #include "Subsystems/InputSubsystem.h"
+#include "Hooks/HookManager.h"
 #include "Engine/EngineAPI.h"
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
@@ -186,6 +187,7 @@ void Engine_StartUp(void)
 	VerifyAllEngineAPIFunctionPointersAreValid();
 
 	SubsystemManager_InitAll();
+	HookManager_RegisterAll();
 
 	g_Initialised = true;
 
@@ -205,6 +207,8 @@ void Engine_ShutDown(void)
 	}
 
 	LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, "RayGE engine shutting down.");
+
+	HookManager_UnregisterAll();
 	SubsystemManager_ShutDownAll();
 
 	LoggingSubsystem_ShutDown();

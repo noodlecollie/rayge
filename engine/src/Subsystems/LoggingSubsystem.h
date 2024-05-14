@@ -4,6 +4,10 @@
 #include <stdarg.h>
 #include "RayGE/APIs/Logging.h"
 
+// TODO: Move this out of the subsystem folder and to somewhere of its own?
+// It's managed independently of the rest of the subsystems, so probably
+// shouldn't be named like one.
+
 void LoggingSubsystem_Init(void);
 void LoggingSubsystem_ShutDown(void);
 void LoggingSubsystem_SetLogLevel(RayGE_Log_Level level);

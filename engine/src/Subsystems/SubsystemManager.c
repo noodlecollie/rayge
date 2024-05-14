@@ -37,7 +37,10 @@ void SubsystemManager_InitAll(void)
 
 	for ( const SubsystemInitAndShutdown* subsystem = g_Subsystems; subsystem < end; ++subsystem )
 	{
-		subsystem->Init();
+		if ( subsystem->Init )
+		{
+			subsystem->Init();
+		}
 	}
 
 	g_Initialised = true;
@@ -55,7 +58,10 @@ void SubsystemManager_ShutDownAll(void)
 	for ( const SubsystemInitAndShutdown* subsystem = g_Subsystems + RAYGE_ARRAY_SIZE(g_Subsystems) - 1; subsystem > end;
 		  --subsystem )
 	{
-		subsystem->ShutDown();
+		if ( subsystem->ShutDown )
+		{
+			subsystem->ShutDown();
+		}
 	}
 
 	g_Initialised = false;
