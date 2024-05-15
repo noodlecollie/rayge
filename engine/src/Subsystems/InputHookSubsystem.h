@@ -5,8 +5,14 @@
 
 typedef enum RayGE_InputHookTriggerFlag
 {
+	// This hook triggers when an input becomes active.
 	INPUT_TRIGGER_ACTIVE = (1 << 0),
-	INPUT_TRIGGER_INACTIVE = (1 << 1)
+
+	// This hook triggers when an input becomes inactive.
+	INPUT_TRIGGER_INACTIVE = (1 << 1),
+
+	// This hook triggers even when a UI window is active.
+	INPUT_TRIGGER_OVERRIDE_UI_FOCUS = (1 << 2),
 } RayGE_InputHookTriggerFlag;
 
 typedef struct RayGE_InputHook

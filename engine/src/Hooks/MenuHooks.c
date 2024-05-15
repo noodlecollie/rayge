@@ -84,7 +84,7 @@ static void RegisterMenu(int key, const char* name, const RayGE_UIMenu* menu)
 	state->hideCmd = CommandSubsystem_AddCommand(fullName, HandleCommand, (void*)menu);
 
 	const RayGE_InputHook hook = {
-		.triggerFlags = INPUT_TRIGGER_ACTIVE,
+		.triggerFlags = INPUT_TRIGGER_ACTIVE | INPUT_TRIGGER_OVERRIDE_UI_FOCUS,
 		.callback = HandleHook,
 		.userData = state
 	};

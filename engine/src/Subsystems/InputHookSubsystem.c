@@ -1,5 +1,6 @@
 #include "Subsystems/InputHookSubsystem.h"
 #include "Subsystems/LoggingSubsystem.h"
+#include "Subsystems/UISubsystem.h"
 #include "utlist.h"
 
 #define UTHASH_POOLED_MEMPOOL MEMPOOL_INPUT
@@ -9,6 +10,7 @@ typedef struct CallbackInfo
 {
 	RayGE_InputSource source;
 	const RayGE_InputBuffer* buffer;
+	bool uiIsOpen;
 } CallbackInfo;
 
 typedef struct HookItem
@@ -86,9 +88,8 @@ static void DestroyData(Data* data)
 	MEMPOOL_FREE(data);
 }
 
-static void HandleInputNowInactive(int id, RayGE_InputState state, void* userData)
+static void CheckAndCallHook(int id, RayGE_InputState state, void* userData)
 {
-	(void)state;
 	const CallbackInfo* cbInfo = (const CallbackInfo*)userData;
 
 	// Find any lists for this input.
@@ -104,32 +105,15 @@ static void HandleInputNowInactive(int id, RayGE_InputState state, void* userDat
 
 	DL_FOREACH(hashItem->list, hook)
 	{
-		if ( hook->hook.triggerFlags & INPUT_TRIGGER_INACTIVE )
+		bool shouldTrigger = ((hook->hook.triggerFlags & INPUT_TRIGGER_ACTIVE) && state == INPUT_STATE_ACTIVE) ||
+			((hook->hook.triggerFlags & INPUT_TRIGGER_INACTIVE) && state == INPUT_STATE_INACTIVE);
+
+		if ( cbInfo->uiIsOpen && !(hook->hook.triggerFlags & INPUT_TRIGGER_OVERRIDE_UI_FOCUS) )
 		{
-			hook->hook.callback(cbInfo->source, id, cbInfo->buffer, hook->hook.userData);
+			shouldTrigger = false;
 		}
-	}
-}
 
-static void HandleInputNowActive(int id, RayGE_InputState state, void* userData)
-{
-	(void)state;
-	const CallbackInfo* cbInfo = (const CallbackInfo*)userData;
-
-	// Find any lists for this input.
-	HookInputHashItem* hashItem = NULL;
-	HASH_FIND_INT(g_Data->inputHash[cbInfo->source], &id, hashItem);
-
-	if ( !hashItem )
-	{
-		return;
-	}
-
-	HookItem* hook = NULL;
-
-	DL_FOREACH(hashItem->list, hook)
-	{
-		if ( hook->hook.triggerFlags & INPUT_TRIGGER_ACTIVE )
+		if ( shouldTrigger )
 		{
 			hook->hook.callback(cbInfo->source, id, cbInfo->buffer, hook->hook.userData);
 		}
@@ -197,6 +181,8 @@ void InputHookSubsystem_ProcessInput(void)
 		return;
 	}
 
+	const bool uiIsOpen = UISubsystem_HasCurrentMenu();
+
 	// Deal with all newly inactive inputs before all newly active ones.
 	for ( size_t source = 0; source < INPUT_SOURCE__COUNT; ++source )
 	{
@@ -205,8 +191,13 @@ void InputHookSubsystem_ProcessInput(void)
 		const RayGE_InputBuffer* buffer = InputSubsystem_GetInputForSource(inputSource);
 		RAYGE_ENSURE(buffer, "Expected valid input buffer for source");
 
-		const CallbackInfo cbInfo = { inputSource, buffer };
-		InputBuffer_TriggerForAllInputsNowInactive(buffer, &HandleInputNowInactive, (void*)&cbInfo);
+		const CallbackInfo cbInfo = {
+			inputSource,
+			buffer,
+			uiIsOpen,
+		};
+
+		InputBuffer_TriggerForAllInputsNowInactive(buffer, &CheckAndCallHook, (void*)&cbInfo);
 	}
 
 	for ( size_t source = 0; source < INPUT_SOURCE__COUNT; ++source )
@@ -216,7 +207,12 @@ void InputHookSubsystem_ProcessInput(void)
 		const RayGE_InputBuffer* buffer = InputSubsystem_GetInputForSource(inputSource);
 		RAYGE_ENSURE(buffer, "Expected valid input buffer for source");
 
-		const CallbackInfo cbInfo = { inputSource, buffer };
-		InputBuffer_TriggerForAllInputsNowActive(buffer, &HandleInputNowActive, (void*)&cbInfo);
+		const CallbackInfo cbInfo = {
+			inputSource,
+			buffer,
+			uiIsOpen,
+		};
+
+		InputBuffer_TriggerForAllInputsNowActive(buffer, &CheckAndCallHook, (void*)&cbInfo);
 	}
 }

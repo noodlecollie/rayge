@@ -117,19 +117,9 @@ static void VisualiseEntities(void)
 static void RunFrameInput(void)
 {
 	InputSubsystem_NewFrame();
-
-	// Don't allow any in-game keys to be pressed if UI is active.
-	if ( UISubsystem_HasCurrentMenu() )
-	{
-		InputSubsystem_ClearAllInputThisFrame();
-	}
-
 	InputSubsystem_ProcessInput();
 	InputHookSubsystem_ProcessInput();
-}
 
-static void RunFrameUIInput(void)
-{
 	if ( UISubsystem_HasCurrentMenu() )
 	{
 		UISubsystem_ProcessInput();
@@ -158,7 +148,6 @@ static bool RunFrame(void)
 	bool windowShouldClose = RendererSubsystem_WindowCloseRequested();
 
 	RunFrameInput();
-	RunFrameUIInput();
 	RunFrameRender();
 
 	return windowShouldClose;
