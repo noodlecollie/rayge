@@ -15,17 +15,24 @@ typedef enum RayGE_InputHookTriggerFlag
 	INPUT_TRIGGER_OVERRIDE_UI_FOCUS = (1 << 2),
 } RayGE_InputHookTriggerFlag;
 
+typedef void (*RayGE_InputHookCallback)(
+	RayGE_InputSource source,
+	int id,
+	const RayGE_InputBuffer* inputBuffer,
+	void* userData
+);
+
 typedef struct RayGE_InputHook
 {
 	unsigned int triggerFlags;
-	void (*callback)(RayGE_InputSource source, int id, const RayGE_InputBuffer* inputBuffer, void* userData);
+	RayGE_InputHookCallback callback;
 	void* userData;
 } RayGE_InputHook;
 
 void InputHookSubsystem_Init(void);
 void InputHookSubsystem_ShutDown(void);
 
-void InputHookSubsystem_AddHook(RayGE_InputSource source, int id, RayGE_InputHook hook);
+void InputHookSubsystem_AddHook(RayGE_InputSource source, int id, unsigned int modifierFlags, RayGE_InputHook hook);
 
 // Expected to be called *after* InputSubsystem.
 void InputHookSubsystem_ProcessInput(void);

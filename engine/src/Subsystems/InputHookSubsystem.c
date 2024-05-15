@@ -1,6 +1,7 @@
 #include "Subsystems/InputHookSubsystem.h"
 #include "Subsystems/LoggingSubsystem.h"
 #include "Subsystems/UISubsystem.h"
+#include "Input/InputBufferKeyboard.h"
 #include "utlist.h"
 
 #define UTHASH_POOLED_MEMPOOL MEMPOOL_INPUT
@@ -18,6 +19,7 @@ typedef struct HookItem
 	struct HookItem* prev;
 	struct HookItem* next;
 	RayGE_InputHook hook;
+	unsigned int modifierFlags;
 } HookItem;
 
 typedef struct HookInputHashItem
@@ -88,6 +90,34 @@ static void DestroyData(Data* data)
 	MEMPOOL_FREE(data);
 }
 
+static bool
+PassesModifierChecks(RayGE_InputSource source, const RayGE_InputBuffer* inputBuffer, unsigned int requiredModifiers)
+{
+	if ( source != INPUT_SOURCE_KEYBOARD )
+	{
+		// We don't support any other checks yet.
+		return true;
+	}
+
+	if ( requiredModifiers == 0 )
+	{
+		// No need to check anything.
+		return true;
+	}
+
+	// Get the current modifiers.
+	RayGE_KeyboardModifiers currentModifiers = InputBuffer_GetCurrentKeyboardModifiers(inputBuffer);
+
+	// Restrict the modifiers to only the ones we need to check.
+	currentModifiers &= requiredModifiers;
+
+	// Toggle all the required modifiers.
+	currentModifiers ^= requiredModifiers;
+
+	// If there are any bits enabled, this means not all modifiers were present.
+	return currentModifiers == 0;
+}
+
 static void CheckAndCallHook(int id, RayGE_InputState state, void* userData)
 {
 	const CallbackInfo* cbInfo = (const CallbackInfo*)userData;
@@ -109,6 +139,14 @@ static void CheckAndCallHook(int id, RayGE_InputState state, void* userData)
 			((hook->hook.triggerFlags & INPUT_TRIGGER_INACTIVE) && state == INPUT_STATE_INACTIVE);
 
 		if ( cbInfo->uiIsOpen && !(hook->hook.triggerFlags & INPUT_TRIGGER_OVERRIDE_UI_FOCUS) )
+		{
+			shouldTrigger = false;
+		}
+
+		// Only apply modifier checks for an active input.
+		// For one that triggers on inactivity, we don't care about the modifiers.
+		if ( shouldTrigger && state == INPUT_STATE_ACTIVE &&
+			 !PassesModifierChecks(cbInfo->source, cbInfo->buffer, hook->modifierFlags) )
 		{
 			shouldTrigger = false;
 		}
@@ -141,7 +179,7 @@ void InputHookSubsystem_ShutDown(void)
 	g_Data = NULL;
 }
 
-void InputHookSubsystem_AddHook(RayGE_InputSource source, int id, RayGE_InputHook hook)
+void InputHookSubsystem_AddHook(RayGE_InputSource source, int id, unsigned int modifierFlags, RayGE_InputHook hook)
 {
 	if ( !g_Data )
 	{
@@ -171,6 +209,7 @@ void InputHookSubsystem_AddHook(RayGE_InputSource source, int id, RayGE_InputHoo
 
 	HookItem* hookItem = MEMPOOL_CALLOC_STRUCT(MEMPOOL_INPUT, HookItem);
 	hookItem->hook = hook;
+	hookItem->modifierFlags = modifierFlags;
 	DL_APPEND(hashItem->list, hookItem);
 }
 

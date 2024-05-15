@@ -4,6 +4,7 @@
 #include "Subsystems/CommandSubsystem.h"
 #include "Subsystems/MemPoolSubsystem.h"
 #include "Subsystems/InputHookSubsystem.h"
+#include "Input/KeyboardModifiers.h"
 #include "UI/TestUI.h"
 #include "Debugging.h"
 #include "wzl_cutl/string.h"
@@ -66,7 +67,7 @@ static void HandleHook(RayGE_InputSource source, int id, const RayGE_InputBuffer
 	}
 }
 
-static void RegisterMenu(int key, const char* name, const RayGE_UIMenu* menu)
+static void RegisterMenuWithModifiers(int key, unsigned int modifierFlags, const char* name, const RayGE_UIMenu* menu)
 {
 	RAYGE_ENSURE(name && menu, "Expected a valid name and menu");
 
@@ -89,12 +90,17 @@ static void RegisterMenu(int key, const char* name, const RayGE_UIMenu* menu)
 		.userData = state
 	};
 
-	InputHookSubsystem_AddHook(INPUT_SOURCE_KEYBOARD, key, hook);
+	InputHookSubsystem_AddHook(INPUT_SOURCE_KEYBOARD, key, modifierFlags, hook);
+}
+
+static void RegisterMenu(int key, const char* name, const RayGE_UIMenu* menu)
+{
+	RegisterMenuWithModifiers(key, KEYMOD_NONE, name, menu);
 }
 
 static void RegisterMenus(void)
 {
-	RegisterMenu(KEY_GRAVE, "menu_testui", &Menu_TestUI);
+	RegisterMenuWithModifiers(KEY_GRAVE, KEYMOD_CTRL, "menu_testui", &Menu_TestUI);
 }
 
 void MenuHooks_Register(void)
