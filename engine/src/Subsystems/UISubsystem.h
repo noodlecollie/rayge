@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include "Nuklear/Nuklear.h"
 
 typedef struct RayGE_UIMenu
@@ -8,7 +9,9 @@ typedef struct RayGE_UIMenu
 
 	void (*Show)(struct nk_context* context, void* userData);
 	void (*Hide)(struct nk_context* context, void* userData);
-	void (*Poll)(struct nk_context* context, void* userData);
+
+	// Return false if the menu should close.
+	bool (*Poll)(struct nk_context* context, void* userData);
 } RayGE_UIMenu;
 
 void UISubsystem_Init(void);

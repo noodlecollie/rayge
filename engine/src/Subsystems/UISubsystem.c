@@ -116,7 +116,12 @@ void UISubsystem_PollCurrentMenu(void)
 		return;
 	}
 
-	g_CurrentMenu->Poll(g_NKContext, g_CurrentMenu->userData);
+	const bool shouldStayOpen = g_CurrentMenu->Poll(g_NKContext, g_CurrentMenu->userData);
+
+	if ( !shouldStayOpen )
+	{
+		UISubsystem_ClearCurrentMenu();
+	}
 }
 
 void UISubsystem_ProcessInput(void)

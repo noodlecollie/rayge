@@ -85,6 +85,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Subsystems/SubsystemManager.c
 	src/Subsystems/UISubsystem.h
 	src/Subsystems/UISubsystem.c
+	src/UI/SceneDebugUI.h
+	src/UI/SceneDebugUI.c
 	src/UI/TestUI.h
 	src/UI/TestUI.c
 	src/UTUtils/UTHash_Pooled.h

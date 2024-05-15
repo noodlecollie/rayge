@@ -5,7 +5,7 @@
 #include "Subsystems/MemPoolSubsystem.h"
 #include "Subsystems/InputHookSubsystem.h"
 #include "Input/KeyboardModifiers.h"
-#include "UI/TestUI.h"
+#include "UI/SceneDebugUI.h"
 #include "Debugging.h"
 #include "wzl_cutl/string.h"
 #include "utlist.h"
@@ -100,7 +100,7 @@ static void RegisterMenu(int key, const char* name, const RayGE_UIMenu* menu)
 
 static void RegisterMenus(void)
 {
-	RegisterMenuWithModifiers(KEY_GRAVE, KEYMOD_CTRL, "menu_testui", &Menu_TestUI);
+	RegisterMenuWithModifiers(KEY_GRAVE, KEYMOD_CTRL, "menu_debug", &Menu_SceneDebugUI);
 }
 
 void MenuHooks_Register(void)

@@ -24,7 +24,7 @@ static void Hide(struct nk_context* context, void* userData)
 	LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, "TestUI Hide()");
 }
 
-static void Poll(struct nk_context* context, void* userData)
+static bool Poll(struct nk_context* context, void* userData)
 {
 	(void)userData;
 
@@ -69,9 +69,10 @@ static void Poll(struct nk_context* context, void* userData)
 		nk_combo(context, comboValues, 3, 0, 20, (struct nk_vec2){100, 100});
 
 		nk_color_picker(context, (struct nk_colorf){1.0f, 0.0f, 0.0f, 1.0f}, NK_RGB);
-
-		nk_end(context);
 	}
+
+	nk_end(context);
+	return true;
 }
 
 const RayGE_UIMenu Menu_TestUI = {
