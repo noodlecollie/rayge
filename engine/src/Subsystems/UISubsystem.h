@@ -14,6 +14,7 @@ typedef struct RayGE_UIMenu
 void UISubsystem_Init(void);
 void UISubsystem_ShutDown(void);
 
+const RayGE_UIMenu* UISubsystem_GetCurrentMenu(void);
 void UISubsystem_SetCurrentMenu(const RayGE_UIMenu* menu);
 void UISubsystem_ClearCurrentMenu(void);
 bool UISubsystem_HasCurrentMenu(void);

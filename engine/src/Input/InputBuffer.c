@@ -137,6 +137,28 @@ void InputBuffer_Swap(RayGE_InputBuffer* buffer)
 	buffer->currentIndex = OTHER_BUFFER_INDEX(buffer->currentIndex);
 }
 
+bool InputBuffer_InputIsNowActive(const RayGE_InputBuffer* buffer, int value)
+{
+	if ( !buffer )
+	{
+		return false;
+	}
+
+	return InputIsInList(buffer->buffers[buffer->currentIndex], buffer->bufferLength, value) &&
+		!InputIsInList(buffer->buffers[OTHER_BUFFER_INDEX(buffer->currentIndex)], buffer->bufferLength, value);
+}
+
+bool InputBuffer_InputIsNowInctive(const RayGE_InputBuffer* buffer, int value)
+{
+	if ( !buffer )
+	{
+		return false;
+	}
+
+	return !InputIsInList(buffer->buffers[buffer->currentIndex], buffer->bufferLength, value) &&
+		InputIsInList(buffer->buffers[OTHER_BUFFER_INDEX(buffer->currentIndex)], buffer->bufferLength, value);
+}
+
 void InputBuffer_TriggerForAllInputsNowActive(
 	const RayGE_InputBuffer* buffer,
 	RayGE_InputBufferTriggerFunc callback,

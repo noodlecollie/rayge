@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdbool.h>
 
 typedef struct RayGE_InputBuffer RayGE_InputBuffer;
 
@@ -23,6 +24,9 @@ const int* InputBuffer_GetLastBufferConst(const RayGE_InputBuffer* buffer);
 void InputBuffer_SetCurrentBufferValues(RayGE_InputBuffer* buffer, int value);
 void InputBuffer_SetLastBufferValues(RayGE_InputBuffer* buffer, int value);
 void InputBuffer_Swap(RayGE_InputBuffer* buffer);
+
+bool InputBuffer_InputIsNowActive(const RayGE_InputBuffer* buffer, int value);
+bool InputBuffer_InputIsNowInctive(const RayGE_InputBuffer* buffer, int value);
 
 void InputBuffer_TriggerForAllInputsNowActive(
 	const RayGE_InputBuffer* buffer,

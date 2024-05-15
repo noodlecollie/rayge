@@ -62,6 +62,16 @@ void UISubsystem_ShutDown(void)
 	g_Initialised = false;
 }
 
+const RayGE_UIMenu* UISubsystem_GetCurrentMenu(void)
+{
+	if ( !g_Initialised )
+	{
+		return NULL;
+	}
+
+	return g_CurrentMenu;
+}
+
 void UISubsystem_SetCurrentMenu(const RayGE_UIMenu* menu)
 {
 	if ( !g_Initialised || menu == g_CurrentMenu )
