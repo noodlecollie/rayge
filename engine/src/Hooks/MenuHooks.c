@@ -2,11 +2,25 @@
 #include "Subsystems/UISubsystem.h"
 #include "Subsystems/LoggingSubsystem.h"
 #include "Subsystems/CommandSubsystem.h"
+#include "Subsystems/MemPoolSubsystem.h"
+#include "Subsystems/InputHookSubsystem.h"
 #include "UI/TestUI.h"
 #include "Debugging.h"
 #include "wzl_cutl/string.h"
+#include "utlist.h"
 
-static void HandleHook(const char* commandName, void* userData)
+typedef struct StateItem
+{
+	struct StateItem* next;
+	const CommandSubsystem_CommandHandle* showCmd;
+	const CommandSubsystem_CommandHandle* hideCmd;
+	const RayGE_UIMenu* menu;
+} StateItem;
+
+static StateItem* g_State = NULL;
+static bool g_Registered = false;
+
+static void HandleCommand(const char* commandName, void* userData)
 {
 	RAYGE_ENSURE(commandName, "Expected valid command name");
 
@@ -34,20 +48,84 @@ static void HandleHook(const char* commandName, void* userData)
 	}
 }
 
-static void RegisterMenu(const char* name, const RayGE_UIMenu* menu)
+static void HandleHook(RayGE_InputSource source, int id, const RayGE_InputBuffer* inputBuffer, void* userData)
+{
+	(void)inputBuffer;
+
+	const StateItem* state = (const StateItem*)userData;
+
+	if ( state->menu && UISubsystem_GetCurrentMenu() != state->menu )
+	{
+		LoggingSubsystem_PrintLine(RAYGE_LOG_TRACE, "Triggering show menu for source %d key %d", source, id);
+		CommandSubsystem_InvokeCommand(state->showCmd);
+	}
+	else
+	{
+		LoggingSubsystem_PrintLine(RAYGE_LOG_TRACE, "Triggering hide menu for source %d key %d", source, id);
+		CommandSubsystem_InvokeCommand(state->hideCmd);
+	}
+}
+
+static void RegisterMenu(int key, const char* name, const RayGE_UIMenu* menu)
 {
 	RAYGE_ENSURE(name && menu, "Expected a valid name and menu");
+
+	StateItem* state = MEMPOOL_CALLOC_STRUCT(MEMPOOL_HOOKS, StateItem);
+	LL_PREPEND(g_State, state);
+
+	state->menu = menu;
 
 	char fullName[32];
 
 	wzl_sprintf(fullName, sizeof(fullName), "+%s", name);
-	CommandSubsystem_AddCommand(fullName, HandleHook, (void*)menu);
+	state->showCmd = CommandSubsystem_AddCommand(fullName, HandleCommand, (void*)menu);
 
 	wzl_sprintf(fullName, sizeof(fullName), "-%s", name);
-	CommandSubsystem_AddCommand(fullName, HandleHook, (void*)menu);
+	state->hideCmd = CommandSubsystem_AddCommand(fullName, HandleCommand, (void*)menu);
+
+	const RayGE_InputHook hook = {
+		.triggerFlags = INPUT_TRIGGER_ACTIVE,
+		.callback = HandleHook,
+		.userData = state
+	};
+
+	InputHookSubsystem_AddHook(INPUT_SOURCE_KEYBOARD, key, hook);
+}
+
+static void RegisterMenus(void)
+{
+	RegisterMenu(KEY_GRAVE, "menu_testui", &Menu_TestUI);
 }
 
 void MenuHooks_Register(void)
 {
-	RegisterMenu("menu_testui", &Menu_TestUI);
+	if ( g_Registered )
+	{
+		return;
+	}
+
+	RegisterMenus();
+	g_Registered = true;
+}
+
+void MenuHooks_Unregister(void)
+{
+	if ( !g_Registered )
+	{
+		return;
+	}
+
+	StateItem* item = NULL;
+	StateItem* temp = NULL;
+
+	LL_FOREACH_SAFE(g_State, item, temp)
+	{
+		LL_DELETE(g_State, item);
+		MEMPOOL_FREE(item);
+	}
+
+	// Just in case:
+	g_State = NULL;
+
+	g_Registered = false;
 }

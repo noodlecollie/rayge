@@ -11,7 +11,7 @@ typedef struct HookRegisterAndUnregister
 } HookRegisterAndUnregister;
 
 static const HookRegisterAndUnregister g_Hooks[] = {
-	{MenuHooks_Register, NULL},
+	{MenuHooks_Register, MenuHooks_Unregister},
 };
 
 static bool g_Initialised = false;
