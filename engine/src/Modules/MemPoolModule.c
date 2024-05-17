@@ -4,8 +4,8 @@
 #include <string.h>
 #include <stddef.h>
 #include <ctype.h>
-#include "Subsystems/MemPoolSubsystem.h"
-#include "Subsystems/LoggingSubsystem.h"
+#include "Modules/MemPoolModule.h"
+#include "Logging/Logging.h"
 #include "Debugging.h"
 
 #define HEAD_SENTINEL_VALUE 0xF9A23BAD
@@ -304,17 +304,17 @@ static void DestroyItemInPool(MemPool* pool, MemPoolItemHead* item, const char* 
 	free(item);
 }
 
-bool MemPoolSubsystem_DebuggingEnabled(void)
+bool MemPoolModule_DebuggingEnabled(void)
 {
 	return g_DebuggingEnabled;
 }
 
-void MemPoolSubsystem_SetDebuggingEnabled(bool enabled)
+void MemPoolModule_SetDebuggingEnabled(bool enabled)
 {
 	g_DebuggingEnabled = g_PoolsInitialised && enabled;
 }
 
-void MemPoolSubsystem_Init(void)
+void MemPoolModule_Init(void)
 {
 	if ( g_PoolsInitialised )
 	{
@@ -331,7 +331,7 @@ void MemPoolSubsystem_Init(void)
 	g_PoolsInitialised = true;
 }
 
-void MemPoolSubsystem_ShutDown(void)
+void MemPoolModule_ShutDown(void)
 {
 	if ( !g_PoolsInitialised )
 	{
@@ -348,13 +348,13 @@ void MemPoolSubsystem_ShutDown(void)
 	g_PoolsInitialised = false;
 }
 
-void* MemPoolSubsystem_Malloc(const char* file, int line, MemPool_Category category, size_t size)
+void* MemPoolModule_Malloc(const char* file, int line, MemPool_Category category, size_t size)
 {
 	RAYGE_ENSURE(g_PoolsInitialised, "Mem pool must be initialised before calling this function.");
 
 	RAYGE_ENSURE(
 		(size_t)category < MEMPOOL__COUNT,
-		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolSubsystem_Malloc",
+		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolModule_Malloc",
 		file,
 		line
 	);
@@ -363,7 +363,7 @@ void* MemPoolSubsystem_Malloc(const char* file, int line, MemPool_Category categ
 	return ItemToMemPtr(head);
 }
 
-void* MemPoolSubsystem_Calloc(
+void* MemPoolModule_Calloc(
 	const char* file,
 	int line,
 	MemPool_Category category,
@@ -375,7 +375,7 @@ void* MemPoolSubsystem_Calloc(
 
 	RAYGE_ENSURE(
 		(size_t)category < MEMPOOL__COUNT,
-		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolSubsystem_Calloc",
+		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolModule_Calloc",
 		file,
 		line
 	);
@@ -388,20 +388,20 @@ void* MemPoolSubsystem_Calloc(
 	return ptr;
 }
 
-void* MemPoolSubsystem_Realloc(const char* file, int line, MemPool_Category category, void* memory, size_t newSize)
+void* MemPoolModule_Realloc(const char* file, int line, MemPool_Category category, void* memory, size_t newSize)
 {
 	RAYGE_ENSURE(g_PoolsInitialised, "Mem pool must be initialised before calling this function.");
 
 	RAYGE_ENSURE(
 		(size_t)category < MEMPOOL__COUNT,
-		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolSubsystem_Realloc",
+		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolModule_Realloc",
 		file,
 		line
 	);
 
 	if ( !memory )
 	{
-		return MemPoolSubsystem_Malloc(file, line, category, newSize);
+		return MemPoolModule_Malloc(file, line, category, newSize);
 	}
 
 	MemPoolItemHead* item = MemPtrToItemChecked(memory, file, line);
@@ -437,16 +437,16 @@ void* MemPoolSubsystem_Realloc(const char* file, int line, MemPool_Category cate
 	return newPtr;
 }
 
-void MemPoolSubsystem_Free(const char* file, int line, void* memory)
+void MemPoolModule_Free(const char* file, int line, void* memory)
 {
 	RAYGE_ENSURE(g_PoolsInitialised, "Mem pool must be initialised before calling this function.");
-	RAYGE_ENSURE(memory, "Mem pool invocation from %s:%d: Null pointer provided to MemPoolSubsystem_Free", file, line);
+	RAYGE_ENSURE(memory, "Mem pool invocation from %s:%d: Null pointer provided to MemPoolModule_Free", file, line);
 
 	MemPoolItemHead* item = MemPtrToItemChecked(memory, file, line);
 	DestroyItemInPool(item->pool, item, file, line);
 }
 
-void MemPoolSubsystem_DumpAllocInfo(void* memory)
+void MemPoolModule_DumpAllocInfo(void* memory)
 {
 	RAYGE_ENSURE(g_PoolsInitialised, "Mem pool must be initialised before calling this function.");
 	RAYGE_ASSERT(g_DebuggingEnabled, "Mem pool debugging must be enabled to use this function.");

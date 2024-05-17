@@ -57,6 +57,24 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Launcher/Launcher.c
 	src/Launcher/LaunchParams.h
 	src/Launcher/LaunchParams.c
+	src/Logging/Logging.h
+	src/Logging/Logging.c
+	src/Modules/CommandModule.h
+	src/Modules/CommandModule.c
+	src/Modules/FilesystemModule.h
+	src/Modules/FilesystemModule.c
+	src/Modules/InputHookModule.h
+	src/Modules/InputHookModule.c
+	src/Modules/InputModule.h
+	src/Modules/InputModule.c
+	src/Modules/MemPoolModule.h
+	src/Modules/MemPoolModule.c
+	src/Modules/ModuleManager.h
+	src/Modules/ModuleManager.c
+	src/Modules/RendererModule.h
+	src/Modules/RendererModule.c
+	src/Modules/UIModule.h
+	src/Modules/UIModule.c
 	src/Rendering/Renderer.h
 	src/Rendering/Renderer.c
 	src/Scene/Component.h
