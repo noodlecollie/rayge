@@ -1,6 +1,6 @@
 #include "Modules/CommandModule.h"
-#include "Subsystems/MemPoolSubsystem.h"
-#include "Subsystems/LoggingSubsystem.h"
+#include "Modules/MemPoolModule.h"
+#include "Logging/Logging.h"
 #include "Debugging.h"
 #include "wzl_cutl/string.h"
 
@@ -125,7 +125,7 @@ CommandModule_AddCommand(const char* name, CommandModule_Callback callback, void
 
 	if ( !name || !(*name) )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Failed to add command with invalid name");
+		Logging_PrintLine(RAYGE_LOG_ERROR, "Failed to add command with invalid name");
 		return NULL;
 	}
 
@@ -137,7 +137,7 @@ CommandModule_AddCommand(const char* name, CommandModule_Callback callback, void
 
 		if ( FindCommandByName(g_Registry, name) )
 		{
-			LoggingSubsystem_PrintLine(
+			Logging_PrintLine(
 				RAYGE_LOG_ERROR,
 				"Failed to add command \"%s\": a command with this name already exists.",
 				trimmedName
@@ -148,7 +148,7 @@ CommandModule_AddCommand(const char* name, CommandModule_Callback callback, void
 
 		if ( !callback )
 		{
-			LoggingSubsystem_PrintLine(
+			Logging_PrintLine(
 				RAYGE_LOG_ERROR,
 				"Failed to add command \"%s\": no callback was provided.",
 				trimmedName

@@ -85,24 +85,6 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Scene/Scene.c
 	src/Scene/SceneAPI.h
 	src/Scene/SceneAPI.c
-	src/Subsystems/CommandSubsystem.h
-	src/Subsystems/CommandSubsystem.c
-	src/Subsystems/FileSubsystem.h
-	src/Subsystems/FileSubsystem.c
-	src/Subsystems/InputHookSubsystem.h
-	src/Subsystems/InputHookSubsystem.c
-	src/Subsystems/InputSubsystem.h
-	src/Subsystems/InputSubsystem.c
-	src/Subsystems/LoggingSubsystem.h
-	src/Subsystems/LoggingSubsystem.c
-	src/Subsystems/MemPoolSubsystem.h
-	src/Subsystems/MemPoolSubsystem.c
-	src/Subsystems/RendererSubsystem.h
-	src/Subsystems/RendererSubsystem.c
-	src/Subsystems/SubsystemManager.h
-	src/Subsystems/SubsystemManager.c
-	src/Subsystems/UISubsystem.h
-	src/Subsystems/UISubsystem.c
 	src/UI/SceneDebugUI.h
 	src/UI/SceneDebugUI.c
 	src/UI/TestUI.h

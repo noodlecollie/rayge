@@ -1,8 +1,8 @@
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
 #include "Engine/EngineAPI.h"
-#include "Subsystems/MemPoolSubsystem.h"
-#include "Subsystems/LoggingSubsystem.h"
+#include "Modules/MemPoolModule.h"
+#include "Logging/Logging.h"
 #include "Utils.h"
 #include "Debugging.h"
 
@@ -83,7 +83,7 @@ RayGE_Entity* Scene_CreateEntity(void)
 
 	if ( Entity_GetNumFreeSlots(g_Scene->entities) < 1 )
 	{
-		LoggingSubsystem_PrintLine(
+		Logging_PrintLine(
 			RAYGE_LOG_ERROR,
 			"Max limit of %zu scene entities reached.",
 			Entity_GetListCapacity(g_Scene->entities)

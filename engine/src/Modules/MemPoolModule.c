@@ -461,7 +461,7 @@ void MemPoolModule_DumpAllocInfo(void* memory)
 	MemPoolItemHead* item = MemPtrToItem(memory);
 	MemPoolItemTail* tail = ItemTail(item);
 
-#define LOG(...) LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, __VA_ARGS__)
+#define LOG(...) Logging_PrintLine(RAYGE_LOG_INFO, __VA_ARGS__)
 
 	LOG("==== Allocation info for 0x%p ====", memory);
 	LOG("  Head sentinel: 0x%08x", item->sentinel);

@@ -1,5 +1,5 @@
 #include "Input/InputBufferKeyboard.h"
-#include "Subsystems/LoggingSubsystem.h"
+#include "Logging/Logging.h"
 #include "raylib.h"
 
 static bool IsKeyInList(int key, const int* list, size_t length)
@@ -65,7 +65,7 @@ void InputBuffer_PopulateFromKeyboard(RayGE_InputBuffer* buffer)
 
 		if ( nextIndex >= bufferMaxLength )
 		{
-			LoggingSubsystem_PrintLine(
+			Logging_PrintLine(
 				RAYGE_LOG_WARNING,
 				"Key %d exceeded max of %zu simultaneous key presses per frame",
 				lastData[index],
@@ -89,7 +89,7 @@ void InputBuffer_PopulateFromKeyboard(RayGE_InputBuffer* buffer)
 
 		if ( nextIndex >= bufferMaxLength )
 		{
-			LoggingSubsystem_PrintLine(
+			Logging_PrintLine(
 				RAYGE_LOG_WARNING,
 				"Key %d exceeded max of %zu simultaneous key presses per frame",
 				pressedKey,

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "GameLoader.h"
-#include "Subsystems/FileSubsystem.h"
-#include "Subsystems/LoggingSubsystem.h"
+#include "Modules/FilesystemModule.h"
+#include "Logging/Logging.h"
 #include "Engine/EngineAPI.h"
 #include "wzl_cutl/libloader.h"
 #include "wzl_cutl/string.h"
@@ -10,15 +10,15 @@
 static char* ComputeGameLibraryAbsolutePath(const char* dirPath)
 {
 	const char* libPath = GameData_GetGameLibraryPath();
-	LoggingSubsystem_PrintLine(RAYGE_LOG_DEBUG, "Using game client library: %s", libPath);
+	Logging_PrintLine(RAYGE_LOG_DEBUG, "Using game client library: %s", libPath);
 
-	FileSubsystem_Path libPathRelativeToJson;
+	FilesystemModule_Path libPathRelativeToJson;
 	wzl_sprintf(libPathRelativeToJson, sizeof(libPathRelativeToJson), "%s/%s", dirPath, libPath);
 
 	char* absPath = (char*)malloc(FILESYSTEM_MAX_ABS_PATH);
-	FileSubsystem_MakeAbsolute(libPathRelativeToJson, absPath, FILESYSTEM_MAX_ABS_PATH);
+	FilesystemModule_MakeAbsolute(libPathRelativeToJson, absPath, FILESYSTEM_MAX_ABS_PATH);
 
-	LoggingSubsystem_PrintLine(RAYGE_LOG_TRACE, "Absolute path to game client library: %s", absPath);
+	Logging_PrintLine(RAYGE_LOG_TRACE, "Absolute path to game client library: %s", absPath);
 	return absPath;
 }
 
@@ -29,7 +29,7 @@ static void* LoadGameLibraryFromGameJSON(const char* dirPath)
 
 	do
 	{
-		FileSubsystem_Path gameJsonPath;
+		FilesystemModule_Path gameJsonPath;
 		wzl_sprintf(gameJsonPath, sizeof(gameJsonPath), "%s/game.json", dirPath);
 
 		if ( !GameData_Load(gameJsonPath) )
@@ -48,7 +48,7 @@ static void* LoadGameLibraryFromGameJSON(const char* dirPath)
 
 		if ( !libHandle )
 		{
-			LoggingSubsystem_PrintLine(
+			Logging_PrintLine(
 				RAYGE_LOG_ERROR,
 				"Loading %s failed. Message: %s",
 				libAbsPath,
@@ -58,7 +58,7 @@ static void* LoadGameLibraryFromGameJSON(const char* dirPath)
 			break;
 		}
 
-		LoggingSubsystem_PrintLine(RAYGE_LOG_TRACE, "Successfully loaded game client library from disk.");
+		Logging_PrintLine(RAYGE_LOG_TRACE, "Successfully loaded game client library from disk.");
 	}
 	while ( false );
 
@@ -84,7 +84,7 @@ void* GameLoader_LoadLibraryFromDirectory(const char* dirPath)
 
 	if ( !apiFunc )
 	{
-		LoggingSubsystem_PrintLine(
+		Logging_PrintLine(
 			RAYGE_LOG_ERROR,
 			"Could not resolve " RAYGE_GAMELIBRARY_EXCHANGEAPIS_SYMBOL_NAME " function in game library."
 		);

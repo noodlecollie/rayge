@@ -1,5 +1,5 @@
 #include "UI/SceneDebugUI.h"
-#include "Subsystems/LoggingSubsystem.h"
+#include "Logging/Logging.h"
 #include "Nuklear/Nuklear.h"
 #include "raylib.h"
 
@@ -20,7 +20,7 @@ static void Show(struct nk_context* context, void* userData)
 	(void)context;
 	(void)userData;
 
-	LoggingSubsystem_PrintLine(RAYGE_LOG_TRACE, "Showing scene debug UI");
+	Logging_PrintLine(RAYGE_LOG_TRACE, "Showing scene debug UI");
 }
 
 static void Hide(struct nk_context* context, void* userData)
@@ -28,7 +28,7 @@ static void Hide(struct nk_context* context, void* userData)
 	(void)context;
 	(void)userData;
 
-	LoggingSubsystem_PrintLine(RAYGE_LOG_TRACE, "Hiding scene debug UI");
+	Logging_PrintLine(RAYGE_LOG_TRACE, "Hiding scene debug UI");
 }
 
 static bool Poll(struct nk_context* context, void* userData)

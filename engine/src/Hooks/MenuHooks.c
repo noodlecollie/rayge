@@ -1,9 +1,9 @@
 #include "Hooks/MenuHooks.h"
-#include "Subsystems/UISubsystem.h"
-#include "Subsystems/LoggingSubsystem.h"
-#include "Subsystems/CommandSubsystem.h"
-#include "Subsystems/MemPoolSubsystem.h"
-#include "Subsystems/InputHookSubsystem.h"
+#include "Modules/UIModule.h"
+#include "Logging/Logging.h"
+#include "Modules/CommandModule.h"
+#include "Modules/MemPoolModule.h"
+#include "Modules/InputHookModule.h"
 #include "Input/KeyboardModifiers.h"
 #include "UI/SceneDebugUI.h"
 #include "Debugging.h"
@@ -13,8 +13,8 @@
 typedef struct StateItem
 {
 	struct StateItem* next;
-	const CommandSubsystem_CommandHandle* showCmd;
-	const CommandSubsystem_CommandHandle* hideCmd;
+	const CommandModule_CommandHandle* showCmd;
+	const CommandModule_CommandHandle* hideCmd;
 	const RayGE_UIMenu* menu;
 } StateItem;
 
@@ -27,7 +27,7 @@ static void HandleCommand(const char* commandName, void* userData)
 
 	if ( !userData )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_WARNING, "MenuHooks: Expected a valid menu for command hook!");
+		Logging_PrintLine(RAYGE_LOG_WARNING, "MenuHooks: Expected a valid menu for command hook!");
 		return;
 	}
 
@@ -35,17 +35,17 @@ static void HandleCommand(const char* commandName, void* userData)
 
 	if ( commandName[0] == '+' )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_DEBUG, "Showing menu: %s", commandName + 1);
-		UISubsystem_SetCurrentMenu(menu);
+		Logging_PrintLine(RAYGE_LOG_DEBUG, "Showing menu: %s", commandName + 1);
+		UIModule_SetCurrentMenu(menu);
 	}
 	else if ( commandName[0] == '-' )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_DEBUG, "Hiding menu: %s", commandName + 1);
-		UISubsystem_ClearCurrentMenu();
+		Logging_PrintLine(RAYGE_LOG_DEBUG, "Hiding menu: %s", commandName + 1);
+		UIModule_ClearCurrentMenu();
 	}
 	else
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_WARNING, "MenuHooks: Unsupported command name syntax \"%s\"", commandName);
+		Logging_PrintLine(RAYGE_LOG_WARNING, "MenuHooks: Unsupported command name syntax \"%s\"", commandName);
 	}
 }
 
@@ -55,15 +55,15 @@ static void HandleHook(RayGE_InputSource source, int id, const RayGE_InputBuffer
 
 	const StateItem* state = (const StateItem*)userData;
 
-	if ( state->menu && UISubsystem_GetCurrentMenu() != state->menu )
+	if ( state->menu && UIModule_GetCurrentMenu() != state->menu )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_TRACE, "Triggering show menu for source %d key %d", source, id);
-		CommandSubsystem_InvokeCommand(state->showCmd);
+		Logging_PrintLine(RAYGE_LOG_TRACE, "Triggering show menu for source %d key %d", source, id);
+		CommandModule_InvokeCommand(state->showCmd);
 	}
 	else
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_TRACE, "Triggering hide menu for source %d key %d", source, id);
-		CommandSubsystem_InvokeCommand(state->hideCmd);
+		Logging_PrintLine(RAYGE_LOG_TRACE, "Triggering hide menu for source %d key %d", source, id);
+		CommandModule_InvokeCommand(state->hideCmd);
 	}
 }
 
@@ -79,10 +79,10 @@ static void RegisterMenuWithModifiers(int key, unsigned int modifierFlags, const
 	char fullName[32];
 
 	wzl_sprintf(fullName, sizeof(fullName), "+%s", name);
-	state->showCmd = CommandSubsystem_AddCommand(fullName, HandleCommand, (void*)menu);
+	state->showCmd = CommandModule_AddCommand(fullName, HandleCommand, (void*)menu);
 
 	wzl_sprintf(fullName, sizeof(fullName), "-%s", name);
-	state->hideCmd = CommandSubsystem_AddCommand(fullName, HandleCommand, (void*)menu);
+	state->hideCmd = CommandModule_AddCommand(fullName, HandleCommand, (void*)menu);
 
 	const RayGE_InputHook hook = {
 		.triggerFlags = INPUT_TRIGGER_ACTIVE | INPUT_TRIGGER_OVERRIDE_UI_FOCUS,
@@ -90,7 +90,7 @@ static void RegisterMenuWithModifiers(int key, unsigned int modifierFlags, const
 		.userData = state
 	};
 
-	InputHookSubsystem_AddHook(INPUT_SOURCE_KEYBOARD, key, modifierFlags, hook);
+	InputHookModule_AddHook(INPUT_SOURCE_KEYBOARD, key, modifierFlags, hook);
 }
 
 static void RegisterMenu(int key, const char* name, const RayGE_UIMenu* menu)

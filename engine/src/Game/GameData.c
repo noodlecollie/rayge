@@ -3,8 +3,8 @@
 #include "RayGE/Platform.h"
 #include "cJSON.h"
 #include "JSON/JSONUtils.h"
-#include "Subsystems/FileSubsystem.h"
-#include "Subsystems/LoggingSubsystem.h"
+#include "Modules/FilesystemModule.h"
+#include "Logging/Logging.h"
 #include "wzl_cutl/string.h"
 #include "Utils.h"
 
@@ -16,7 +16,7 @@
 
 typedef struct GameData
 {
-	FileSubsystem_Path clientLibrary;
+	FilesystemModule_Path clientLibrary;
 } GameData;
 
 static GameData g_GameData;
@@ -25,11 +25,11 @@ static bool g_IsLoaded = false;
 static cJSON* ParseJSONFromFile(const char* path)
 {
 	size_t size = 0;
-	uint8_t* fileData = FileSubsystem_LoadFileData(path, &size);
+	uint8_t* fileData = FilesystemModule_LoadFileData(path, &size);
 
 	if ( !fileData )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Could not load game JSON from %s", path);
+		Logging_PrintLine(RAYGE_LOG_ERROR, "Could not load game JSON from %s", path);
 		return NULL;
 	}
 
@@ -41,7 +41,7 @@ static cJSON* ParseJSONFromFile(const char* path)
 		// but not sure what else we can really do here...
 		const char* errorPtr = cJSON_GetErrorPtr();
 
-		LoggingSubsystem_PrintLine(
+		Logging_PrintLine(
 			RAYGE_LOG_ERROR,
 			"Failed to parse %s. Parse failed at character %zu",
 			path,
@@ -49,7 +49,7 @@ static cJSON* ParseJSONFromFile(const char* path)
 		);
 	}
 
-	FileSubsystem_UnloadFileData(fileData);
+	FilesystemModule_UnloadFileData(fileData);
 	return out;
 }
 
@@ -115,7 +115,7 @@ bool GameData_Load(const char* filePath)
 
 		if ( !cJSON_IsObject(json) )
 		{
-			LoggingSubsystem_PrintLine(RAYGE_LOG_WARNING, "Game JSON root was not an object");
+			Logging_PrintLine(RAYGE_LOG_WARNING, "Game JSON root was not an object");
 			break;
 		}
 
@@ -132,12 +132,12 @@ bool GameData_Load(const char* filePath)
 
 	if ( g_IsLoaded )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, "Successfully loaded data from game JSON");
+		Logging_PrintLine(RAYGE_LOG_INFO, "Successfully loaded data from game JSON");
 	}
 	else
 	{
 		memset(&g_GameData, 0, sizeof(g_GameData));
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Failed to load data from game JSON");
+		Logging_PrintLine(RAYGE_LOG_ERROR, "Failed to load data from game JSON");
 	}
 
 	return g_IsLoaded;

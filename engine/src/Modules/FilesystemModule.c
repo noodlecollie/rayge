@@ -18,6 +18,29 @@
 
 static FilesystemModule_LongPath g_NativeApplicationDirectory;
 
+// TODO: Replace this with wzl_strdup once we've set up the allocators properly
+static char* StrDup(const char* str)
+{
+	if ( !str )
+	{
+		return NULL;
+	}
+
+	const size_t size = strlen(str) + 1;
+	char* out = MEMPOOL_MALLOC(MEMPOOL_FILESYSTEM, size);
+
+	char* cursor = out;
+
+	while ( *str )
+	{
+		*(cursor++) = *(str++);
+	}
+
+	*cursor = '\0';
+
+	return out;
+}
+
 static void EnsureApplicationDirectory()
 {
 	if ( g_NativeApplicationDirectory[0] )
@@ -57,7 +80,7 @@ static char* MakeAbsolutePathFromApplicationDirectory(const char* relNativePath)
 
 	if ( !relNativePath || !(*relNativePath) )
 	{
-		return wzl_strdup(g_NativeApplicationDirectory);
+		return StrDup(g_NativeApplicationDirectory);
 	}
 
 	char dummy;
@@ -80,7 +103,7 @@ static char* MakeRelativePathFromApplicationDirectory(const char* absNativePath)
 
 	if ( !absNativePath || !(*absNativePath) )
 	{
-		return wzl_strdup("");
+		return StrDup("");
 	}
 
 	char dummy;
@@ -157,7 +180,7 @@ static void MakePathSafe(char* path)
 // Always returns a valid pointer.
 static char* PathSeparatorsToNative(const char* path)
 {
-	char* newPath = wzl_strdup(path ? path : "");
+	char* newPath = StrDup(path ? path : "");
 
 #if RAYGE_PLATFORM() == RAYGE_PLATFORM_WINDOWS
 	for ( char* cursor = newPath; *cursor; ++cursor )
@@ -174,7 +197,7 @@ static char* PathSeparatorsToNative(const char* path)
 
 static char* PathSeparatorsFromNative(const char* path)
 {
-	char* newPath = wzl_strdup(path ? path : "");
+	char* newPath = StrDup(path ? path : "");
 
 #if RAYGE_PLATFORM() == RAYGE_PLATFORM_WINDOWS
 	for ( char* cursor = newPath; *cursor; ++cursor )

@@ -2,7 +2,7 @@
 #include "Scene/Scene.h"
 #include "Scene/Component.h"
 #include "Scene/Entity.h"
-#include "Subsystems/LoggingSubsystem.h"
+#include "Logging/Logging.h"
 
 static RayGE_Entity* GetEntityFromHandle(RayGE_EntityHandle handle, const char* operation)
 {
@@ -10,7 +10,7 @@ static RayGE_Entity* GetEntityFromHandle(RayGE_EntityHandle handle, const char* 
 
 	if ( !entity )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "%s: entity handle was not valid.", operation);
+		Logging_PrintLine(RAYGE_LOG_ERROR, "%s: entity handle was not valid.", operation);
 		return NULL;
 	}
 
@@ -42,7 +42,7 @@ RayGE_Component_Spatial* SceneAPI_AddSpatialComponent(RayGE_EntityHandle entity)
 
 	if ( !Entity_AddComponent(entPtr, &component->header) )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "AddSpatialComponent: failed to add component to entity.");
+		Logging_PrintLine(RAYGE_LOG_ERROR, "AddSpatialComponent: failed to add component to entity.");
 		Component_FreeList(&component->header);
 		component = NULL;
 	}
@@ -83,7 +83,7 @@ RayGE_Component_Camera* SceneAPI_AddCameraComponent(RayGE_EntityHandle entity)
 
 	if ( !Entity_AddComponent(entPtr, &component->header) )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "AddCameraComponent: failed to add component to entity.");
+		Logging_PrintLine(RAYGE_LOG_ERROR, "AddCameraComponent: failed to add component to entity.");
 		Component_FreeList(&component->header);
 		component = NULL;
 	}
@@ -124,7 +124,7 @@ RayGE_Component_Renderable* SceneAPI_AddRenderableComponent(RayGE_EntityHandle e
 
 	if ( !Entity_AddComponent(entPtr, &component->header) )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "AddRenderableComponent: failed to add component to entity.");
+		Logging_PrintLine(RAYGE_LOG_ERROR, "AddRenderableComponent: failed to add component to entity.");
 		Component_FreeList(&component->header);
 		component = NULL;
 	}

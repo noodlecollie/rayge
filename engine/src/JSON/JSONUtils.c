@@ -1,5 +1,5 @@
 #include "JSON/JSONUtils.h"
-#include "Subsystems/LoggingSubsystem.h"
+#include "Logging/Logging.h"
 
 static cJSON* GetItem(
 	const char* context,
@@ -11,7 +11,7 @@ static cJSON* GetItem(
 {
 	if ( !parent )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "%s object was null.", context ? context : "JSON");
+		Logging_PrintLine(RAYGE_LOG_ERROR, "%s object was null.", context ? context : "JSON");
 		return NULL;
 	}
 
@@ -19,7 +19,7 @@ static cJSON* GetItem(
 
 	if ( !item )
 	{
-		LoggingSubsystem_PrintLine(
+		Logging_PrintLine(
 			RAYGE_LOG_ERROR,
 			"%s object did not contain expected item \"%s\".",
 			context ? context : "JSON",
@@ -31,7 +31,7 @@ static cJSON* GetItem(
 
 	if ( !(*validator)(item) )
 	{
-		LoggingSubsystem_PrintLine(
+		Logging_PrintLine(
 			RAYGE_LOG_ERROR,
 			"%s object item \"%s\" was not of type \"%s\".",
 			context ? context : "JSON",

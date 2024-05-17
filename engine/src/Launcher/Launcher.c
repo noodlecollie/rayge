@@ -1,5 +1,5 @@
-#include "Subsystems/LoggingSubsystem.h"
-#include "Subsystems/FileSubsystem.h"
+#include "Logging/Logging.h"
+#include "Modules/FilesystemModule.h"
 #include "Launcher/LaunchParams.h"
 #include "Game/GameLoader.h"
 #include "Engine/EngineAPI.h"
@@ -12,12 +12,12 @@ static void* LoadGameLibrary(const RayGE_LaunchParams* params)
 	// TODO: Support loading from a specific directory if passed in params.
 	(void)params;
 
-	if ( FileSubsystem_DirectoryExists(DEFAULT_GAME_DIR) )
+	if ( FilesystemModule_DirectoryExists(DEFAULT_GAME_DIR) )
 	{
 		return GameLoader_LoadLibraryFromDirectory(DEFAULT_GAME_DIR);
 	}
 
-	LoggingSubsystem_PrintLine(
+	Logging_PrintLine(
 		RAYGE_LOG_ERROR,
 		"Default game directory " DEFAULT_GAME_DIR " was not found, and no game directory override was specified."
 	);
@@ -31,7 +31,7 @@ static int32_t LoadAndRunGame(const RayGE_LaunchParams* params)
 
 	if ( !gameLib )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Could not load game library.");
+		Logging_PrintLine(RAYGE_LOG_ERROR, "Could not load game library.");
 		return RAYGE_LAUNCHER_EXIT_FAIL_GAME_LOAD;
 	}
 

@@ -1,5 +1,5 @@
 #pragma once
 
-#include "Subsystems/UISubsystem.h"
+#include "Modules/UIModule.h"
 
 extern const RayGE_UIMenu Menu_SceneDebugUI;

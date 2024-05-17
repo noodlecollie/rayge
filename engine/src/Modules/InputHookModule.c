@@ -188,13 +188,13 @@ void InputHookModule_AddHook(RayGE_InputSource source, int id, unsigned int modi
 
 	if ( source >= INPUT_SOURCE__COUNT )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Invalid input source provided when adding input hook");
+		Logging_PrintLine(RAYGE_LOG_ERROR, "Invalid input source provided when adding input hook");
 		return;
 	}
 
 	if ( !hook.callback )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_ERROR, "Invalid callback provided when adding input hook");
+		Logging_PrintLine(RAYGE_LOG_ERROR, "Invalid callback provided when adding input hook");
 		return;
 	}
 

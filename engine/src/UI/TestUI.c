@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include "UI/TestUI.h"
 #include "Nuklear/Nuklear.h"
-#include "Subsystems/LoggingSubsystem.h"
+#include "Logging/Logging.h"
 
 nk_bool EditFilter(const struct nk_text_edit* edit, nk_rune unicode)
 {
@@ -14,14 +14,14 @@ static void Show(struct nk_context* context, void* userData)
 {
 	(void)context;
 	(void)userData;
-	LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, "TestUI Show()");
+	Logging_PrintLine(RAYGE_LOG_INFO, "TestUI Show()");
 }
 
 static void Hide(struct nk_context* context, void* userData)
 {
 	(void)context;
 	(void)userData;
-	LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, "TestUI Hide()");
+	Logging_PrintLine(RAYGE_LOG_INFO, "TestUI Hide()");
 }
 
 static bool Poll(struct nk_context* context, void* userData)

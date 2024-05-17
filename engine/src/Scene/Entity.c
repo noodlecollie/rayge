@@ -1,7 +1,7 @@
 #include <string.h>
 #include "Scene/Entity.h"
 #include "Scene/Component.h"
-#include "Subsystems/MemPoolSubsystem.h"
+#include "Modules/MemPoolModule.h"
 #include "Debugging.h"
 #include "raylib.h"
 

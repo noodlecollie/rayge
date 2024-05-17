@@ -1,13 +1,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "Engine/EngineAPI.h"
-#include "Subsystems/LoggingSubsystem.h"
+#include "Logging/Logging.h"
 #include "Scene/SceneAPI.h"
 
 const RayGE_Engine_API_Current g_EngineAPI = {
 	// Logging
 	{
-		LoggingSubsystem_PrintLine,
+		Logging_PrintLine,
 	},
 
 	// Scene

@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include "Subsystems/LoggingSubsystem.h"
+#include "Logging/Logging.h"
 #include "wzl_cutl/string.h"
 
 #ifndef NDEBUG
@@ -41,7 +41,7 @@ static inline void RayGE_EnsureTrue(
 		va_end(args);
 	}
 
-	LoggingSubsystem_PrintLine(
+	Logging_PrintLine(
 		isFatal ? RAYGE_LOG_FATAL : RAYGE_LOG_WARNING,
 		"\n"
 		"**** ASSERTION FAILED ****\n"

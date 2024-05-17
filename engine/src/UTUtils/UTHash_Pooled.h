@@ -12,7 +12,7 @@
 #error UTHASH_POOLED_MEMPOOL was not defined! Define this to point to a specific MemPool_Category constant.
 #endif
 
-#include "Subsystems/MemPoolSubsystem.h"
+#include "Modules/MemPoolModule.h"
 #include "Debugging.h"
 
 #define uthash_malloc(sz) MEMPOOL_MALLOC(UTHASH_POOLED_MEMPOOL, (sz))

@@ -1,6 +1,6 @@
 #include <stdarg.h>
 #include "Rendering/Renderer.h"
-#include "Subsystems/RendererSubsystem.h"
+#include "Modules/RendererModule.h"
 #include "Scene/Entity.h"
 #include "Debugging.h"
 
@@ -104,10 +104,10 @@ void Renderer_ClearDebugFlags(void)
 void Renderer_DrawTextDev(int posX, int posY, Color color, const char* text)
 {
 	DrawTextEx(
-		RendererSubsystem_GetDefaultMonoFont(),
+		RendererModule_GetDefaultMonoFont(),
 		text,
 		(Vector2) {(float)posX, (float)posY},
-		RENDERSUBSYSTEM_DEFAULT_FONT_SIZE,
+		RENDERERMODULE_DEFAULT_FONT_SIZE,
 		1.0f,
 		color
 	);
@@ -127,7 +127,7 @@ void Renderer_FormatTextDev(int posX, int posY, Color color, const char* format,
 
 void Renderer_DrawEntity(RayGE_Entity* entity)
 {
-	RAYGE_ASSERT(RendererSubsystem_IsInitialised(), "Renderer subsystem must be initialised");
+	RAYGE_ASSERT(RendererModule_IsInitialised(), "Renderer subsystem must be initialised");
 
 	if ( !entity )
 	{

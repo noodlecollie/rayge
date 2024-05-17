@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "Launcher/LaunchParams.h"
-#include "Subsystems/LoggingSubsystem.h"
-#include "Subsystems/MemPoolSubsystem.h"
+#include "Logging/Logging.h"
+#include "Modules/MemPoolModule.h"
 #include "cargs.h"
 
 static const struct cag_option LaunchOptionDefs[] = {
@@ -64,23 +64,23 @@ bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 
 				if ( level >= 3 )
 				{
-					LoggingSubsystem_SetBackendDebugLogsEnabled(true);
-					LoggingSubsystem_SetLogLevel(RAYGE_LOG_TRACE);
+					Logging_SetBackendDebugLogsEnabled(true);
+					Logging_SetLogLevel(RAYGE_LOG_TRACE);
 				}
 				else if ( level == 2 )
 				{
-					LoggingSubsystem_SetBackendDebugLogsEnabled(false);
-					LoggingSubsystem_SetLogLevel(RAYGE_LOG_TRACE);
+					Logging_SetBackendDebugLogsEnabled(false);
+					Logging_SetLogLevel(RAYGE_LOG_TRACE);
 				}
 				else if ( level == 1 )
 				{
-					LoggingSubsystem_SetBackendDebugLogsEnabled(false);
-					LoggingSubsystem_SetLogLevel(RAYGE_LOG_DEBUG);
+					Logging_SetBackendDebugLogsEnabled(false);
+					Logging_SetLogLevel(RAYGE_LOG_DEBUG);
 				}
 				else
 				{
-					LoggingSubsystem_SetBackendDebugLogsEnabled(false);
-					LoggingSubsystem_SetLogLevel(RAYGE_LOG_INFO);
+					Logging_SetBackendDebugLogsEnabled(false);
+					Logging_SetLogLevel(RAYGE_LOG_INFO);
 				}
 
 				break;
@@ -88,7 +88,7 @@ bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 
 			case 'm':
 			{
-				MemPoolSubsystem_SetDebuggingEnabled(true);
+				MemPoolModule_SetDebuggingEnabled(true);
 				break;
 			}
 		}

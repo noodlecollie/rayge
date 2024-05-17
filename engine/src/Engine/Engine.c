@@ -1,10 +1,10 @@
 #include <stdbool.h>
 #include "Engine/Engine.h"
-#include "Subsystems/LoggingSubsystem.h"
-#include "Subsystems/SubsystemManager.h"
-#include "Subsystems/UISubsystem.h"
-#include "Subsystems/InputSubsystem.h"
-#include "Subsystems/InputHookSubsystem.h"
+#include "Logging/Logging.h"
+#include "Modules/ModuleManager.h"
+#include "Modules/UIModule.h"
+#include "Modules/InputModule.h"
+#include "Modules/InputHookModule.h"
 #include "Hooks/HookManager.h"
 #include "Engine/EngineAPI.h"
 #include "Scene/Scene.h"
@@ -13,7 +13,7 @@
 #include "Identity/Identity.h"
 
 // TODO: Remove this once we move the rendering elsewhere
-#include "Subsystems/RendererSubsystem.h"
+#include "Modules/RendererModule.h"
 #include "Rendering/Renderer.h"
 #include "raylib.h"
 #include "UI/TestUI.h"
@@ -49,7 +49,7 @@ static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 	{
 		if ( !wrapper.funcTablePtr->funcPtrs[index] )
 		{
-			LoggingSubsystem_PrintLine(
+			Logging_PrintLine(
 				RAYGE_LOG_ERROR,
 				"Engine API function was null! (Table index: %zu, table size: %zu)",
 				index,
@@ -62,7 +62,7 @@ static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 
 	if ( functionWasInvalid )
 	{
-		LoggingSubsystem_PrintLine(RAYGE_LOG_FATAL, "One or more engine API functions were missing, aborting.");
+		Logging_PrintLine(RAYGE_LOG_FATAL, "One or more engine API functions were missing, aborting.");
 	}
 }
 
@@ -116,14 +116,14 @@ static void VisualiseEntities(void)
 
 static void RunFrameInput(void)
 {
-	InputSubsystem_NewFrame();
-	InputSubsystem_ProcessInput();
-	InputHookSubsystem_ProcessInput();
+	InputModule_NewFrame();
+	InputModule_ProcessInput();
+	InputHookModule_ProcessInput();
 
-	if ( UISubsystem_HasCurrentMenu() )
+	if ( UIModule_HasCurrentMenu() )
 	{
-		UISubsystem_ProcessInput();
-		UISubsystem_PollCurrentMenu();
+		UIModule_ProcessInput();
+		UIModule_PollCurrentMenu();
 	}
 }
 
@@ -135,9 +135,9 @@ static void RunFrameRender(void)
 	VisualiseEntities();
 
 	// Poll and render UI
-	if ( UISubsystem_HasCurrentMenu() )
+	if ( UIModule_HasCurrentMenu() )
 	{
-		UISubsystem_Draw();
+		UIModule_Draw();
 	}
 
 	EndDrawing();
@@ -145,7 +145,7 @@ static void RunFrameRender(void)
 
 static bool RunFrame(void)
 {
-	bool windowShouldClose = RendererSubsystem_WindowCloseRequested();
+	bool windowShouldClose = RendererModule_WindowCloseRequested();
 
 	RunFrameInput();
 	RunFrameRender();
@@ -161,19 +161,19 @@ void Engine_StartUp(void)
 	}
 
 	// Do this first, as a sanity check:
-	LoggingSubsystem_Init();
+	Logging_Init();
 	VerifyAllEngineAPIFunctionPointersAreValid();
 
-	SubsystemManager_InitAll();
+	ModuleManager_InitAll();
 	HookManager_RegisterAll();
 
 	g_Initialised = true;
 
-	LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, "RayGE engine initialised.");
-	LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, "%s", Identity_GetBuildDescription());
+	Logging_PrintLine(RAYGE_LOG_INFO, "RayGE engine initialised.");
+	Logging_PrintLine(RAYGE_LOG_INFO, "%s", Identity_GetBuildDescription());
 
 #if RAYGE_BUILD_TESTING()
-	LoggingSubsystem_PrintLine(RAYGE_LOG_WARNING, "Engine is built with test endpoints exposed.");
+	Logging_PrintLine(RAYGE_LOG_WARNING, "Engine is built with test endpoints exposed.");
 #endif
 }
 
@@ -184,12 +184,12 @@ void Engine_ShutDown(void)
 		return;
 	}
 
-	LoggingSubsystem_PrintLine(RAYGE_LOG_INFO, "RayGE engine shutting down.");
+	Logging_PrintLine(RAYGE_LOG_INFO, "RayGE engine shutting down.");
 
 	HookManager_UnregisterAll();
-	SubsystemManager_ShutDownAll();
+	ModuleManager_ShutDownAll();
 
-	LoggingSubsystem_ShutDown();
+	Logging_ShutDown();
 
 	g_Initialised = false;
 }
