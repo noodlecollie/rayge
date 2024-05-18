@@ -52,20 +52,14 @@ RAYGE_ENGINE_PUBLIC(int32_t) RayGE_Launcher_Run(const RayGE_LaunchParams* params
 		return -RAYGE_LAUNCHPARAMS_VERSION;
 	}
 
-	Engine_StartUp();
-
-	int32_t returnCode = RAYGE_LAUNCHER_EXIT_UNKNOWN_ERROR;
-
 	if ( !LaunchParams_Parse(params) )
 	{
 		// We don't need to go any further than parsing the params.
-		returnCode = RAYGE_LAUNCHER_EXIT_LOAD_ABORTED;
-	}
-	else
-	{
-		returnCode = LoadAndRunGame(params);
+		return RAYGE_LAUNCHER_EXIT_LOAD_ABORTED;
 	}
 
+	Engine_StartUp();
+	int32_t returnCode = LoadAndRunGame(params);
 	Engine_ShutDown();
 
 	return returnCode;

@@ -5,17 +5,12 @@
 #include <stddef.h>
 #include <ctype.h>
 #include "Modules/MemPoolModule.h"
+#include "Launcher/LaunchParams.h"
 #include "Logging/Logging.h"
 #include "Debugging.h"
 
 #define HEAD_SENTINEL_VALUE 0xF9A23BAD
 #define TAIL_SENTINEL_VALUE ~(HEAD_SENTINEL_VALUE)
-
-#if RAYGE_DEBUG()
-#define DEBUGGING_DEFAULT_VALUE true
-#else
-#define DEBUGGING_DEFAULT_VALUE false
-#endif
 
 struct MemPool;
 
@@ -327,7 +322,7 @@ void MemPoolModule_Init(void)
 		g_Pools[index].category = (MemPool_Category)index;
 	}
 
-	g_DebuggingEnabled = DEBUGGING_DEFAULT_VALUE;
+	g_DebuggingEnabled = LaunchParams_GetLaunchState()->enableMemPoolDebugging;
 	g_PoolsInitialised = true;
 }
 

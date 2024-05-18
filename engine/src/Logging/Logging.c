@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "RayGE/Private/Launcher.h"
 #include "Logging/Logging.h"
+#include "Launcher/LaunchParams.h"
 #include "Debugging.h"
 #include "raylib.h"
 #include "wzl_cutl/string.h"
@@ -111,10 +112,10 @@ static void RaylibLogCallback(int logLevel, const char* format, va_list args)
 
 void Logging_Init(void)
 {
-	SetTraceLogLevel(LOG_NONE);
+	Logging_SetBackendDebugLogsEnabled(LaunchParams_GetLaunchState()->enableBackendDebugLogs ? LOG_DEBUG : LOG_NONE);
 	SetTraceLogCallback(&RaylibLogCallback);
 
-	g_LogLevel = RAYGE_LOG_INFO;
+	g_LogLevel = LaunchParams_GetLaunchState()->defaultLogLevel;
 }
 
 void Logging_ShutDown(void)

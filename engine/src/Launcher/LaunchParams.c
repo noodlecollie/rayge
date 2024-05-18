@@ -2,14 +2,23 @@
 #include "Launcher/LaunchParams.h"
 #include "Logging/Logging.h"
 #include "Modules/MemPoolModule.h"
+#include "Identity/Identity.h"
+#include "Debugging.h"
 #include "cargs.h"
 
+static RayGE_LaunchState g_LaunchState;
 static const struct cag_option LaunchOptionDefs[] = {
 	{
 		.identifier = 'h',
 		.access_letters = "h",
 		.access_name = "help",
 		.description = "Displays a help message and exits.",
+	},
+	{
+		.identifier = 'v',
+		.access_letters = "v",
+		.access_name = "version",
+		.description = "Displays version string and exits.",
 	},
 	{
 		.identifier = 'd',
@@ -27,8 +36,22 @@ static const struct cag_option LaunchOptionDefs[] = {
 	}
 };
 
+static void SetDefaults(RayGE_LaunchState* state)
+{
+	state->defaultLogLevel = RAYGE_LOG_INFO;
+	state->enableBackendDebugLogs = false;
+
+#if RAYGE_DEBUG()
+	state->enableMemPoolDebugging = true;
+#else
+	state->enableMemPoolDebugging = false;
+#endif
+}
+
 bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 {
+	SetDefaults(&g_LaunchState);
+
 	if ( !params )
 	{
 		// Nothing to do.
@@ -57,6 +80,14 @@ bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 				return false;
 			}
 
+			case 'v':
+			{
+				printf("RayGE %s\n", Identity_GetBuildDescription());
+
+				// Quit here.
+				return false;
+			}
+
 			case 'd':
 			{
 				const char* value = cag_option_get_value(&context);
@@ -64,23 +95,23 @@ bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 
 				if ( level >= 3 )
 				{
-					Logging_SetBackendDebugLogsEnabled(true);
-					Logging_SetLogLevel(RAYGE_LOG_TRACE);
+					g_LaunchState.enableBackendDebugLogs = true;
+					g_LaunchState.defaultLogLevel = RAYGE_LOG_TRACE;
 				}
 				else if ( level == 2 )
 				{
-					Logging_SetBackendDebugLogsEnabled(false);
-					Logging_SetLogLevel(RAYGE_LOG_TRACE);
+					g_LaunchState.enableBackendDebugLogs = false;
+					g_LaunchState.defaultLogLevel = RAYGE_LOG_TRACE;
 				}
 				else if ( level == 1 )
 				{
-					Logging_SetBackendDebugLogsEnabled(false);
-					Logging_SetLogLevel(RAYGE_LOG_DEBUG);
+					g_LaunchState.enableBackendDebugLogs = false;
+					g_LaunchState.defaultLogLevel = RAYGE_LOG_DEBUG;
 				}
 				else
 				{
-					Logging_SetBackendDebugLogsEnabled(false);
-					Logging_SetLogLevel(RAYGE_LOG_INFO);
+					g_LaunchState.enableBackendDebugLogs = false;
+					g_LaunchState.defaultLogLevel = RAYGE_LOG_INFO;
 				}
 
 				break;
@@ -88,11 +119,16 @@ bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 
 			case 'm':
 			{
-				MemPoolModule_SetDebuggingEnabled(true);
+				g_LaunchState.enableMemPoolDebugging = true;
 				break;
 			}
 		}
 	}
 
 	return true;
+}
+
+const RayGE_LaunchState* LaunchParams_GetLaunchState(void)
+{
+	return &g_LaunchState;
 }

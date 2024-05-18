@@ -162,6 +162,8 @@ void Engine_StartUp(void)
 
 	// Do this first, as a sanity check:
 	Logging_Init();
+	Logging_PrintLine(RAYGE_LOG_INFO, "%s", Identity_GetBuildDescription());
+
 	VerifyAllEngineAPIFunctionPointersAreValid();
 
 	ModuleManager_InitAll();
@@ -170,7 +172,6 @@ void Engine_StartUp(void)
 	g_Initialised = true;
 
 	Logging_PrintLine(RAYGE_LOG_INFO, "RayGE engine initialised.");
-	Logging_PrintLine(RAYGE_LOG_INFO, "%s", Identity_GetBuildDescription());
 
 #if RAYGE_BUILD_TESTING()
 	Logging_PrintLine(RAYGE_LOG_WARNING, "Engine is built with test endpoints exposed.");
