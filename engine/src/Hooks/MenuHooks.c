@@ -35,12 +35,12 @@ static void HandleCommand(const char* commandName, void* userData)
 
 	if ( commandName[0] == '+' )
 	{
-		Logging_PrintLine(RAYGE_LOG_DEBUG, "Showing menu: %s", commandName + 1);
+		Logging_PrintLine(RAYGE_LOG_DEBUG, "Show menu command: %s", commandName);
 		UIModule_SetCurrentMenu(menu);
 	}
 	else if ( commandName[0] == '-' )
 	{
-		Logging_PrintLine(RAYGE_LOG_DEBUG, "Hiding menu: %s", commandName + 1);
+		Logging_PrintLine(RAYGE_LOG_DEBUG, "Hide menu command: %s", commandName);
 		UIModule_ClearCurrentMenu();
 	}
 	else

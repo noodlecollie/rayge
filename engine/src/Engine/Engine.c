@@ -81,7 +81,8 @@ static void VisualiseEntities(void)
 		}
 	}
 
-	Renderer_AddDebugFlags(RENDERER_DBG_DRAW_LOCATIONS);
+	RayGE_Renderer* renderer = RendererModule_GetRenderer();
+	Renderer_AddDebugFlags(renderer, RENDERER_DBG_DRAW_LOCATIONS);
 	ClearBackground(BLACK);
 
 	Camera3D camera = {0};
@@ -105,13 +106,13 @@ static void VisualiseEntities(void)
 			continue;
 		}
 
-		Renderer_DrawEntity(entity);
+		Renderer_DrawEntity(renderer, entity);
 	}
 
 	EndMode3D();
 
-	Renderer_FormatTextDev(20, 20, WHITE, "Scene has %zu active entities", Scene_GetActiveEntities());
-	Renderer_FormatTextDev(20, 40, WHITE, "FPS: %d", GetFPS());
+	Renderer_FormatTextDev(renderer, 20, 20, WHITE, "Scene has %zu active entities", Scene_GetActiveEntities());
+	Renderer_FormatTextDev(renderer, 20, 40, WHITE, "FPS: %d", GetFPS());
 }
 
 static void RunFrameInput(void)
@@ -131,14 +132,8 @@ static void RunFrameRender(void)
 {
 	BeginDrawing();
 
-	// Render scene
 	VisualiseEntities();
-
-	// Poll and render UI
-	if ( UIModule_HasCurrentMenu() )
-	{
-		UIModule_Draw();
-	}
+	UIModule_Draw();
 
 	EndDrawing();
 }

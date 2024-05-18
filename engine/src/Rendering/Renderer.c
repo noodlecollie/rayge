@@ -1,13 +1,17 @@
 #include <stdarg.h>
 #include "Rendering/Renderer.h"
 #include "Modules/RendererModule.h"
+#include "Modules/MemPoolModule.h"
 #include "Scene/Entity.h"
 #include "Debugging.h"
 
 #define DBG_LOCATION_MARKER_RADIUS 4.0f
 #define MAX_DEV_TEXT_LENGTH 256
 
-static uint64_t g_DebugFlags = 0;
+struct RayGE_Renderer
+{
+	uint64_t debugFlags;
+};
 
 static void DrawEntityLocation(RayGE_Entity* entity)
 {
@@ -86,23 +90,68 @@ static void DrawEntityLocation(RayGE_Entity* entity)
 	DrawLine3D(component->data.position, endPoint, YELLOW);
 }
 
-void Renderer_AddDebugFlags(uint64_t flags)
+RayGE_Renderer* Renderer_Create(void)
 {
-	g_DebugFlags |= flags;
+	return MEMPOOL_CALLOC_STRUCT(MEMPOOL_RENDERER, RayGE_Renderer);
 }
 
-void Renderer_RemoveDebugFlags(uint64_t flags)
+void Renderer_Destroy(RayGE_Renderer* renderer)
 {
-	g_DebugFlags &= ~flags;
+	RAYGE_ASSERT_VALID(renderer);
+
+	if ( !renderer )
+	{
+		return;
+	}
+
+	MEMPOOL_FREE(renderer);
 }
 
-void Renderer_ClearDebugFlags(void)
+void Renderer_AddDebugFlags(RayGE_Renderer* renderer, uint64_t flags)
 {
-	g_DebugFlags = 0;
+	RAYGE_ASSERT_VALID(renderer);
+
+	if ( !renderer )
+	{
+		return;
+	}
+
+	renderer->debugFlags |= flags;
 }
 
-void Renderer_DrawTextDev(int posX, int posY, Color color, const char* text)
+void Renderer_RemoveDebugFlags(RayGE_Renderer* renderer, uint64_t flags)
 {
+	RAYGE_ASSERT_VALID(renderer);
+
+	if ( !renderer )
+	{
+		return;
+	}
+
+	renderer->debugFlags &= ~flags;
+}
+
+void Renderer_ClearDebugFlags(RayGE_Renderer* renderer)
+{
+	RAYGE_ASSERT_VALID(renderer);
+
+	if ( !renderer )
+	{
+		return;
+	}
+
+	renderer->debugFlags = 0;
+}
+
+void Renderer_DrawTextDev(RayGE_Renderer* renderer, int posX, int posY, Color color, const char* text)
+{
+	RAYGE_ASSERT_VALID(renderer);
+
+	if ( !renderer )
+	{
+		return;
+	}
+
 	DrawTextEx(
 		RendererModule_GetDefaultMonoFont(),
 		text,
@@ -113,8 +162,15 @@ void Renderer_DrawTextDev(int posX, int posY, Color color, const char* text)
 	);
 }
 
-void Renderer_FormatTextDev(int posX, int posY, Color color, const char* format, ...)
+void Renderer_FormatTextDev(RayGE_Renderer* renderer, int posX, int posY, Color color, const char* format, ...)
 {
+	RAYGE_ASSERT_VALID(renderer);
+
+	if ( !renderer )
+	{
+		return;
+	}
+
 	char buffer[MAX_DEV_TEXT_LENGTH];
 
 	va_list args;
@@ -122,19 +178,20 @@ void Renderer_FormatTextDev(int posX, int posY, Color color, const char* format,
 	wzl_vsprintf(buffer, sizeof(buffer), format, args);
 	va_end(args);
 
-	Renderer_DrawTextDev(posX, posY, color, buffer);
+	Renderer_DrawTextDev(renderer, posX, posY, color, buffer);
 }
 
-void Renderer_DrawEntity(RayGE_Entity* entity)
+void Renderer_DrawEntity(RayGE_Renderer* renderer, RayGE_Entity* entity)
 {
-	RAYGE_ASSERT(RendererModule_IsInitialised(), "Renderer subsystem must be initialised");
+	RAYGE_ASSERT_VALID(renderer);
+	RAYGE_ASSERT_VALID(entity);
 
-	if ( !entity )
+	if ( !renderer || !entity )
 	{
 		return;
 	}
 
-	if ( g_DebugFlags & RENDERER_DBG_DRAW_LOCATIONS )
+	if ( renderer->debugFlags & RENDERER_DBG_DRAW_LOCATIONS )
 	{
 		DrawEntityLocation(entity);
 	}

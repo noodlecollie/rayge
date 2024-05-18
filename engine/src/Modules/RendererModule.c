@@ -10,6 +10,7 @@ typedef struct SubsystemData
 {
 	Font defaultMonoFont;
 	Font defaultUIFont;
+	RayGE_Renderer* renderer;
 } SubsystemData;
 
 static SubsystemData* g_Data = NULL;
@@ -52,6 +53,8 @@ void RendererModule_Init(void)
 
 	RAYGE_ENSURE(IsFontReady(g_Data->defaultUIFont), "Could not create default renderer font");
 
+	g_Data->renderer = Renderer_Create();
+
 	SetExitKey(KEY_NULL);
 
 	// TODO: Make this configurable?
@@ -65,6 +68,7 @@ void RendererModule_ShutDown(void)
 		return;
 	}
 
+	Renderer_Destroy(g_Data->renderer);
 	UnloadFont(g_Data->defaultMonoFont);
 	UnloadFont(g_Data->defaultUIFont);
 	CloseWindow();
@@ -81,6 +85,13 @@ bool RendererModule_WindowCloseRequested(void)
 {
 	RAYGE_ASSERT_VALID(g_Data);
 	return g_Data && WindowShouldClose();
+}
+
+RayGE_Renderer* RendererModule_GetRenderer(void)
+{
+	RAYGE_ASSERT_VALID(g_Data);
+
+	return g_Data ? g_Data->renderer : NULL;
 }
 
 Font RendererModule_GetDefaultMonoFont(void)
