@@ -71,6 +71,14 @@ static void RegisterMenuWithModifiers(int key, unsigned int modifierFlags, const
 {
 	RAYGE_ENSURE(name && menu, "Expected a valid name and menu");
 
+	Logging_PrintLine(
+		RAYGE_LOG_TRACE,
+		"Registering menu hook for %s on key %d (modifier condition: 0x%08x)",
+		name,
+		key,
+		modifierFlags
+	);
+
 	StateItem* state = MEMPOOL_CALLOC_STRUCT(MEMPOOL_HOOKS, StateItem);
 	LL_PREPEND(g_State, state);
 

@@ -70,6 +70,7 @@ static inline void RayGE_EnsureTrue(
 	while ( false )
 
 #define RAYGE_ENSURE(expr, ...) RAYGE_ENSURE_EX(true, expr, __VA_ARGS__)
+#define RAYGE_ENSURE_VALID(expr) RAYGE_ENSURE_EX(true, expr, "Required state was not valid")
 #define RAYGE_EXPECT(expr, ...) RAYGE_ENSURE_EX(false, expr, __VA_ARGS__)
 
 #define RAYGE_FATAL_EX(condition, ...) \
@@ -84,8 +85,10 @@ static inline void RayGE_EnsureTrue(
 // Only active in debug builds:
 #if RAYGE_DEBUG()
 #define RAYGE_ASSERT(expr, ...) RAYGE_ENSURE(expr, __VA_ARGS__)
+#define RAYGE_ASSERT_VALID(expr) RAYGE_ENSURE_VALID(expr)
 #define RAYGE_ASSERT_UNREACHABLE(...) RAYGE_FATAL_EX("<Unreachable Code>", __VA_ARGS__)
 #else
 #define RAYGE_ASSERT(expr, ...)
+#define RAYGE_ASSERT_VALID(expr)
 #define RAYGE_ASSERT_UNREACHABLE(...)
 #endif

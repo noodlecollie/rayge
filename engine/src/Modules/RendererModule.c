@@ -79,11 +79,14 @@ bool RendererModule_IsInitialised(void)
 
 bool RendererModule_WindowCloseRequested(void)
 {
+	RAYGE_ASSERT_VALID(g_Data);
 	return g_Data && WindowShouldClose();
 }
 
 Font RendererModule_GetDefaultMonoFont(void)
 {
+	RAYGE_ASSERT_VALID(g_Data);
+
 	if ( !g_Data )
 	{
 		return (Font) {0};
@@ -94,6 +97,8 @@ Font RendererModule_GetDefaultMonoFont(void)
 
 Font RendererModule_GetDefaultUIFont(void)
 {
+	RAYGE_ASSERT_VALID(g_Data);
+
 	if ( !g_Data )
 	{
 		return (Font) {0};

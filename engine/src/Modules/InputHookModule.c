@@ -181,6 +181,8 @@ void InputHookModule_ShutDown(void)
 
 void InputHookModule_AddHook(RayGE_InputSource source, int id, unsigned int modifierFlags, RayGE_InputHook hook)
 {
+	RAYGE_ASSERT_VALID(g_Data);
+
 	if ( !g_Data )
 	{
 		return;
@@ -197,6 +199,14 @@ void InputHookModule_AddHook(RayGE_InputSource source, int id, unsigned int modi
 		Logging_PrintLine(RAYGE_LOG_ERROR, "Invalid callback provided when adding input hook");
 		return;
 	}
+
+	Logging_PrintLine(
+		RAYGE_LOG_TRACE,
+		"Adding input hook for source %d input %d with modifier condition 0x%08x",
+		source,
+		id,
+		modifierFlags
+	);
 
 	HookInputHashItem* hashItem = NULL;
 	HASH_FIND_INT(g_Data->inputHash[source], &id, hashItem);
@@ -215,6 +225,8 @@ void InputHookModule_AddHook(RayGE_InputSource source, int id, unsigned int modi
 
 void InputHookModule_ProcessInput(void)
 {
+	RAYGE_ASSERT_VALID(g_Data);
+
 	if ( !g_Data )
 	{
 		return;

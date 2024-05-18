@@ -80,6 +80,8 @@ static CommandModule_CommandHandle* FindCommandByName(CommandRegistry* registry,
 static CommandModule_CommandHandle*
 AddCommand(CommandRegistry* registry, char* name, CommandModule_Callback callback, void* userData)
 {
+	Logging_PrintLine(RAYGE_LOG_TRACE, "Adding command: %s", name);
+
 	CommandModule_CommandHandle* item = MEMPOOL_CALLOC_STRUCT(MEMPOOL_COMMANDS, CommandModule_CommandHandle);
 	item->name = name;
 	item->callback = callback;
@@ -116,7 +118,7 @@ void CommandModule_ShutDown(void)
 const CommandModule_CommandHandle*
 CommandModule_AddCommand(const char* name, CommandModule_Callback callback, void* userData)
 {
-	RAYGE_ASSERT(g_Registry, "Command subsystem was not initialised");
+	RAYGE_ASSERT_VALID(g_Registry);
 
 	if ( !g_Registry )
 	{
@@ -173,7 +175,7 @@ CommandModule_AddCommand(const char* name, CommandModule_Callback callback, void
 
 const CommandModule_CommandHandle* CommandModule_FindCommand(const char* commandName)
 {
-	RAYGE_ASSERT(g_Registry, "Command subsystem was not initialised");
+	RAYGE_ASSERT_VALID(g_Registry);
 
 	if ( !g_Registry )
 	{
@@ -190,7 +192,7 @@ const CommandModule_CommandHandle* CommandModule_FindCommand(const char* command
 
 void CommandModule_InvokeCommand(const CommandModule_CommandHandle* command)
 {
-	RAYGE_ASSERT(g_Registry, "Command subsystem was not initialised");
+	RAYGE_ASSERT_VALID(g_Registry);
 
 	if ( !g_Registry || !command )
 	{

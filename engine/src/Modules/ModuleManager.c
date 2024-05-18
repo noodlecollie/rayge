@@ -6,6 +6,7 @@
 #include "Modules/InputModule.h"
 #include "Modules/UIModule.h"
 #include "Modules/CommandModule.h"
+#include "Modules/InputHookModule.h"
 #include "Utils.h"
 
 typedef struct ModuleInitAndShutdown
@@ -21,6 +22,7 @@ static const ModuleInitAndShutdown g_Modules[] = {
 	{FilesystemModule_Init, FilesystemModule_ShutDown},
 	{RendererModule_Init, RendererModule_ShutDown},
 	{InputModule_Init, InputModule_ShutDown},
+	{InputHookModule_Init, InputHookModule_ShutDown},
 	{UIModule_Init, UIModule_ShutDown},
 	{CommandModule_Init, CommandModule_ShutDown},
 };

@@ -64,6 +64,8 @@ void UIModule_ShutDown(void)
 
 const RayGE_UIMenu* UIModule_GetCurrentMenu(void)
 {
+	RAYGE_ASSERT_VALID(g_Initialised);
+
 	if ( !g_Initialised )
 	{
 		return NULL;
@@ -74,6 +76,8 @@ const RayGE_UIMenu* UIModule_GetCurrentMenu(void)
 
 void UIModule_SetCurrentMenu(const RayGE_UIMenu* menu)
 {
+	RAYGE_ASSERT_VALID(g_Initialised);
+
 	if ( !g_Initialised || menu == g_CurrentMenu )
 	{
 		return;
@@ -91,6 +95,8 @@ void UIModule_SetCurrentMenu(const RayGE_UIMenu* menu)
 
 void UIModule_ClearCurrentMenu(void)
 {
+	RAYGE_ASSERT_VALID(g_Initialised);
+
 	if ( !g_Initialised )
 	{
 		return;
@@ -106,11 +112,15 @@ void UIModule_ClearCurrentMenu(void)
 
 bool UIModule_HasCurrentMenu(void)
 {
+	RAYGE_ASSERT_VALID(g_Initialised);
+
 	return g_Initialised && g_CurrentMenu;
 }
 
 void UIModule_PollCurrentMenu(void)
 {
+	RAYGE_ASSERT_VALID(g_Initialised);
+
 	if ( !g_Initialised || !g_CurrentMenu || !g_CurrentMenu->Poll )
 	{
 		return;
@@ -126,6 +136,8 @@ void UIModule_PollCurrentMenu(void)
 
 void UIModule_ProcessInput(void)
 {
+	RAYGE_ASSERT_VALID(g_Initialised);
+
 	if ( !g_Initialised )
 	{
 		return;
@@ -136,6 +148,8 @@ void UIModule_ProcessInput(void)
 
 void UIModule_Draw(void)
 {
+	RAYGE_ASSERT_VALID(g_Initialised);
+
 	if ( !g_Initialised )
 	{
 		return;
@@ -146,6 +160,8 @@ void UIModule_Draw(void)
 
 void UIModule_Poll(void)
 {
+	RAYGE_ASSERT_VALID(g_Initialised);
+
 	if ( !g_Initialised )
 	{
 		return;

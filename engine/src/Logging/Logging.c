@@ -13,6 +13,11 @@ static const char* LogPrefix(RayGE_Log_Level level)
 {
 	switch ( level )
 	{
+		case RAYGE_LOG_TRACE:
+		{
+			return "{Trace} ";
+		}
+
 		case RAYGE_LOG_WARNING:
 		{
 			return "Warning: ";

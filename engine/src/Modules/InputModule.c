@@ -3,6 +3,7 @@
 #include "Logging/Logging.h"
 #include "Input/InputBuffer.h"
 #include "Input/InputBufferKeyboard.h"
+#include "Debugging.h"
 #include "raylib.h"
 
 // You've got 10 digits on your hands, anything more than
@@ -75,6 +76,8 @@ void InputModule_ShutDown(void)
 
 void InputModule_ClearAllInputThisFrame(void)
 {
+	RAYGE_ASSERT_VALID(g_Data);
+
 	if ( !g_Data )
 	{
 		return;
@@ -85,6 +88,9 @@ void InputModule_ClearAllInputThisFrame(void)
 
 const RayGE_InputBuffer* InputModule_GetInputForSource(RayGE_InputSource source)
 {
+	RAYGE_ASSERT_VALID(g_Data);
+	RAYGE_ASSERT_VALID(source < INPUT_SOURCE__COUNT);
+
 	if ( !g_Data || source >= INPUT_SOURCE__COUNT )
 	{
 		return NULL;
@@ -95,6 +101,8 @@ const RayGE_InputBuffer* InputModule_GetInputForSource(RayGE_InputSource source)
 
 void InputModule_NewFrame(void)
 {
+	RAYGE_ASSERT_VALID(g_Data);
+
 	if ( !g_Data )
 	{
 		return;
@@ -110,6 +118,8 @@ void InputModule_NewFrame(void)
 
 void InputModule_ProcessInput(void)
 {
+	RAYGE_ASSERT_VALID(g_Data);
+
 	if ( !g_Data )
 	{
 		return;

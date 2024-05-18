@@ -345,7 +345,7 @@ void MemPoolModule_ShutDown(void)
 
 void* MemPoolModule_Malloc(const char* file, int line, MemPool_Category category, size_t size)
 {
-	RAYGE_ENSURE(g_PoolsInitialised, "Mem pool must be initialised before calling this function.");
+	RAYGE_ENSURE_VALID(g_PoolsInitialised);
 
 	RAYGE_ENSURE(
 		(size_t)category < MEMPOOL__COUNT,
@@ -366,7 +366,7 @@ void* MemPoolModule_Calloc(
 	size_t elementSize
 )
 {
-	RAYGE_ENSURE(g_PoolsInitialised, "Mem pool must be initialised before calling this function.");
+	RAYGE_ENSURE_VALID(g_PoolsInitialised);
 
 	RAYGE_ENSURE(
 		(size_t)category < MEMPOOL__COUNT,
@@ -385,7 +385,7 @@ void* MemPoolModule_Calloc(
 
 void* MemPoolModule_Realloc(const char* file, int line, MemPool_Category category, void* memory, size_t newSize)
 {
-	RAYGE_ENSURE(g_PoolsInitialised, "Mem pool must be initialised before calling this function.");
+	RAYGE_ENSURE_VALID(g_PoolsInitialised);
 
 	RAYGE_ENSURE(
 		(size_t)category < MEMPOOL__COUNT,
@@ -434,7 +434,7 @@ void* MemPoolModule_Realloc(const char* file, int line, MemPool_Category categor
 
 void MemPoolModule_Free(const char* file, int line, void* memory)
 {
-	RAYGE_ENSURE(g_PoolsInitialised, "Mem pool must be initialised before calling this function.");
+	RAYGE_ENSURE_VALID(g_PoolsInitialised);
 	RAYGE_ENSURE(memory, "Mem pool invocation from %s:%d: Null pointer provided to MemPoolModule_Free", file, line);
 
 	MemPoolItemHead* item = MemPtrToItemChecked(memory, file, line);
@@ -443,7 +443,7 @@ void MemPoolModule_Free(const char* file, int line, void* memory)
 
 void MemPoolModule_DumpAllocInfo(void* memory)
 {
-	RAYGE_ENSURE(g_PoolsInitialised, "Mem pool must be initialised before calling this function.");
+	RAYGE_ENSURE_VALID(g_PoolsInitialised);
 	RAYGE_ASSERT(g_DebuggingEnabled, "Mem pool debugging must be enabled to use this function.");
 
 	if ( !g_DebuggingEnabled )
