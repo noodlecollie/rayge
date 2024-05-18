@@ -6,32 +6,8 @@
 #include "Nuklear/Nuklear.h"
 
 static struct nk_context* g_NKContext = NULL;
-static struct nk_user_font g_NKFont;
 static const RayGE_UIMenu* g_CurrentMenu = NULL;
 static bool g_Initialised = false;
-
-static void* LocalAllocate(nk_handle handle, void* ptr, nk_size size)
-{
-	(void)handle;
-	(void)ptr;
-
-	return MEMPOOL_MALLOC(MEMPOOL_UI, size);
-}
-
-static void LocalFree(nk_handle handle, void* ptr)
-{
-	(void)handle;
-
-	MEMPOOL_FREE(ptr);
-}
-
-static float ComputeTextWidthForDefaultFont(nk_handle handle, float height, const char* text, int textLength)
-{
-	(void)handle;
-	(void)textLength;
-
-	return MeasureTextEx(RendererModule_GetDefaultUIFont(), text, height, 0.0f).x;
-}
 
 void UIModule_Init(void)
 {

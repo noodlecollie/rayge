@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include "UI/SceneDebugUI.h"
 #include "Logging/Logging.h"
 #include "Nuklear/Nuklear.h"

@@ -117,7 +117,7 @@ static void RaylibLogCallback(int logLevel, const char* format, va_list args)
 
 void Logging_Init(void)
 {
-	Logging_SetBackendDebugLogsEnabled(LaunchParams_GetLaunchState()->enableBackendDebugLogs ? LOG_DEBUG : LOG_NONE);
+	Logging_SetBackendDebugLogsEnabled(LaunchParams_GetLaunchState()->enableBackendDebugLogs);
 	SetTraceLogCallback(&RaylibLogCallback);
 
 	g_LogLevel = LaunchParams_GetLaunchState()->defaultLogLevel;
