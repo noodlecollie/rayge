@@ -10,41 +10,46 @@
 #define DBG_LOCATION_MARKER_RADIUS 4.0f
 #define MAX_DEV_TEXT_LENGTH 256
 
-typedef enum RenderCameraType
+typedef enum DrawMode
 {
-	RENDERCAMERA_NONE = 0,
-	RENDERCAMERA_2D,
-	RENDERCAMERA_3D
-} RenderCameraType;
-
-typedef union RenderCamera
-{
-	Camera2D cam2D;
-	Camera3D cam3D;
-} RenderCamera;
+	DRAWMODE_DIRECT = 0,
+	DRAWMODE_2D,
+	DRAWMODE_3D
+} DrawMode;
 
 struct RayGE_Renderer
 {
 	uint64_t debugFlags;
 	Color backgroundColour;
 
-	RenderCameraType cameraType;
-	RenderCamera camera;
 	bool inFrame;
+	DrawMode drawMode;
+	Camera2D cam2D;
+	Camera3D cam3D;
 };
+
+static Camera2D Default2DCamera(void)
+{
+	return (Camera2D) {
+		.offset = {0.0f, 0.0f},
+		.target = {0.0f, 0.0f},
+		.rotation = 0.0f,
+		.zoom = 1.0f,
+	};
+}
 
 static Camera3D Default3DCamera(void)
 {
 	return (Camera3D) {
-		{0.0f, 0.0f, 0.0f},
-		{1.0f, 0.0f, 0.0f},
-		{0.0f, 0.0f, 1.0f},
-		45.0f,
-		CAMERA_PERSPECTIVE,
+		.position = {0.0f, 0.0f, 0.0f},
+		.target = {1.0f, 0.0f, 0.0f},
+		.up = {0.0f, 0.0f, 1.0f},
+		.fovy = 45.0f,
+		.projection = CAMERA_PERSPECTIVE,
 	};
 }
 
-static bool VerifyNotInFrame(RayGE_Renderer* renderer)
+static bool VerifyNotInFrame(const RayGE_Renderer* renderer)
 {
 	RAYGE_ASSERT_VALID(renderer);
 	RAYGE_ASSERT_EXPECT(renderer && !renderer->inFrame, "Cannot perform operation after frame has begun");
@@ -52,12 +57,79 @@ static bool VerifyNotInFrame(RayGE_Renderer* renderer)
 	return renderer && !renderer->inFrame;
 }
 
-static bool VerifyInFrame(RayGE_Renderer* renderer)
+static bool VerifyInFrame(const RayGE_Renderer* renderer)
 {
 	RAYGE_ASSERT_VALID(renderer);
 	RAYGE_ASSERT_EXPECT(renderer && renderer->inFrame, "Cannot perform operation before frame has begun");
 
 	return renderer && renderer->inFrame;
+}
+
+static bool VerifyInDrawMode(const RayGE_Renderer* renderer, DrawMode mode)
+{
+	if ( !VerifyInFrame(renderer) )
+	{
+		return false;
+	}
+
+	RAYGE_ASSERT_VALID(renderer->drawMode == mode);
+	return renderer->drawMode == mode;
+}
+
+static void TransitionToDrawMode(RayGE_Renderer* renderer, DrawMode mode)
+{
+	if ( renderer->drawMode == mode )
+	{
+		return;
+	}
+
+	if ( renderer->inFrame )
+	{
+		switch ( renderer->drawMode )
+		{
+			case DRAWMODE_2D:
+			{
+				EndMode2D();
+				break;
+			}
+
+			case DRAWMODE_3D:
+			{
+				EndMode3D();
+				break;
+			}
+
+			default:
+			{
+				break;
+			}
+		}
+	}
+
+	renderer->drawMode = mode;
+
+	if ( renderer->inFrame )
+	{
+		switch ( renderer->drawMode )
+		{
+			case DRAWMODE_2D:
+			{
+				BeginMode2D(renderer->cam2D);
+				break;
+			}
+
+			case DRAWMODE_3D:
+			{
+				BeginMode3D(renderer->cam3D);
+				break;
+			}
+
+			default:
+			{
+				break;
+			}
+		}
+	}
 }
 
 static void DrawEntityLocation(RayGE_Entity* entity)
@@ -143,9 +215,9 @@ RayGE_Renderer* Renderer_Create(void)
 
 	renderer->debugFlags = 0;
 	renderer->backgroundColour = RENDERCOLOUR_NONE;
-
-	renderer->cameraType = RENDERCAMERA_NONE;
-	renderer->camera.cam3D = Default3DCamera();
+	renderer->drawMode = DRAWMODE_DIRECT;
+	renderer->cam2D = Default2DCamera();
+	renderer->cam3D = Default3DCamera();
 
 	return renderer;
 }
@@ -216,39 +288,6 @@ uint64_t Renderer_GetDebugFlags(const RayGE_Renderer* renderer)
 	return renderer ? renderer->debugFlags : 0;
 }
 
-void Renderer_Set2DCamera(RayGE_Renderer* renderer, Camera2D camera)
-{
-	if ( !VerifyNotInFrame(renderer) )
-	{
-		return;
-	}
-
-	renderer->cameraType = RENDERCAMERA_2D;
-	renderer->camera.cam2D = camera;
-}
-
-void Renderer_Set3DCamera(RayGE_Renderer* renderer, Camera3D camera)
-{
-	if ( !VerifyNotInFrame(renderer) )
-	{
-		return;
-	}
-
-	renderer->cameraType = RENDERCAMERA_3D;
-	renderer->camera.cam3D = camera;
-}
-
-void Renderer_ClearCamera(RayGE_Renderer* renderer)
-{
-	if ( !VerifyNotInFrame(renderer) )
-	{
-		return;
-	}
-
-	renderer->cameraType = RENDERCAMERA_NONE;
-	renderer->camera.cam3D = Default3DCamera();
-}
-
 void Renderer_SetBackgroundColour(RayGE_Renderer* renderer, Color colour)
 {
 	if ( !VerifyNotInFrame(renderer) )
@@ -280,30 +319,13 @@ void Renderer_BeginFrame(RayGE_Renderer* renderer)
 	}
 
 	renderer->inFrame = true;
+	renderer->drawMode = DRAWMODE_DIRECT;
+
+	BeginDrawing();
 
 	if ( renderer->backgroundColour.a > 0 )
 	{
 		ClearBackground(renderer->backgroundColour);
-	}
-
-	switch ( renderer->cameraType )
-	{
-		case RENDERCAMERA_2D:
-		{
-			BeginMode2D(renderer->camera.cam2D);
-			break;
-		}
-
-		case RENDERCAMERA_3D:
-		{
-			BeginMode3D(renderer->camera.cam3D);
-			break;
-		}
-
-		default:
-		{
-			break;
-		}
 	}
 }
 
@@ -317,70 +339,52 @@ void Renderer_EndFrame(RayGE_Renderer* renderer)
 		return;
 	}
 
-	switch ( renderer->cameraType )
-	{
-		case RENDERCAMERA_2D:
-		{
-			EndMode2D();
-			break;
-		}
-
-		case RENDERCAMERA_3D:
-		{
-			EndMode3D();
-			break;
-		}
-
-		default:
-		{
-			break;
-		}
-	}
-
+	TransitionToDrawMode(renderer, DRAWMODE_DIRECT);
+	EndDrawing();
 	renderer->inFrame = false;
 }
 
-void Renderer_DrawTextDev(RayGE_Renderer* renderer, int posX, int posY, Color color, const char* text)
+bool Renderer_IsInFrame(const RayGE_Renderer* renderer)
 {
 	RAYGE_ASSERT_VALID(renderer);
-
-	if ( !renderer )
-	{
-		return;
-	}
-
-	DrawTextEx(
-		RendererModule_GetDefaultMonoFont(),
-		text,
-		(Vector2) {(float)posX, (float)posY},
-		RENDERERMODULE_DEFAULT_FONT_SIZE,
-		1.0f,
-		color
-	);
+	return renderer && renderer->inFrame;
 }
 
-void Renderer_FormatTextDev(RayGE_Renderer* renderer, int posX, int posY, Color color, const char* format, ...)
-{
-	RAYGE_ASSERT_VALID(renderer);
-
-	if ( !renderer )
-	{
-		return;
-	}
-
-	char buffer[MAX_DEV_TEXT_LENGTH];
-
-	va_list args;
-	va_start(args, format);
-	wzl_vsprintf(buffer, sizeof(buffer), format, args);
-	va_end(args);
-
-	Renderer_DrawTextDev(renderer, posX, posY, color, buffer);
-}
-
-void Renderer_DrawEntity(RayGE_Renderer* renderer, RayGE_Entity* entity)
+void Renderer_SetDrawingMode2D(RayGE_Renderer* renderer, Camera2D camera)
 {
 	if ( !VerifyInFrame(renderer) )
+	{
+		return;
+	}
+
+	renderer->cam2D = camera;
+	TransitionToDrawMode(renderer, DRAWMODE_2D);
+}
+
+void Renderer_SetDrawingMode3D(RayGE_Renderer* renderer, Camera3D camera)
+{
+	if ( !VerifyInFrame(renderer) )
+	{
+		return;
+	}
+
+	renderer->cam3D = camera;
+	TransitionToDrawMode(renderer, DRAWMODE_3D);
+}
+
+void Renderer_SetDrawingModeDirect(RayGE_Renderer* renderer)
+{
+	if ( !VerifyInFrame(renderer) )
+	{
+		return;
+	}
+
+	TransitionToDrawMode(renderer, DRAWMODE_DIRECT);
+}
+
+void Renderer_DrawEntity3D(RayGE_Renderer* renderer, RayGE_Entity* entity)
+{
+	if ( !VerifyInDrawMode(renderer, DRAWMODE_3D) )
 	{
 		return;
 	}
@@ -400,9 +404,9 @@ void Renderer_DrawEntity(RayGE_Renderer* renderer, RayGE_Entity* entity)
 	// TODO: Proper drawing here
 }
 
-void Renderer_DrawAllActiveEntities(RayGE_Renderer* renderer)
+void Renderer_DrawAllActiveEntitiesInScene3D(RayGE_Renderer* renderer)
 {
-	if ( !VerifyInFrame(renderer) )
+	if ( !VerifyInDrawMode(renderer, DRAWMODE_3D) )
 	{
 		return;
 	}
@@ -419,6 +423,40 @@ void Renderer_DrawAllActiveEntities(RayGE_Renderer* renderer)
 			continue;
 		}
 
-		Renderer_DrawEntity(renderer, entity);
+		Renderer_DrawEntity3D(renderer, entity);
 	}
+}
+
+void Renderer_DrawTextDev(RayGE_Renderer* renderer, int posX, int posY, Color color, const char* text)
+{
+	if ( !VerifyInDrawMode(renderer, DRAWMODE_DIRECT) )
+	{
+		return;
+	}
+
+	DrawTextEx(
+		RendererModule_GetDefaultMonoFont(),
+		text,
+		(Vector2) {(float)posX, (float)posY},
+		RENDERERMODULE_DEFAULT_FONT_SIZE,
+		1.0f,
+		color
+	);
+}
+
+void Renderer_FormatTextDev(RayGE_Renderer* renderer, int posX, int posY, Color color, const char* format, ...)
+{
+	if ( !VerifyInDrawMode(renderer, DRAWMODE_DIRECT) )
+	{
+		return;
+	}
+
+	char buffer[MAX_DEV_TEXT_LENGTH];
+
+	va_list args;
+	va_start(args, format);
+	wzl_vsprintf(buffer, sizeof(buffer), format, args);
+	va_end(args);
+
+	Renderer_DrawTextDev(renderer, posX, posY, color, buffer);
 }

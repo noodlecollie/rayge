@@ -131,6 +131,16 @@ void UIModule_Draw(void)
 		return;
 	}
 
+	RayGE_Renderer* renderer = RendererModule_GetRenderer();
+
+	RAYGE_ASSERT_VALID(renderer && Renderer_IsInFrame(renderer));
+
+	if ( !renderer || !Renderer_IsInFrame(renderer) )
+	{
+		return;
+	}
+
+	Renderer_SetDrawingModeDirect(renderer);
 	DrawNuklear(g_NKContext);
 }
 

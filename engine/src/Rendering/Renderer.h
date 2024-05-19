@@ -22,19 +22,25 @@ void Renderer_SetDebugFlags(RayGE_Renderer* renderer, uint64_t flags);
 void Renderer_ClearDebugFlags(RayGE_Renderer* renderer);
 uint64_t Renderer_GetDebugFlags(const RayGE_Renderer* renderer);
 
-void Renderer_Set2DCamera(RayGE_Renderer* renderer, Camera2D camera);
-void Renderer_Set3DCamera(RayGE_Renderer* renderer, Camera3D camera);
-void Renderer_ClearCamera(RayGE_Renderer* renderer);
-
 void Renderer_SetBackgroundColour(RayGE_Renderer* renderer, Color colour);
 void Renderer_ClearBackgroundColour(RayGE_Renderer* renderer);
 
+// Any frame begins in direct drawing mode.
 void Renderer_BeginFrame(RayGE_Renderer* renderer);
 void Renderer_EndFrame(RayGE_Renderer* renderer);
+bool Renderer_IsInFrame(const RayGE_Renderer* renderer);
 
-void Renderer_DrawEntity(RayGE_Renderer* renderer, RayGE_Entity* entity);
-void Renderer_DrawAllActiveEntities(RayGE_Renderer* renderer);
+// All functions below may only be called after a frame has begun.
 
-// These functions do not need to happen within a frame.
+// These functions will change the underlying rendering mode.
+// Depending on what Raylib does underneath, this may be expensive
+// as it may change the rendering context.
+void Renderer_SetDrawingMode2D(RayGE_Renderer* renderer, Camera2D camera);
+void Renderer_SetDrawingMode3D(RayGE_Renderer* renderer, Camera3D camera);
+void Renderer_SetDrawingModeDirect(RayGE_Renderer* renderer);
+
+void Renderer_DrawEntity3D(RayGE_Renderer* renderer, RayGE_Entity* entity);
+void Renderer_DrawAllActiveEntitiesInScene3D(RayGE_Renderer* renderer);
+
 void Renderer_DrawTextDev(RayGE_Renderer* renderer, int posX, int posY, Color color, const char* text);
 void Renderer_FormatTextDev(RayGE_Renderer* renderer, int posX, int posY, Color color, const char* format, ...);

@@ -13,6 +13,7 @@
 #include "Scene/Entity.h"
 #include "Testing.h"
 #include "Identity/Identity.h"
+#include "Debugging.h"
 
 // TODO: Remove this once we move the rendering elsewhere
 #include "Modules/RendererModule.h"
@@ -34,6 +35,7 @@ typedef union EngineAPIVerifyWrapper
 } EngineAPIVerifyWrapper;
 
 static bool g_Initialised = false;
+static RayGE_EngineState g_State = ENGINE_STATE_IDLE;
 
 static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 {
@@ -69,7 +71,7 @@ static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 }
 
 // TODO: Remove this once we move the rendering elsewhere
-static void VisualiseEntities(void)
+static void VisualiseEntities(RayGE_Renderer* renderer)
 {
 	RayGE_Scene* scene = SceneModule_GetScene();
 	RayGE_Entity* firstEnt = Scene_GetActiveEntity(scene, 0);
@@ -84,9 +86,6 @@ static void VisualiseEntities(void)
 		}
 	}
 
-	RayGE_Renderer* renderer = RendererModule_GetRenderer();
-	Renderer_SetBackgroundColour(renderer, BLACK);
-
 	Camera3D camera = {0};
 
 	camera.position = (Vector3) {20.0f, -20.0f, 10.0f};
@@ -95,15 +94,14 @@ static void VisualiseEntities(void)
 	camera.fovy = 45.0f;
 	camera.projection = CAMERA_PERSPECTIVE;
 
-	Renderer_Set3DCamera(renderer, camera);
-
-	Renderer_BeginFrame(renderer);
-	Renderer_DrawAllActiveEntities(renderer);
-	Renderer_EndFrame(renderer);
+	Renderer_SetDrawingMode3D(renderer, camera);
+	Renderer_DrawAllActiveEntitiesInScene3D(renderer);
 }
 
 static void RunFrameInput(void)
 {
+	RAYGE_ENSURE_VALID(g_State == ENGINE_STATE_PROCESSING_INPUT);
+
 	InputModule_NewFrame();
 	InputModule_ProcessInput();
 	InputHookModule_ProcessInput();
@@ -117,21 +115,38 @@ static void RunFrameInput(void)
 
 static void RunFrameRender(void)
 {
-	BeginDrawing();
+	RAYGE_ENSURE_VALID(g_State == ENGINE_STATE_RENDERING);
 
-	VisualiseEntities();
+	RayGE_Renderer* renderer = RendererModule_GetRenderer();
+
+	// Frame setup
+	Renderer_SetBackgroundColour(renderer, BLACK);
+
+	// Begin rendering frame
+	Renderer_BeginFrame(renderer);
+
+	// TODO: Remove this once rendering is formalised more
+	VisualiseEntities(renderer);
+
 	UIModule_Draw();
 
-	EndDrawing();
+	// End rendering frame
+	Renderer_EndFrame(renderer);
 }
 
 static bool RunFrame(void)
 {
-	bool windowShouldClose = RendererModule_WindowCloseRequested();
+	RAYGE_ENSURE_VALID(g_State == ENGINE_STATE_INTER_FRAME);
 
+	g_State = ENGINE_STATE_PROCESSING_INPUT;
+
+	bool windowShouldClose = RendererModule_WindowCloseRequested();
 	RunFrameInput();
+
+	g_State = ENGINE_STATE_RENDERING;
 	RunFrameRender();
 
+	g_State = ENGINE_STATE_INTER_FRAME;
 	return windowShouldClose;
 }
 
@@ -141,6 +156,8 @@ void Engine_StartUp(void)
 	{
 		return;
 	}
+
+	g_State = ENGINE_STATE_IDLE;
 
 	// Do this first, as a sanity check:
 	Logging_Init();
@@ -167,6 +184,8 @@ void Engine_ShutDown(void)
 		return;
 	}
 
+	g_State = ENGINE_STATE_IDLE;
+
 	Logging_PrintLine(RAYGE_LOG_INFO, "RayGE engine shutting down.");
 
 	HookManager_UnregisterAll();
@@ -179,6 +198,11 @@ void Engine_ShutDown(void)
 
 void Engine_RunToCompletion(void)
 {
+	RAYGE_ENSURE_VALID(g_State == ENGINE_STATE_IDLE);
+
+	g_State = ENGINE_STATE_INTER_FRAME;
+
+	// TODO: These callbacks should probably be elsewhere
 	INVOKE_CALLBACK(g_GameLibCallbacks.scene.SceneBegin);
 
 	bool windowShouldClose = false;
@@ -189,5 +213,13 @@ void Engine_RunToCompletion(void)
 	}
 	while ( !windowShouldClose );
 
+	RAYGE_ENSURE_VALID(g_State == ENGINE_STATE_INTER_FRAME);
 	INVOKE_CALLBACK(g_GameLibCallbacks.scene.SceneEnd);
+
+	g_State = ENGINE_STATE_IDLE;
+}
+
+RayGE_EngineState Engine_GetCurrentState(void)
+{
+	return g_Initialised ? g_State : ENGINE_STATE_IDLE;
 }
