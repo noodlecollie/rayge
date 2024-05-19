@@ -85,7 +85,7 @@ static void VisualiseEntities(void)
 	}
 
 	RayGE_Renderer* renderer = RendererModule_GetRenderer();
-	ClearBackground(BLACK);
+	Renderer_SetBackgroundColour(renderer, BLACK);
 
 	Camera3D camera = {0};
 
@@ -95,9 +95,11 @@ static void VisualiseEntities(void)
 	camera.fovy = 45.0f;
 	camera.projection = CAMERA_PERSPECTIVE;
 
-	BeginMode3D(camera);
+	Renderer_Set3DCamera(renderer, camera);
+
+	Renderer_BeginFrame(renderer);
 	Renderer_DrawAllActiveEntities(renderer);
-	EndMode3D();
+	Renderer_EndFrame(renderer);
 }
 
 static void RunFrameInput(void)

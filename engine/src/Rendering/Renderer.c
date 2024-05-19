@@ -10,10 +10,55 @@
 #define DBG_LOCATION_MARKER_RADIUS 4.0f
 #define MAX_DEV_TEXT_LENGTH 256
 
+typedef enum RenderCameraType
+{
+	RENDERCAMERA_NONE = 0,
+	RENDERCAMERA_2D,
+	RENDERCAMERA_3D
+} RenderCameraType;
+
+typedef union RenderCamera
+{
+	Camera2D cam2D;
+	Camera3D cam3D;
+} RenderCamera;
+
 struct RayGE_Renderer
 {
 	uint64_t debugFlags;
+	Color backgroundColour;
+
+	RenderCameraType cameraType;
+	RenderCamera camera;
+	bool inFrame;
 };
+
+static Camera3D Default3DCamera(void)
+{
+	return (Camera3D) {
+		{0.0f, 0.0f, 0.0f},
+		{1.0f, 0.0f, 0.0f},
+		{0.0f, 0.0f, 1.0f},
+		45.0f,
+		CAMERA_PERSPECTIVE,
+	};
+}
+
+static bool VerifyNotInFrame(RayGE_Renderer* renderer)
+{
+	RAYGE_ASSERT_VALID(renderer);
+	RAYGE_ASSERT_EXPECT(renderer && !renderer->inFrame, "Cannot perform operation after frame has begun");
+
+	return renderer && !renderer->inFrame;
+}
+
+static bool VerifyInFrame(RayGE_Renderer* renderer)
+{
+	RAYGE_ASSERT_VALID(renderer);
+	RAYGE_ASSERT_EXPECT(renderer && renderer->inFrame, "Cannot perform operation before frame has begun");
+
+	return renderer && renderer->inFrame;
+}
 
 static void DrawEntityLocation(RayGE_Entity* entity)
 {
@@ -94,7 +139,15 @@ static void DrawEntityLocation(RayGE_Entity* entity)
 
 RayGE_Renderer* Renderer_Create(void)
 {
-	return MEMPOOL_CALLOC_STRUCT(MEMPOOL_RENDERER, RayGE_Renderer);
+	RayGE_Renderer* renderer = MEMPOOL_CALLOC_STRUCT(MEMPOOL_RENDERER, RayGE_Renderer);
+
+	renderer->debugFlags = 0;
+	renderer->backgroundColour = RENDERCOLOUR_NONE;
+
+	renderer->cameraType = RENDERCAMERA_NONE;
+	renderer->camera.cam3D = Default3DCamera();
+
+	return renderer;
 }
 
 void Renderer_Destroy(RayGE_Renderer* renderer)
@@ -163,6 +216,130 @@ uint64_t Renderer_GetDebugFlags(const RayGE_Renderer* renderer)
 	return renderer ? renderer->debugFlags : 0;
 }
 
+void Renderer_Set2DCamera(RayGE_Renderer* renderer, Camera2D camera)
+{
+	if ( !VerifyNotInFrame(renderer) )
+	{
+		return;
+	}
+
+	renderer->cameraType = RENDERCAMERA_2D;
+	renderer->camera.cam2D = camera;
+}
+
+void Renderer_Set3DCamera(RayGE_Renderer* renderer, Camera3D camera)
+{
+	if ( !VerifyNotInFrame(renderer) )
+	{
+		return;
+	}
+
+	renderer->cameraType = RENDERCAMERA_3D;
+	renderer->camera.cam3D = camera;
+}
+
+void Renderer_ClearCamera(RayGE_Renderer* renderer)
+{
+	if ( !VerifyNotInFrame(renderer) )
+	{
+		return;
+	}
+
+	renderer->cameraType = RENDERCAMERA_NONE;
+	renderer->camera.cam3D = Default3DCamera();
+}
+
+void Renderer_SetBackgroundColour(RayGE_Renderer* renderer, Color colour)
+{
+	if ( !VerifyNotInFrame(renderer) )
+	{
+		return;
+	}
+
+	renderer->backgroundColour = colour;
+}
+
+void Renderer_ClearBackgroundColour(RayGE_Renderer* renderer)
+{
+	if ( !VerifyNotInFrame(renderer) )
+	{
+		return;
+	}
+
+	renderer->backgroundColour = RENDERCOLOUR_NONE;
+}
+
+void Renderer_BeginFrame(RayGE_Renderer* renderer)
+{
+	RAYGE_ASSERT_VALID(renderer);
+	RAYGE_ASSERT_VALID(!renderer->inFrame);
+
+	if ( !renderer || renderer->inFrame )
+	{
+		return;
+	}
+
+	renderer->inFrame = true;
+
+	if ( renderer->backgroundColour.a > 0 )
+	{
+		ClearBackground(renderer->backgroundColour);
+	}
+
+	switch ( renderer->cameraType )
+	{
+		case RENDERCAMERA_2D:
+		{
+			BeginMode2D(renderer->camera.cam2D);
+			break;
+		}
+
+		case RENDERCAMERA_3D:
+		{
+			BeginMode3D(renderer->camera.cam3D);
+			break;
+		}
+
+		default:
+		{
+			break;
+		}
+	}
+}
+
+void Renderer_EndFrame(RayGE_Renderer* renderer)
+{
+	RAYGE_ASSERT_VALID(renderer);
+	RAYGE_ASSERT_VALID(renderer->inFrame);
+
+	if ( !renderer || !renderer->inFrame )
+	{
+		return;
+	}
+
+	switch ( renderer->cameraType )
+	{
+		case RENDERCAMERA_2D:
+		{
+			EndMode2D();
+			break;
+		}
+
+		case RENDERCAMERA_3D:
+		{
+			EndMode3D();
+			break;
+		}
+
+		default:
+		{
+			break;
+		}
+	}
+
+	renderer->inFrame = false;
+}
+
 void Renderer_DrawTextDev(RayGE_Renderer* renderer, int posX, int posY, Color color, const char* text)
 {
 	RAYGE_ASSERT_VALID(renderer);
@@ -203,10 +380,14 @@ void Renderer_FormatTextDev(RayGE_Renderer* renderer, int posX, int posY, Color 
 
 void Renderer_DrawEntity(RayGE_Renderer* renderer, RayGE_Entity* entity)
 {
-	RAYGE_ASSERT_VALID(renderer);
+	if ( !VerifyInFrame(renderer) )
+	{
+		return;
+	}
+
 	RAYGE_ASSERT_VALID(entity);
 
-	if ( !renderer || !entity )
+	if ( !entity )
 	{
 		return;
 	}
@@ -221,9 +402,7 @@ void Renderer_DrawEntity(RayGE_Renderer* renderer, RayGE_Entity* entity)
 
 void Renderer_DrawAllActiveEntities(RayGE_Renderer* renderer)
 {
-	RAYGE_ASSERT_VALID(renderer);
-
-	if ( !renderer )
+	if ( !VerifyInFrame(renderer) )
 	{
 		return;
 	}
