@@ -1,15 +1,18 @@
 #include <stddef.h>
+#include <stdarg.h>
 #include "UI/SceneDebugUI.h"
 #include "Logging/Logging.h"
 #include "Nuklear/Nuklear.h"
 #include "Modules/RendererModule.h"
+#include "Modules/SceneModule.h"
 #include "UI/UIHelpers.h"
+#include "wzl_cutl/string.h"
 #include "raylib.h"
 
 #define DEFAULT_DIMS \
 	(struct nk_rect) \
 	{ \
-		20.0f, 20.0f, 250.0f, 150.0f \
+		20.0f, 20.0f, 320.0f, 250.0f \
 	}
 
 typedef struct WindowState
@@ -18,6 +21,20 @@ typedef struct WindowState
 } WindowState;
 
 static WindowState g_WindowState;
+
+static void VAFormRow(struct nk_context* context, const char* label, const char* valueFormat, ...)
+{
+	nk_label(context, label, NK_TEXT_ALIGN_LEFT);
+
+	char buffer[32];
+
+	va_list args;
+	va_start(args, valueFormat);
+	wzl_vsprintf(buffer, sizeof(buffer), valueFormat, args);
+	va_end(args);
+
+	nk_label(context, buffer, NK_TEXT_ALIGN_LEFT);
+}
 
 static void Show(struct nk_context* context, void* userData)
 {
@@ -47,6 +64,21 @@ static uint64_t CheckDebugFlag(struct nk_context* context, const char* label, ui
 	}
 }
 
+static void DrawFrameStatsGroup(struct nk_context* context)
+{
+	if ( nk_group_begin_titled(context, "frame_state", "Frame Stats", UI_DEFAULT_GROUP_FLAGS) )
+	{
+		const RayGE_Scene* scene = SceneModule_GetScene();
+
+		nk_layout_row_dynamic(context, UI_DEFAULT_ROW_HEIGHT, 2);
+
+		VAFormRow(context, "FPS:", "%d", GetFPS());
+		VAFormRow(context, "Active entities:", "%zu", Scene_GetActiveEntities(scene));
+
+		nk_group_end(context);
+	}
+}
+
 static void DrawRenderDebugFlagGroup(struct nk_context* context)
 {
 	if ( nk_group_begin_titled(context, "render_debug_flags", "Render Debug Flags", UI_DEFAULT_GROUP_FLAGS) )
@@ -54,7 +86,7 @@ static void DrawRenderDebugFlagGroup(struct nk_context* context)
 		RayGE_Renderer* renderer = RendererModule_GetRenderer();
 		uint64_t debugFlags = Renderer_GetDebugFlags(renderer);
 
-		nk_layout_row_dynamic(context, 20.0f, 1);
+		nk_layout_row_dynamic(context, UI_DEFAULT_ROW_HEIGHT, 1);
 
 		debugFlags = CheckDebugFlag(context, "Draw Locations", debugFlags, RENDERER_DBG_DRAW_LOCATIONS);
 
@@ -79,6 +111,9 @@ static bool Poll(struct nk_context* context, void* userData)
 	{
 		shouldStayOpen = true;
 		windowState->lastRect = nk_window_get_bounds(context);
+
+		nk_layout_row_dynamic(context, 100.0f, 1);
+		DrawFrameStatsGroup(context);
 
 		nk_layout_row_dynamic(context, 80.0f, 1);
 		DrawRenderDebugFlagGroup(context);

@@ -3,10 +3,11 @@
 #include "Scene/Component.h"
 #include "Scene/Entity.h"
 #include "Logging/Logging.h"
+#include "Modules/SceneModule.h"
 
 static RayGE_Entity* GetEntityFromHandle(RayGE_EntityHandle handle, const char* operation)
 {
-	RayGE_Entity* entity = Scene_GetEntityFromHandle(handle);
+	RayGE_Entity* entity = Scene_GetEntityFromHandle(SceneModule_GetScene(), handle);
 
 	if ( !entity )
 	{
@@ -19,7 +20,7 @@ static RayGE_Entity* GetEntityFromHandle(RayGE_EntityHandle handle, const char* 
 
 RayGE_EntityHandle SceneAPI_CreateEntity(void)
 {
-	return Entity_CreateHandle(Scene_CreateEntity());
+	return Entity_CreateHandle(Scene_CreateEntity(SceneModule_GetScene()));
 }
 
 RayGE_Component_Spatial* SceneAPI_AddSpatialComponent(RayGE_EntityHandle entity)

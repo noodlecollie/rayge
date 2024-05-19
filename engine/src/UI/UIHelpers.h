@@ -6,6 +6,7 @@
 	(NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE)
 
 #define UI_DEFAULT_GROUP_FLAGS (NK_PANEL_GROUP | NK_WINDOW_TITLE | NK_WINDOW_BORDER)
+#define UI_DEFAULT_ROW_HEIGHT 20.0f
 
 // For keeping track of window sizes. Returns the current rect if it has
 // a valid width and height, otherwise returns the default rect.

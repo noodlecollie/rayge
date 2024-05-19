@@ -1,10 +1,12 @@
 #include <stdbool.h>
 #include "Engine/Engine.h"
+#include "Engine/EngineAPI.h"
 #include "Logging/Logging.h"
 #include "Modules/ModuleManager.h"
 #include "Modules/UIModule.h"
 #include "Modules/InputModule.h"
 #include "Modules/InputHookModule.h"
+#include "Modules/SceneModule.h"
 #include "Hooks/HookManager.h"
 #include "Engine/EngineAPI.h"
 #include "Scene/Scene.h"
@@ -69,7 +71,8 @@ static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 // TODO: Remove this once we move the rendering elsewhere
 static void VisualiseEntities(void)
 {
-	RayGE_Entity* firstEnt = Scene_GetActiveEntity(0);
+	RayGE_Scene* scene = SceneModule_GetScene();
+	RayGE_Entity* firstEnt = Scene_GetActiveEntity(scene, 0);
 
 	if ( firstEnt )
 	{
@@ -95,9 +98,6 @@ static void VisualiseEntities(void)
 	BeginMode3D(camera);
 	Renderer_DrawAllActiveEntities(renderer);
 	EndMode3D();
-
-	Renderer_FormatTextDev(renderer, 20, 20, WHITE, "Scene has %zu active entities", Scene_GetActiveEntities());
-	Renderer_FormatTextDev(renderer, 20, 40, WHITE, "FPS: %d", GetFPS());
 }
 
 static void RunFrameInput(void)
@@ -177,8 +177,7 @@ void Engine_ShutDown(void)
 
 void Engine_RunToCompletion(void)
 {
-	// TODO: Make this value canonical somehow?
-	Scene_CreateStatic(1024);
+	INVOKE_CALLBACK(g_GameLibCallbacks.scene.SceneBegin);
 
 	bool windowShouldClose = false;
 
@@ -188,5 +187,5 @@ void Engine_RunToCompletion(void)
 	}
 	while ( !windowShouldClose );
 
-	Scene_DestroyStatic();
+	INVOKE_CALLBACK(g_GameLibCallbacks.scene.SceneEnd);
 }

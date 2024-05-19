@@ -2,6 +2,7 @@
 #include "Rendering/Renderer.h"
 #include "Modules/RendererModule.h"
 #include "Modules/MemPoolModule.h"
+#include "Modules/SceneModule.h"
 #include "Scene/Entity.h"
 #include "Scene/Scene.h"
 #include "Debugging.h"
@@ -227,11 +228,12 @@ void Renderer_DrawAllActiveEntities(RayGE_Renderer* renderer)
 		return;
 	}
 
-	const size_t maxEntities = Scene_GetMaxEntities();
+	RayGE_Scene* scene = SceneModule_GetScene();
+	const size_t maxEntities = Scene_GetMaxEntities(scene);
 
 	for ( size_t index = 0; index < maxEntities; ++index )
 	{
-		RayGE_Entity* entity = Scene_GetActiveEntity(index);
+		RayGE_Entity* entity = Scene_GetActiveEntity(scene, index);
 
 		if ( !entity )
 		{

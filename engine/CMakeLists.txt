@@ -73,6 +73,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Modules/ModuleManager.c
 	src/Modules/RendererModule.h
 	src/Modules/RendererModule.c
+	src/Modules/SceneModule.h
+	src/Modules/SceneModule.c
 	src/Modules/UIModule.h
 	src/Modules/UIModule.c
 	src/Rendering/Renderer.h
