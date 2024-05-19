@@ -5,6 +5,8 @@
 #include "RayGE/SceneTypes.h"
 #include "Scene/Entity.h"
 
+// TODO: Structify this, and move it to a module for lifetime management
+
 void Scene_CreateStatic(size_t maxEntities);
 void Scene_DestroyStatic(void);
 bool Scene_IsCreated(void);

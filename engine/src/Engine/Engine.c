@@ -82,7 +82,6 @@ static void VisualiseEntities(void)
 	}
 
 	RayGE_Renderer* renderer = RendererModule_GetRenderer();
-	Renderer_AddDebugFlags(renderer, RENDERER_DBG_DRAW_LOCATIONS);
 	ClearBackground(BLACK);
 
 	Camera3D camera = {0};
@@ -94,21 +93,7 @@ static void VisualiseEntities(void)
 	camera.projection = CAMERA_PERSPECTIVE;
 
 	BeginMode3D(camera);
-
-	const size_t maxEntities = Scene_GetMaxEntities();
-
-	for ( size_t index = 0; index < maxEntities; ++index )
-	{
-		RayGE_Entity* entity = Scene_GetActiveEntity(index);
-
-		if ( !entity )
-		{
-			continue;
-		}
-
-		Renderer_DrawEntity(renderer, entity);
-	}
-
+	Renderer_DrawAllActiveEntities(renderer);
 	EndMode3D();
 
 	Renderer_FormatTextDev(renderer, 20, 20, WHITE, "Scene has %zu active entities", Scene_GetActiveEntities());

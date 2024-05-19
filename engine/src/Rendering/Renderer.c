@@ -3,6 +3,7 @@
 #include "Modules/RendererModule.h"
 #include "Modules/MemPoolModule.h"
 #include "Scene/Entity.h"
+#include "Scene/Scene.h"
 #include "Debugging.h"
 
 #define DBG_LOCATION_MARKER_RADIUS 4.0f
@@ -131,6 +132,18 @@ void Renderer_RemoveDebugFlags(RayGE_Renderer* renderer, uint64_t flags)
 	renderer->debugFlags &= ~flags;
 }
 
+void Renderer_SetDebugFlags(RayGE_Renderer* renderer, uint64_t flags)
+{
+	RAYGE_ASSERT_VALID(renderer);
+
+	if ( !renderer )
+	{
+		return;
+	}
+
+	renderer->debugFlags = flags;
+}
+
 void Renderer_ClearDebugFlags(RayGE_Renderer* renderer)
 {
 	RAYGE_ASSERT_VALID(renderer);
@@ -141,6 +154,12 @@ void Renderer_ClearDebugFlags(RayGE_Renderer* renderer)
 	}
 
 	renderer->debugFlags = 0;
+}
+
+uint64_t Renderer_GetDebugFlags(const RayGE_Renderer* renderer)
+{
+	RAYGE_ASSERT_VALID(renderer);
+	return renderer ? renderer->debugFlags : 0;
 }
 
 void Renderer_DrawTextDev(RayGE_Renderer* renderer, int posX, int posY, Color color, const char* text)
@@ -194,5 +213,31 @@ void Renderer_DrawEntity(RayGE_Renderer* renderer, RayGE_Entity* entity)
 	if ( renderer->debugFlags & RENDERER_DBG_DRAW_LOCATIONS )
 	{
 		DrawEntityLocation(entity);
+	}
+
+	// TODO: Proper drawing here
+}
+
+void Renderer_DrawAllActiveEntities(RayGE_Renderer* renderer)
+{
+	RAYGE_ASSERT_VALID(renderer);
+
+	if ( !renderer )
+	{
+		return;
+	}
+
+	const size_t maxEntities = Scene_GetMaxEntities();
+
+	for ( size_t index = 0; index < maxEntities; ++index )
+	{
+		RayGE_Entity* entity = Scene_GetActiveEntity(index);
+
+		if ( !entity )
+		{
+			continue;
+		}
+
+		Renderer_DrawEntity(renderer, entity);
 	}
 }
