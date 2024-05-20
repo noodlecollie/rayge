@@ -10,7 +10,10 @@ static void Scene_End(void);
 static const RayGE_Engine_API_V1* g_EngineAPI = NULL;
 static const RayGE_GameLib_Callbacks_V1 g_Callbacks = {
 	// Game
-	{Game_StartUp, Game_ShutDown, NULL, NULL},
+	{
+		Game_StartUp,
+		Game_ShutDown,
+	},
 
 	// Scene
 	{
