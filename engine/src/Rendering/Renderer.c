@@ -240,6 +240,18 @@ static void DrawRenderablePrimitive(
 			break;
 		}
 
+		case RAYGE_RENDERABLE_PRIM_AACUBE:
+		{
+			DrawCube(
+				position,
+				renderable->scale,
+				renderable->scale,
+				renderable->scale,
+				PublicToRaylibColor(renderable->color)
+			);
+			break;
+		}
+
 		default:
 		{
 			RAYGE_ASSERT_UNREACHABLE("Unknown renderable primitive type %d", primitive);
