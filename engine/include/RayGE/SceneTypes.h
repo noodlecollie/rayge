@@ -7,6 +7,7 @@
 #include "RayGE/Angles.h"
 #include "RayGE/InterfaceUtils.h"
 #include "RayGE/ResourceHandle.h"
+#include "RayGE/Color.h"
 
 typedef enum RayGE_ComponentType
 {
@@ -29,4 +30,6 @@ typedef struct RayGE_Component_Camera
 typedef struct RayGE_Component_Renderable
 {
 	RayGE_ResourceHandle handle;
+	float scale;
+	RayGE_Color color;
 } RayGE_Component_Renderable;

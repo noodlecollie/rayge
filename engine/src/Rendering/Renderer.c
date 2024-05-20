@@ -1,10 +1,13 @@
 #include <stdarg.h>
 #include "Rendering/Renderer.h"
+#include "Rendering/RenderablePrimitives.h"
 #include "Modules/RendererModule.h"
 #include "Modules/MemPoolModule.h"
 #include "Modules/SceneModule.h"
 #include "Scene/Entity.h"
 #include "Scene/Scene.h"
+#include "ResourceManagement/ResourceHandleUtils.h"
+#include "Conversions.h"
 #include "Debugging.h"
 
 #define DBG_LOCATION_MARKER_RADIUS 4.0f
@@ -221,6 +224,54 @@ static void DrawEntityLocation(RayGE_Entity* entity)
 
 	// Direction
 	DrawLine3D(component->data.position, endPoint, YELLOW);
+}
+
+static void DrawRenderablePrimitive(
+	RayGE_RenderablePrimitive primitive,
+	const RayGE_Component_Renderable* renderable,
+	Vector3 position
+)
+{
+	switch ( primitive )
+	{
+		case RAYGE_RENDERABLE_PRIM_SPHERE:
+		{
+			DrawSphere(position, renderable->scale, PublicToRaylibColor(renderable->color));
+			break;
+		}
+
+		default:
+		{
+			RAYGE_ASSERT_UNREACHABLE("Unknown renderable primitive type %d", primitive);
+			break;
+		}
+	}
+}
+
+static void DrawRenderable(const RayGE_Component_Renderable* renderable, Vector3 position)
+{
+	if ( !renderable )
+	{
+		return;
+	}
+
+	switch ( Resource_GetInternalDomain(renderable->handle) )
+	{
+		case RESOURCE_DOMAIN_RENDERABLE_PRIMITIVE:
+		{
+			DrawRenderablePrimitive(
+				RenderablePrimitive_GetPrimitiveFromHandle(renderable->handle),
+				renderable,
+				position
+			);
+			break;
+		}
+
+		default:
+		{
+			break;
+		}
+	}
 }
 
 RayGE_Renderer* Renderer_Create(void)
@@ -469,7 +520,20 @@ void Renderer_DrawEntity3D(RayGE_Renderer* renderer, RayGE_Entity* entity)
 		DrawEntityLocation(entity);
 	}
 
-	// TODO: Proper drawing here
+	RayGE_ComponentHeader* spatial = Entity_GetFirstComponentOfType(entity, RAYGE_COMPONENTTYPE_SPATIAL);
+	RayGE_ComponentHeader* renderable = Entity_GetFirstComponentOfType(entity, RAYGE_COMPONENTTYPE_RENDERABLE);
+
+	Vector3 position = {0.0f, 0.0f, 0.0f};
+
+	if ( spatial )
+	{
+		position = COMPONENTDATA_SPATIAL(spatial)->position;
+	}
+
+	if ( renderable )
+	{
+		DrawRenderable(COMPONENTDATA_RENDERABLE(renderable), position);
+	}
 }
 
 void Renderer_DrawAllActiveEntitiesInScene3D(RayGE_Renderer* renderer)

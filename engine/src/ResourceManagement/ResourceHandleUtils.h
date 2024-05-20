@@ -12,7 +12,8 @@ typedef enum RayGE_ResourceDomainFlag
 typedef enum RayGE_InternalResourceDomain
 {
 	RESOURCE_DOMAIN_INVALID = 0,
-	RESOURCE_DOMAIN_ENTITY = 1,
+	RESOURCE_DOMAIN_ENTITY,
+	RESOURCE_DOMAIN_RENDERABLE_PRIMITIVE,
 
 	RESOURCE_DOMAIN__COUNT
 } RayGE_InternalResourceDomain;

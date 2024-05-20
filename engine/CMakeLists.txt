@@ -77,6 +77,10 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Modules/SceneModule.c
 	src/Modules/UIModule.h
 	src/Modules/UIModule.c
+	src/Rendering/RenderableAPI.h
+	src/Rendering/RenderableAPI.c
+	src/Rendering/RenderablePrimitives.h
+	src/Rendering/RenderablePrimitives.c
 	src/Rendering/Renderer.h
 	src/Rendering/Renderer.c
 	src/ResourceManagement/ResourceHandleUtils.h
@@ -94,6 +98,7 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/UI/TestUI.h
 	src/UI/TestUI.c
 	src/UTUtils/UTHash_Pooled.h
+	src/Conversions.h
 	src/Debugging.h
 	src/Debugging.c
 	src/Testing.h
@@ -109,8 +114,10 @@ target_sources(${TARGETNAME_ENGINE}
 	include/RayGE/APIs/Engine.h
 	include/RayGE/APIs/Game.h
 	include/RayGE/APIs/Logging.h
+	include/RayGE/APIs/Renderable.h
 	include/RayGE/APIs/Scene.h
 	include/RayGE/Angles.h
+	include/RayGE/Color.h
 	include/RayGE/InterfaceUtils.h
 	include/RayGE/Math.h
 	include/RayGE/Platform.h

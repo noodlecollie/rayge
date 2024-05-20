@@ -8,6 +8,7 @@
 #include "RayGE/APIs/Logging.h"
 #include "RayGE/APIs/Scene.h"
 #include "RayGE/APIs/Game.h"
+#include "RayGE/APIs/Renderable.h"
 
 #define RAYGE_ENGINEAPI_VERSION_1 1
 
@@ -15,6 +16,7 @@ typedef struct RayGE_Engine_API_V1
 {
 	RayGE_Log_API log;
 	RayGE_Scene_API scene;
+	RayGE_Renderable_API renderable;
 } RayGE_Engine_API_V1;
 
 typedef struct RayGE_GameLib_Callbacks_V1

@@ -10,12 +10,7 @@ static void Scene_End(void);
 static const RayGE_Engine_API_V1* g_EngineAPI = NULL;
 static const RayGE_GameLib_Callbacks_V1 g_Callbacks = {
 	// Game
-	{
-		Game_StartUp,
-		Game_ShutDown,
-		NULL,
-		NULL
-	},
+	{Game_StartUp, Game_ShutDown, NULL, NULL},
 
 	// Scene
 	{
@@ -47,6 +42,11 @@ static void Scene_Begin(void)
 	RayGE_Component_Spatial* spatial = g_EngineAPI->scene.AddSpatialComponent(g_SubjectEntity);
 	spatial->position.x = -10.0f;
 	spatial->angles.pitch = 0.0f;
+
+	RayGE_Component_Renderable* renderable = g_EngineAPI->scene.AddRenderableComponent(g_SubjectEntity);
+	renderable->handle = g_EngineAPI->renderable.GetPrimitiveHandle(RAYGE_RENDERABLE_PRIM_SPHERE);
+	renderable->scale = 3.0f;
+	renderable->color = (RayGE_Color) {255, 0, 10, 255};
 
 	g_EngineAPI->log.PrintLine(RAYGE_LOG_INFO, "Sanity test: Adding camera entity");
 	g_CameraEntity = g_EngineAPI->scene.CreateEntity();

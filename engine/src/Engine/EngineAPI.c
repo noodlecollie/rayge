@@ -3,6 +3,7 @@
 #include "Engine/EngineAPI.h"
 #include "Logging/Logging.h"
 #include "Scene/SceneAPI.h"
+#include "Rendering/RenderableAPI.h"
 
 const RayGE_Engine_API_Current g_EngineAPI = {
 	// Logging
@@ -19,6 +20,11 @@ const RayGE_Engine_API_Current g_EngineAPI = {
 		SceneAPI_GetCameraComponent,
 		SceneAPI_AddRenderableComponent,
 		SceneAPI_GetRenderableComponent,
+	},
+
+	// Renderable
+	{
+		RenderableAPI_GetPrimitiveHandle,
 	}
 };
 

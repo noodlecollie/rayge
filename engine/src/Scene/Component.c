@@ -29,12 +29,23 @@ RayGE_ComponentImpl_Spatial* Component_CreateSpatial(void)
 
 RayGE_ComponentImpl_Camera* Component_CreateCamera(void)
 {
-	return CALLOC_COMPONENT(RayGE_ComponentImpl_Camera, RAYGE_COMPONENTTYPE_CAMERA);
+	RayGE_ComponentImpl_Camera* component = CALLOC_COMPONENT(RayGE_ComponentImpl_Camera, RAYGE_COMPONENTTYPE_CAMERA);
+
+	component->data.fieldOfView = 90.0f;
+
+	return component;
 }
 
 RayGE_ComponentImpl_Renderable* Component_CreateRenderable(void)
 {
-	return CALLOC_COMPONENT(RayGE_ComponentImpl_Renderable, RAYGE_COMPONENTTYPE_RENDERABLE);
+	RayGE_ComponentImpl_Renderable* component =
+		CALLOC_COMPONENT(RayGE_ComponentImpl_Renderable, RAYGE_COMPONENTTYPE_RENDERABLE);
+
+	component->data.handle = RAYGE_INVALID_RESOURCE_HANDLE;
+	component->data.color = (RayGE_Color){ 255, 255, 255, 255 };
+	component->data.scale = 1.0f;
+
+	return component;
 }
 
 void* Component_CastImpl(
