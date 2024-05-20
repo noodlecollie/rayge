@@ -5,7 +5,7 @@
 #include "Logging/Logging.h"
 #include "Modules/SceneModule.h"
 
-static RayGE_Entity* GetEntityFromHandle(RayGE_EntityHandle handle, const char* operation)
+static RayGE_Entity* GetEntityFromHandle(RayGE_ResourceHandle handle, const char* operation)
 {
 	RayGE_Entity* entity = Scene_GetEntityFromHandle(SceneModule_GetScene(), handle);
 
@@ -18,12 +18,12 @@ static RayGE_Entity* GetEntityFromHandle(RayGE_EntityHandle handle, const char* 
 	return entity;
 }
 
-RayGE_EntityHandle SceneAPI_CreateEntity(void)
+RayGE_ResourceHandle SceneAPI_CreateEntity(void)
 {
 	return Entity_CreateHandle(Scene_CreateEntity(SceneModule_GetScene()));
 }
 
-RayGE_Component_Spatial* SceneAPI_AddSpatialComponent(RayGE_EntityHandle entity)
+RayGE_Component_Spatial* SceneAPI_AddSpatialComponent(RayGE_ResourceHandle entity)
 {
 	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "AddSpatialComponent");
 
@@ -51,7 +51,7 @@ RayGE_Component_Spatial* SceneAPI_AddSpatialComponent(RayGE_EntityHandle entity)
 	return &component->data;
 }
 
-RayGE_Component_Spatial* SceneAPI_GetSpatialComponent(RayGE_EntityHandle entity)
+RayGE_Component_Spatial* SceneAPI_GetSpatialComponent(RayGE_ResourceHandle entity)
 {
 	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "GetSpatialComponent");
 
@@ -64,7 +64,7 @@ RayGE_Component_Spatial* SceneAPI_GetSpatialComponent(RayGE_EntityHandle entity)
 	return component ? COMPONENTDATA_SPATIAL(component) : NULL;
 }
 
-RayGE_Component_Camera* SceneAPI_AddCameraComponent(RayGE_EntityHandle entity)
+RayGE_Component_Camera* SceneAPI_AddCameraComponent(RayGE_ResourceHandle entity)
 {
 	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "AddCameraComponent");
 
@@ -92,7 +92,7 @@ RayGE_Component_Camera* SceneAPI_AddCameraComponent(RayGE_EntityHandle entity)
 	return &component->data;
 }
 
-RayGE_Component_Camera* SceneAPI_GetCameraComponent(RayGE_EntityHandle entity)
+RayGE_Component_Camera* SceneAPI_GetCameraComponent(RayGE_ResourceHandle entity)
 {
 	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "GetCameraComponent");
 
@@ -105,7 +105,7 @@ RayGE_Component_Camera* SceneAPI_GetCameraComponent(RayGE_EntityHandle entity)
 	return component ? COMPONENTDATA_CAMERA(component) : NULL;
 }
 
-RayGE_Component_Renderable* SceneAPI_AddRenderableComponent(RayGE_EntityHandle entity)
+RayGE_Component_Renderable* SceneAPI_AddRenderableComponent(RayGE_ResourceHandle entity)
 {
 	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "AddRenderableComponent");
 
@@ -133,7 +133,7 @@ RayGE_Component_Renderable* SceneAPI_AddRenderableComponent(RayGE_EntityHandle e
 	return &component->data;
 }
 
-RayGE_Component_Renderable* SceneAPI_GetRenderableComponent(RayGE_EntityHandle entity)
+RayGE_Component_Renderable* SceneAPI_GetRenderableComponent(RayGE_ResourceHandle entity)
 {
 	RayGE_Entity* entPtr = GetEntityFromHandle(entity, "GetRenderableComponent");
 

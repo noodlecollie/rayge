@@ -2,13 +2,14 @@
 #include "Scene/Entity.h"
 #include "Scene/Component.h"
 #include "Modules/MemPoolModule.h"
+#include "ResourceManagement/ResourceHandleUtils.h"
 #include "Debugging.h"
 #include "raylib.h"
 
 struct RayGE_Entity
 {
 	RayGE_EntityList* parentList;
-	size_t indexInParent;
+	uint32_t indexInParent;
 	bool isInUse;
 	RayGE_ComponentHeader* componentsHead;
 	RayGE_ComponentHeader* componentsTail;
@@ -19,8 +20,8 @@ struct RayGE_Entity
 struct RayGE_EntityList
 {
 	RayGE_Entity* entities;
-	size_t capacity;
-	size_t numInUse;
+	uint32_t capacity;
+	uint32_t numInUse;
 };
 
 static uint64_t CrunchKey(uint64_t key, size_t index)
@@ -51,7 +52,7 @@ static uint64_t CreateEntityKey(size_t index)
 	return ts.key;
 }
 
-RayGE_EntityList* Entity_AllocateList(size_t capacity)
+RayGE_EntityList* Entity_AllocateList(uint32_t capacity)
 {
 	RAYGE_ASSERT(capacity > 0, "Expected the entity list capacity to be greater than zero.");
 
@@ -65,7 +66,7 @@ RayGE_EntityList* Entity_AllocateList(size_t capacity)
 	list->capacity = capacity;
 	list->entities = (RayGE_Entity*)MEMPOOL_CALLOC(MEMPOOL_ENTITY, list->capacity, sizeof(RayGE_Entity));
 
-	for ( size_t index = 0; index < list->capacity; ++index )
+	for ( uint32_t index = 0; index < list->capacity; ++index )
 	{
 		RayGE_Entity* entity = &list->entities[index];
 
@@ -100,12 +101,12 @@ void Entity_FreeList(RayGE_EntityList* list)
 	MEMPOOL_FREE(list);
 }
 
-size_t Entity_GetListCapacity(const RayGE_EntityList* list)
+uint32_t Entity_GetListCapacity(const RayGE_EntityList* list)
 {
 	return list ? list->capacity : 0;
 }
 
-size_t Entity_GetNumFreeSlots(const RayGE_EntityList* list)
+uint32_t Entity_GetNumFreeSlots(const RayGE_EntityList* list)
 {
 	if ( !list )
 	{
@@ -117,12 +118,12 @@ size_t Entity_GetNumFreeSlots(const RayGE_EntityList* list)
 	return list->capacity - list->numInUse;
 }
 
-size_t Entity_GetNumUsedSlots(const RayGE_EntityList* list)
+uint32_t Entity_GetNumUsedSlots(const RayGE_EntityList* list)
 {
 	return list ? list->numInUse : 0;
 }
 
-RayGE_Entity* Entity_Get(const RayGE_EntityList* list, size_t index)
+RayGE_Entity* Entity_Get(const RayGE_EntityList* list, uint32_t index)
 {
 	if ( !list || !list->entities || index >= list->capacity )
 	{
@@ -139,7 +140,7 @@ RayGE_Entity* Entity_FindFirstFree(const RayGE_EntityList* list)
 		return NULL;
 	}
 
-	for ( size_t index = 0; index < list->capacity; ++index )
+	for ( uint32_t index = 0; index < list->capacity; ++index )
 	{
 		RayGE_Entity* entity = &list->entities[index];
 
@@ -152,19 +153,26 @@ RayGE_Entity* Entity_FindFirstFree(const RayGE_EntityList* list)
 	return NULL;
 }
 
-RayGE_EntityHandle Entity_CreateHandle(const RayGE_Entity* entity)
+RayGE_ResourceHandle Entity_CreateHandle(const RayGE_Entity* entity)
 {
 	if ( !entity )
 	{
-		return RAYGE_INVALID_ENT_HANDLE;
+		return RAYGE_INVALID_RESOURCE_HANDLE;
 	}
 
-	return (RayGE_EntityHandle) {entity->indexInParent, entity->key};
+	return Resource_CreateInternalHandle(RESOURCE_DOMAIN_ENTITY, entity->indexInParent, entity->key);
 }
 
-RayGE_Entity* Entity_GetFromHandle(const RayGE_EntityList* list, RayGE_EntityHandle handle)
+RayGE_Entity* Entity_GetFromHandle(const RayGE_EntityList* list, RayGE_ResourceHandle handle)
 {
-	if ( !list || !RayGE_EntityHandleIsValid(handle) )
+	RAYGE_ASSERT_VALID(list);
+
+	if ( !list )
+	{
+		return NULL;
+	}
+
+	if ( !Resource_HandleIsValidForInternalDomain(handle, RESOURCE_DOMAIN_ENTITY, list->capacity) )
 	{
 		return NULL;
 	}
@@ -230,10 +238,10 @@ bool Entity_IsInUse(const RayGE_Entity* entity)
 	return entity && entity->isInUse;
 }
 
-size_t Entity_GetIndex(const RayGE_Entity* entity)
+uint32_t Entity_GetIndex(const RayGE_Entity* entity)
 {
 	RAYGE_ASSERT(entity, "Cannot get index of null entity.");
-	return entity ? entity->indexInParent : ~((size_t)0);
+	return entity ? entity->indexInParent : UINT32_MAX;
 }
 
 bool Entity_AddComponent(RayGE_Entity* entity, RayGE_ComponentHeader* component)

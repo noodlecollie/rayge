@@ -7,13 +7,13 @@
 
 typedef struct RayGE_Scene_API
 {
-	RayGE_EntityHandle (*CreateEntity)(void);
-	RayGE_Component_Spatial* (*AddSpatialComponent)(RayGE_EntityHandle entity);
-	RayGE_Component_Spatial* (*GetSpatialComponent)(RayGE_EntityHandle entity);
-	RayGE_Component_Camera* (*AddCameraComponent)(RayGE_EntityHandle entity);
-	RayGE_Component_Camera* (*GetCameraComponent)(RayGE_EntityHandle entity);
-	RayGE_Component_Renderable* (*AddRenderableComponent)(RayGE_EntityHandle entity);
-	RayGE_Component_Renderable* (*GetRenderableComponent)(RayGE_EntityHandle entity);
+	RayGE_ResourceHandle (*CreateEntity)(void);
+	RayGE_Component_Spatial* (*AddSpatialComponent)(RayGE_ResourceHandle entity);
+	RayGE_Component_Spatial* (*GetSpatialComponent)(RayGE_ResourceHandle entity);
+	RayGE_Component_Camera* (*AddCameraComponent)(RayGE_ResourceHandle entity);
+	RayGE_Component_Camera* (*GetCameraComponent)(RayGE_ResourceHandle entity);
+	RayGE_Component_Renderable* (*AddRenderableComponent)(RayGE_ResourceHandle entity);
+	RayGE_Component_Renderable* (*GetRenderableComponent)(RayGE_ResourceHandle entity);
 } RayGE_Scene_API;
 
 typedef struct RayGE_Scene_Callbacks

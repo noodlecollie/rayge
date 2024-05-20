@@ -79,6 +79,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Modules/UIModule.c
 	src/Rendering/Renderer.h
 	src/Rendering/Renderer.c
+	src/ResourceManagement/ResourceHandleUtils.h
+	src/ResourceManagement/ResourceHandleUtils.c
 	src/Scene/Component.h
 	src/Scene/Component.c
 	src/Scene/Entity.h
@@ -112,6 +114,7 @@ target_sources(${TARGETNAME_ENGINE}
 	include/RayGE/InterfaceUtils.h
 	include/RayGE/Math.h
 	include/RayGE/Platform.h
+	include/RayGE/ResourceHandle.h
 	include/RayGE/SceneTypes.h
 )
 

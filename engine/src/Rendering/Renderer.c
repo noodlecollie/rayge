@@ -480,9 +480,9 @@ void Renderer_DrawAllActiveEntitiesInScene3D(RayGE_Renderer* renderer)
 	}
 
 	RayGE_Scene* scene = SceneModule_GetScene();
-	const size_t maxEntities = Scene_GetMaxEntities(scene);
+	const uint32_t maxEntities = Scene_GetMaxEntities(scene);
 
-	for ( size_t index = 0; index < maxEntities; ++index )
+	for ( uint32_t index = 0; index < maxEntities; ++index )
 	{
 		RayGE_Entity* entity = Scene_GetActiveEntity(scene, index);
 
