@@ -11,6 +11,7 @@ typedef struct RayGE_Renderer RayGE_Renderer;
 typedef enum Renderer_DebugFlag
 {
 	RENDERER_DBG_DRAW_LOCATIONS = (1 << 0),
+	RENDERER_DBG_OVERRIDE_CAMERA = (1 << 1),
 } Renderer_DebugFlag;
 
 RayGE_Renderer* Renderer_Create(void);
@@ -24,6 +25,16 @@ uint64_t Renderer_GetDebugFlags(const RayGE_Renderer* renderer);
 
 void Renderer_SetBackgroundColour(RayGE_Renderer* renderer, Color colour);
 void Renderer_ClearBackgroundColour(RayGE_Renderer* renderer);
+
+Camera2D Renderer_GetDefaultCamera2D(void);
+Camera3D Renderer_GetDefaultCamera3D(void);
+
+Camera2D Renderer_GetDebugCamera2D(const RayGE_Renderer* renderer);
+void Renderer_SetDebugCamera2D(RayGE_Renderer* renderer, Camera2D camera);
+void Renderer_ResetDebugCamera2D(RayGE_Renderer* renderer);
+Camera3D Renderer_GetDebugCamera3D(const RayGE_Renderer* renderer);
+void Renderer_SetDebugCamera3D(RayGE_Renderer* renderer, Camera3D camera);
+void Renderer_ResetDebugCamera3D(RayGE_Renderer* renderer);
 
 // Any frame begins in direct drawing mode.
 void Renderer_BeginFrame(RayGE_Renderer* renderer);

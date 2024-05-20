@@ -26,6 +26,10 @@ struct RayGE_Renderer
 	DrawMode drawMode;
 	Camera2D cam2D;
 	Camera3D cam3D;
+
+	// Only used if the "override camera" debug flag is set
+	Camera2D debugCam2D;
+	Camera3D debugCam3D;
 };
 
 static Camera2D Default2DCamera(void)
@@ -76,6 +80,16 @@ static bool VerifyInDrawMode(const RayGE_Renderer* renderer, DrawMode mode)
 	return renderer->drawMode == mode;
 }
 
+static const Camera2D GetCamera2D(const RayGE_Renderer* renderer)
+{
+	return (renderer->debugFlags & RENDERER_DBG_OVERRIDE_CAMERA) ? renderer->debugCam2D : renderer->cam2D;
+}
+
+static const Camera3D GetCamera3D(const RayGE_Renderer* renderer)
+{
+	return (renderer->debugFlags & RENDERER_DBG_OVERRIDE_CAMERA) ? renderer->debugCam3D : renderer->cam3D;
+}
+
 static void TransitionToDrawMode(RayGE_Renderer* renderer, DrawMode mode)
 {
 	if ( renderer->drawMode == mode )
@@ -114,13 +128,13 @@ static void TransitionToDrawMode(RayGE_Renderer* renderer, DrawMode mode)
 		{
 			case DRAWMODE_2D:
 			{
-				BeginMode2D(renderer->cam2D);
+				BeginMode2D(GetCamera2D(renderer));
 				break;
 			}
 
 			case DRAWMODE_3D:
 			{
-				BeginMode3D(renderer->cam3D);
+				BeginMode3D(GetCamera3D(renderer));
 				break;
 			}
 
@@ -217,7 +231,9 @@ RayGE_Renderer* Renderer_Create(void)
 	renderer->backgroundColour = RENDERCOLOUR_NONE;
 	renderer->drawMode = DRAWMODE_DIRECT;
 	renderer->cam2D = Default2DCamera();
+	renderer->debugCam2D = Default2DCamera();
 	renderer->cam3D = Default3DCamera();
+	renderer->debugCam3D = Default3DCamera();
 
 	return renderer;
 }
@@ -306,6 +322,58 @@ void Renderer_ClearBackgroundColour(RayGE_Renderer* renderer)
 	}
 
 	renderer->backgroundColour = RENDERCOLOUR_NONE;
+}
+
+Camera2D Renderer_GetDefaultCamera2D(void)
+{
+	return Default2DCamera();
+}
+
+Camera3D Renderer_GetDefaultCamera3D(void)
+{
+	return Default3DCamera();
+}
+
+Camera2D Renderer_GetDebugCamera2D(const RayGE_Renderer* renderer)
+{
+	RAYGE_ASSERT_VALID(renderer);
+	return renderer ? renderer->debugCam2D : Default2DCamera();
+}
+
+void Renderer_SetDebugCamera2D(RayGE_Renderer* renderer, Camera2D camera)
+{
+	if ( !VerifyNotInFrame(renderer) )
+	{
+		return;
+	}
+
+	renderer->debugCam2D = camera;
+}
+
+void Renderer_ResetDebugCamera2D(RayGE_Renderer* renderer)
+{
+	Renderer_SetDebugCamera2D(renderer, Default2DCamera());
+}
+
+Camera3D Renderer_GetDebugCamera3D(const RayGE_Renderer* renderer)
+{
+	RAYGE_ASSERT_VALID(renderer);
+	return renderer ? renderer->debugCam3D : Default3DCamera();
+}
+
+void Renderer_SetDebugCamera3D(RayGE_Renderer* renderer, Camera3D camera)
+{
+	if ( !VerifyNotInFrame(renderer) )
+	{
+		return;
+	}
+
+	renderer->debugCam3D = camera;
+}
+
+void Renderer_ResetDebugCamera3D(RayGE_Renderer* renderer)
+{
+	Renderer_SetDebugCamera3D(renderer, Default3DCamera());
 }
 
 void Renderer_BeginFrame(RayGE_Renderer* renderer)

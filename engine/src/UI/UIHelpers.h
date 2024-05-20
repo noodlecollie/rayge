@@ -2,11 +2,16 @@
 
 #include "Nuklear/Nuklear.h"
 
+#define UI_DEFAULT_PANE_FLAGS (NK_WINDOW_TITLE | NK_WINDOW_BORDER)
 #define UI_DEFAULT_WINDOW_FLAGS \
 	(NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_CLOSABLE)
 
 #define UI_DEFAULT_GROUP_FLAGS (NK_PANEL_GROUP | NK_WINDOW_TITLE | NK_WINDOW_BORDER)
 #define UI_DEFAULT_ROW_HEIGHT 20.0f
+
+// Height of a titled group box without any content inside.
+// Determined empirically.
+#define UI_TITLED_GROUPBOX_MIN_HEIGHT 60.0f
 
 // For keeping track of window sizes. Returns the current rect if it has
 // a valid width and height, otherwise returns the default rect.
