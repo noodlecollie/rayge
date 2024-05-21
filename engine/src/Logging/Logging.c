@@ -197,7 +197,6 @@ static void PrintLogMessageLine(RayGE_Log_Level level, const char* source, const
 	if ( source && *source )
 	{
 		bytesLeft -= AppendToLogBuffer(&g_LogBuffer, bytesLeft, "[%s] ", source);
-		printf("[%s] ", source);
 	}
 
 	bytesLeft -= AppendToLogBufferV(&g_LogBuffer, bytesLeft, format, args);
