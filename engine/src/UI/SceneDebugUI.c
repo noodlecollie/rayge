@@ -150,7 +150,7 @@ static bool Poll(struct nk_context* context, void* userData)
 			 "debugui",
 			 "Debug",
 			 (struct nk_rect) {0.0f, 0.0f, 250.0f, (float)GetRenderHeight()},
-			 UI_DEFAULT_PANE_FLAGS
+			 UI_DEFAULT_PANE_FLAGS | NK_WINDOW_CLOSABLE
 		 ) )
 	{
 		shouldStayOpen = true;

@@ -32,7 +32,7 @@ static bool Poll(struct nk_context* context, void* userData)
 			 context,
 			 "Test Window",
 			 nk_rect(50, 50, 800, 600),
-			 NK_WINDOW_BORDER | NK_WINDOW_NO_SCROLLBAR | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE
+			 NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE
 		 ) )
 	{
 		nk_layout_row_dynamic(context, 25, 1);
@@ -62,13 +62,13 @@ static bool Poll(struct nk_context* context, void* userData)
 		static char editBuffer[32] = "Text box";
 		nk_edit_string_zero_terminated(context, NK_EDIT_DEFAULT, editBuffer, sizeof(editBuffer), EditFilter);
 
-		const float values[8] = { 0.0f, 1.0f, 2.0f, 1.0f, 0.0f, 1.0f, 2.0f, 1.0f };
+		const float values[8] = {0.0f, 1.0f, 2.0f, 1.0f, 0.0f, 1.0f, 2.0f, 1.0f};
 		nk_plot(context, NK_CHART_LINES, values, 8, 0);
 
-		const char* comboValues[3] = { "First", "Second", "Third" };
-		nk_combo(context, comboValues, 3, 0, 20, (struct nk_vec2){100, 100});
+		const char* comboValues[3] = {"First", "Second", "Third"};
+		nk_combo(context, comboValues, 3, 0, 20, (struct nk_vec2) {100, 100});
 
-		nk_color_picker(context, (struct nk_colorf){1.0f, 0.0f, 0.0f, 1.0f}, NK_RGB);
+		nk_color_picker(context, (struct nk_colorf) {1.0f, 0.0f, 0.0f, 1.0f}, NK_RGB);
 	}
 
 	nk_end(context);

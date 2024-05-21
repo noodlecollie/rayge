@@ -6,6 +6,7 @@
 #include "Modules/InputHookModule.h"
 #include "Input/KeyboardModifiers.h"
 #include "UI/SceneDebugUI.h"
+#include "UI/TestUI.h"
 #include "Debugging.h"
 #include "wzl_cutl/string.h"
 #include "utlist.h"
@@ -67,6 +68,27 @@ static void HandleHook(RayGE_InputSource source, int id, const RayGE_InputBuffer
 	}
 }
 
+static void RegisterMenuCommands(StateItem* state, const char* name, const RayGE_UIMenu* menu)
+{
+	char fullName[32];
+
+	wzl_sprintf(fullName, sizeof(fullName), "+%s", name);
+	const CommandModule_CommandHandle * showCmd = CommandModule_AddCommand(fullName, HandleCommand, (void*)menu);
+
+	if ( state )
+	{
+		state->showCmd = showCmd;
+	}
+
+	wzl_sprintf(fullName, sizeof(fullName), "-%s", name);
+	const CommandModule_CommandHandle * hideCmd = CommandModule_AddCommand(fullName, HandleCommand, (void*)menu);
+
+	if ( state )
+	{
+		state->hideCmd = hideCmd;
+	}
+}
+
 static void RegisterMenuWithModifiers(int key, unsigned int modifierFlags, const char* name, const RayGE_UIMenu* menu)
 {
 	RAYGE_ENSURE(name && menu, "Expected a valid name and menu");
@@ -83,14 +105,7 @@ static void RegisterMenuWithModifiers(int key, unsigned int modifierFlags, const
 	LL_PREPEND(g_State, state);
 
 	state->menu = menu;
-
-	char fullName[32];
-
-	wzl_sprintf(fullName, sizeof(fullName), "+%s", name);
-	state->showCmd = CommandModule_AddCommand(fullName, HandleCommand, (void*)menu);
-
-	wzl_sprintf(fullName, sizeof(fullName), "-%s", name);
-	state->hideCmd = CommandModule_AddCommand(fullName, HandleCommand, (void*)menu);
+	RegisterMenuCommands(state, name, menu);
 
 	const RayGE_InputHook hook = {
 		.triggerFlags = INPUT_TRIGGER_ACTIVE | INPUT_TRIGGER_OVERRIDE_UI_FOCUS,
@@ -109,6 +124,9 @@ static void RegisterMenuWithModifiers(int key, unsigned int modifierFlags, const
 static void RegisterMenus(void)
 {
 	RegisterMenuWithModifiers(KEY_GRAVE, KEYMOD_CTRL, "menu_debug", &Menu_SceneDebugUI);
+
+	// Menus which are not bound to specific keys, but can be shown by executing commands manually:
+	RegisterMenuCommands(NULL, "menu_testui", &Menu_TestUI);
 }
 
 void MenuHooks_Register(void)

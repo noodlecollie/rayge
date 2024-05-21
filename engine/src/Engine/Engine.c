@@ -15,6 +15,7 @@
 #include "Testing.h"
 #include "Identity/Identity.h"
 #include "Debugging.h"
+#include "wzl_cutl/memory.h"
 
 // TODO: Remove this once we move the rendering elsewhere
 #include "Modules/RendererModule.h"
@@ -37,6 +38,26 @@ typedef union EngineAPIVerifyWrapper
 
 static bool g_Initialised = false;
 static RayGE_EngineState g_State = ENGINE_STATE_IDLE;
+
+static void* WzlMalloc(size_t size)
+{
+	return MEMPOOL_MALLOC(MEMPOOL_WZL_CUTL, size);
+}
+
+static void WzlFree(void* ptr)
+{
+	MEMPOOL_FREE(ptr);
+}
+
+static void* WzlCalloc(size_t num, size_t size)
+{
+	return MEMPOOL_CALLOC(MEMPOOL_WZL_CUTL, num, size);
+}
+
+static void* WzlRealloc(void* ptr, size_t size)
+{
+	return MEMPOOL_REALLOC(MEMPOOL_WZL_CUTL, ptr, size);
+}
 
 static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 {
@@ -152,7 +173,14 @@ void Engine_StartUp(void)
 
 	g_State = ENGINE_STATE_IDLE;
 
-	// Do this first, as a sanity check:
+	// Ensure the memory delegates are set up before we do anything else.
+	wzl_set_memory_delegates((wzl_memory_delegates) {
+		.malloc_func = WzlMalloc,
+		.free_func = WzlFree,
+		.calloc_func = WzlCalloc,
+		.realloc_func = WzlRealloc,
+	});
+
 	Logging_Init();
 	Logging_PrintLine(RAYGE_LOG_INFO, "%s", Identity_GetBuildDescription());
 
