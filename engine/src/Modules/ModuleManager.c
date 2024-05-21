@@ -1,6 +1,5 @@
 #include <stdbool.h>
 #include "Modules/ModuleManager.h"
-#include "Modules/MemPoolModule.h"
 #include "Modules/FilesystemModule.h"
 #include "Modules/RendererModule.h"
 #include "Modules/InputModule.h"
@@ -16,10 +15,7 @@ typedef struct ModuleInitAndShutdown
 	void (*ShutDown)(void);
 } ModuleInitAndShutdown;
 
-// The following exclude the logging subsystem, since this is handled independently.
-// Subsystems are initialised in order, and shut down in reverse order.
 static const ModuleInitAndShutdown g_Modules[] = {
-	{MemPoolModule_Init, MemPoolModule_ShutDown},
 	{FilesystemModule_Init, FilesystemModule_ShutDown},
 	{RendererModule_Init, RendererModule_ShutDown},
 	{SceneModule_Init, SceneModule_ShutDown},

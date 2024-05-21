@@ -2,7 +2,7 @@
 #include "Modules/UIModule.h"
 #include "Logging/Logging.h"
 #include "Modules/CommandModule.h"
-#include "Modules/MemPoolModule.h"
+#include "MemPool/MemPoolManager.h"
 #include "Modules/InputHookModule.h"
 #include "Input/KeyboardModifiers.h"
 #include "UI/SceneDebugUI.h"

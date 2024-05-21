@@ -2,7 +2,7 @@
 #include "Rendering/Renderer.h"
 #include "Rendering/RenderablePrimitives.h"
 #include "Modules/RendererModule.h"
-#include "Modules/MemPoolModule.h"
+#include "MemPool/MemPoolManager.h"
 #include "Modules/SceneModule.h"
 #include "Scene/Entity.h"
 #include "Scene/Scene.h"

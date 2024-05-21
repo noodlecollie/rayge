@@ -4,13 +4,16 @@
 #include <string.h>
 #include <stddef.h>
 #include <ctype.h>
-#include "Modules/MemPoolModule.h"
+#include "MemPool/MemPoolManager.h"
 #include "Launcher/LaunchParams.h"
 #include "Logging/Logging.h"
 #include "Debugging.h"
+#include "Utils.h"
 
 #define HEAD_SENTINEL_VALUE 0xF9A23BAD
 #define TAIL_SENTINEL_VALUE ~(HEAD_SENTINEL_VALUE)
+
+#define ENSURE_INITIALISED() RAYGE_ENSURE(g_Initialised, "MemPool manager was not initialised")
 
 struct MemPool;
 
@@ -20,11 +23,8 @@ typedef struct MemPoolItemHead
 	struct MemPoolItemHead* prev;
 	struct MemPoolItemHead* next;
 
-#if RAYGE_DEBUG()
 	const char* allocFile;
 	int allocLine;
-#endif
-
 	size_t allocSize;
 	uint32_t sentinel;
 } MemPoolItemHead;
@@ -43,17 +43,21 @@ typedef struct MemPool
 	size_t totalMemory;  // Total memory used, including head and tail structs.
 } MemPool;
 
-static MemPool g_Pools[MEMPOOL__COUNT];
-static bool g_PoolsInitialised = false;
-static bool g_DebuggingEnabled = false;
+typedef struct ManagerData
+{
+	MemPool pools[MEMPOOL__COUNT];
+	bool debuggingEnabled;
+} ManagerData;
+
+static ManagerData g_Data;
+static bool g_Initialised = false;
 
 static const char* SafeFileNameString(MemPoolItemHead* item)
 {
-#if RAYGE_DEBUG()
 	static const char* const CORRUPTED = "<corrupted>";
 	static const size_t MAX_LENGTH = 128;
 
-	if ( !item->allocFile )
+	if ( !item || !item->allocFile )
 	{
 		return "<null>";
 	}
@@ -73,18 +77,11 @@ static const char* SafeFileNameString(MemPoolItemHead* item)
 	}
 
 	return CORRUPTED;
-#else
-	return "<unavailable>";
-#endif
 }
 
 static int SafeFileLineNumber(MemPoolItemHead* item)
 {
-#if RAYGE_DEBUG()
-	return item->allocLine;
-#else
-	return 0;
-#endif
+	return item ? item->allocLine : 0;
 }
 
 static void* ItemToMemPtr(MemPoolItemHead* item)
@@ -100,15 +97,15 @@ static MemPoolItemTail* ItemTail(MemPoolItemHead* item)
 static bool VerifyPoolValid(MemPool* pool)
 {
 	const size_t poolNum = (size_t)pool;
-	const size_t poolMin = (size_t)g_Pools;
-	const size_t poolMax = (size_t)(g_Pools + MEMPOOL__COUNT);
+	const size_t poolMin = (size_t)g_Data.pools;
+	const size_t poolMax = (size_t)(g_Data.pools + MEMPOOL__COUNT);
 
 	return poolNum >= poolMin && poolNum < poolMax && poolNum % sizeof(void*) == 0;
 }
 
 static void VerifyIntegrity(MemPoolItemHead* item, const char* file, int line)
 {
-	if ( !g_DebuggingEnabled )
+	if ( !g_Data.debuggingEnabled )
 	{
 		return;
 	}
@@ -217,11 +214,8 @@ static MemPoolItemHead* CreateItemInPool(MemPool* pool, size_t size, const char*
 
 	item->sentinel = HEAD_SENTINEL_VALUE;
 	item->allocSize = size;
-
-#if RAYGE_DEBUG()
 	item->allocFile = file;
 	item->allocLine = line;
-#endif
 
 	ItemTail(item)->sentinel = TAIL_SENTINEL_VALUE;
 
@@ -299,66 +293,75 @@ static void DestroyItemInPool(MemPool* pool, MemPoolItemHead* item, const char* 
 	free(item);
 }
 
-bool MemPoolModule_DebuggingEnabled(void)
+static void InitData(ManagerData* data)
 {
-	return g_DebuggingEnabled;
+	for ( size_t index = 0; index < RAYGE_ARRAY_SIZE(data->pools); ++index )
+	{
+		memset(&data->pools[index], 0, sizeof(MemPool));
+		data->pools[index].category = (MemPool_Category)index;
+	}
+
+	data->debuggingEnabled = LaunchParams_GetLaunchState()->enableMemPoolDebugging;
 }
 
-void MemPoolModule_SetDebuggingEnabled(bool enabled)
+static void FreeData(ManagerData* data)
 {
-	g_DebuggingEnabled = g_PoolsInitialised && enabled;
+	for ( size_t index = 0; index < RAYGE_ARRAY_SIZE(data->pools); ++index )
+	{
+		FreeChain(data->pools[index].head, __FILE__, __LINE__);
+	}
+
+	memset(data, 0, sizeof(*data));
 }
 
-void MemPoolModule_Init(void)
+bool MemPoolManager_DebuggingEnabled(void)
 {
-	if ( g_PoolsInitialised )
+	return g_Data.debuggingEnabled;
+}
+
+void MemPoolManager_SetDebuggingEnabled(bool enabled)
+{
+	g_Data.debuggingEnabled = g_Initialised && enabled;
+}
+
+void MemPoolManager_Init(void)
+{
+	if ( g_Initialised )
 	{
 		return;
 	}
 
-	for ( size_t index = 0; index < MEMPOOL__COUNT; ++index )
-	{
-		memset(&g_Pools[index], 0, sizeof(MemPool));
-		g_Pools[index].category = (MemPool_Category)index;
-	}
-
-	g_DebuggingEnabled = LaunchParams_GetLaunchState()->enableMemPoolDebugging;
-	g_PoolsInitialised = true;
+	InitData(&g_Data);
+	g_Initialised = true;
 }
 
-void MemPoolModule_ShutDown(void)
+void MemPoolManager_ShutDown(void)
 {
-	if ( !g_PoolsInitialised )
+	if ( !g_Initialised )
 	{
 		return;
 	}
 
-	for ( size_t index = 0; index < MEMPOOL__COUNT; ++index )
-	{
-		FreeChain(g_Pools[index].head, __FILE__, __LINE__);
-		memset(&g_Pools[index], 0, sizeof(MemPool));
-	}
-
-	g_DebuggingEnabled = false;
-	g_PoolsInitialised = false;
+	FreeData(&g_Data);
+	g_Initialised = false;
 }
 
-void* MemPoolModule_Malloc(const char* file, int line, MemPool_Category category, size_t size)
+void* MemPoolManager_Malloc(const char* file, int line, MemPool_Category category, size_t size)
 {
-	RAYGE_ENSURE_VALID(g_PoolsInitialised);
+	ENSURE_INITIALISED();
 
 	RAYGE_ENSURE(
 		(size_t)category < MEMPOOL__COUNT,
-		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolModule_Malloc",
+		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolManager_Malloc",
 		file,
 		line
 	);
 
-	MemPoolItemHead* head = CreateItemInPool(&g_Pools[(size_t)category], size, file, line);
+	MemPoolItemHead* head = CreateItemInPool(&g_Data.pools[(size_t)category], size, file, line);
 	return ItemToMemPtr(head);
 }
 
-void* MemPoolModule_Calloc(
+void* MemPoolManager_Calloc(
 	const char* file,
 	int line,
 	MemPool_Category category,
@@ -366,16 +369,16 @@ void* MemPoolModule_Calloc(
 	size_t elementSize
 )
 {
-	RAYGE_ENSURE_VALID(g_PoolsInitialised);
+	ENSURE_INITIALISED();
 
 	RAYGE_ENSURE(
 		(size_t)category < MEMPOOL__COUNT,
-		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolModule_Calloc",
+		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolManager_Calloc",
 		file,
 		line
 	);
 
-	MemPoolItemHead* head = CreateItemInPool(&g_Pools[(size_t)category], numElements * elementSize, file, line);
+	MemPoolItemHead* head = CreateItemInPool(&g_Data.pools[(size_t)category], numElements * elementSize, file, line);
 
 	void* ptr = ItemToMemPtr(head);
 	memset(ptr, 0, numElements * elementSize);
@@ -383,20 +386,20 @@ void* MemPoolModule_Calloc(
 	return ptr;
 }
 
-void* MemPoolModule_Realloc(const char* file, int line, MemPool_Category category, void* memory, size_t newSize)
+void* MemPoolManager_Realloc(const char* file, int line, MemPool_Category category, void* memory, size_t newSize)
 {
-	RAYGE_ENSURE_VALID(g_PoolsInitialised);
+	ENSURE_INITIALISED();
 
 	RAYGE_ENSURE(
 		(size_t)category < MEMPOOL__COUNT,
-		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolModule_Realloc",
+		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolManager_Realloc",
 		file,
 		line
 	);
 
 	if ( !memory )
 	{
-		return MemPoolModule_Malloc(file, line, category, newSize);
+		return MemPoolManager_Malloc(file, line, category, newSize);
 	}
 
 	MemPoolItemHead* item = MemPtrToItemChecked(memory, file, line);
@@ -432,21 +435,21 @@ void* MemPoolModule_Realloc(const char* file, int line, MemPool_Category categor
 	return newPtr;
 }
 
-void MemPoolModule_Free(const char* file, int line, void* memory)
+void MemPoolManager_Free(const char* file, int line, void* memory)
 {
-	RAYGE_ENSURE_VALID(g_PoolsInitialised);
-	RAYGE_ENSURE(memory, "Mem pool invocation from %s:%d: Null pointer provided to MemPoolModule_Free", file, line);
+	ENSURE_INITIALISED();
+	RAYGE_ENSURE(memory, "Mem pool invocation from %s:%d: Null pointer provided to MemPoolManager_Free", file, line);
 
 	MemPoolItemHead* item = MemPtrToItemChecked(memory, file, line);
 	DestroyItemInPool(item->pool, item, file, line);
 }
 
-void MemPoolModule_DumpAllocInfo(void* memory)
+void MemPoolManager_DumpAllocInfo(void* memory)
 {
-	RAYGE_ENSURE_VALID(g_PoolsInitialised);
-	RAYGE_ASSERT(g_DebuggingEnabled, "Mem pool debugging must be enabled to use this function.");
+	ENSURE_INITIALISED();
+	RAYGE_ASSERT(g_Data.debuggingEnabled, "Mem pool debugging must be enabled to use this function.");
 
-	if ( !g_DebuggingEnabled )
+	if ( !g_Data.debuggingEnabled )
 	{
 		return;
 	}

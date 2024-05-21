@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include "Launcher/LaunchParams.h"
 #include "Logging/Logging.h"
-#include "Modules/MemPoolModule.h"
+#include "MemPool/MemPoolManager.h"
 #include "Identity/Identity.h"
 #include "Debugging.h"
 #include "cargs.h"

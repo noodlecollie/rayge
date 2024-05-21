@@ -1,7 +1,7 @@
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
 #include "Engine/EngineAPI.h"
-#include "Modules/MemPoolModule.h"
+#include "MemPool/MemPoolManager.h"
 #include "Logging/Logging.h"
 #include "Utils.h"
 #include "Debugging.h"

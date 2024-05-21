@@ -7,6 +7,7 @@
 #include "Modules/InputModule.h"
 #include "Modules/InputHookModule.h"
 #include "Modules/SceneModule.h"
+#include "MemPool/MemPoolManager.h"
 #include "Hooks/HookManager.h"
 #include "Engine/EngineAPI.h"
 #include "Scene/Scene.h"
@@ -157,6 +158,7 @@ void Engine_StartUp(void)
 
 	VerifyAllEngineAPIFunctionPointersAreValid();
 
+	MemPoolManager_Init();
 	ModuleManager_InitAll();
 	HookManager_RegisterAll();
 
@@ -182,6 +184,7 @@ void Engine_ShutDown(void)
 
 	HookManager_UnregisterAll();
 	ModuleManager_ShutDownAll();
+	MemPoolManager_ShutDown();
 
 	Logging_ShutDown();
 

@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include "Scene/Component.h"
-#include "Modules/MemPoolModule.h"
+#include "MemPool/MemPoolManager.h"
 #include "Debugging.h"
 
 static void* CallocComponent(RayGE_ComponentType type, size_t size)

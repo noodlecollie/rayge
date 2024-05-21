@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include "Modules/RendererModule.h"
-#include "Modules/MemPoolModule.h"
+#include "MemPool/MemPoolManager.h"
 #include "BinaryResources/DMMono_Regular.h"
 #include "BinaryResources/OpenSans_Medium.h"
 #include "Debugging.h"

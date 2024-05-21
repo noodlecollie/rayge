@@ -3,7 +3,7 @@
 #include "raylib.h"
 #include "RayGE/Platform.h"
 #include "Modules/FilesystemModule.h"
-#include "Modules/MemPoolModule.h"
+#include "MemPool/MemPoolManager.h"
 #include "Logging/Logging.h"
 #include "Debugging.h"
 #include "cwalk.h"

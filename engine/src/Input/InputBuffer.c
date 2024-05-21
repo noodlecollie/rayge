@@ -1,5 +1,5 @@
 #include "Input/InputBuffer.h"
-#include "Modules/MemPoolModule.h"
+#include "MemPool/MemPoolManager.h"
 #include "Debugging.h"
 
 struct RayGE_InputBuffer
