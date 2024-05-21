@@ -83,12 +83,12 @@ static bool VerifyInDrawMode(const RayGE_Renderer* renderer, DrawMode mode)
 	return renderer->drawMode == mode;
 }
 
-static const Camera2D GetCamera2D(const RayGE_Renderer* renderer)
+static Camera2D GetCamera2D(const RayGE_Renderer* renderer)
 {
 	return (renderer->debugFlags & RENDERER_DBG_OVERRIDE_CAMERA) ? renderer->debugCam2D : renderer->cam2D;
 }
 
-static const Camera3D GetCamera3D(const RayGE_Renderer* renderer)
+static Camera3D GetCamera3D(const RayGE_Renderer* renderer)
 {
 	return (renderer->debugFlags & RENDERER_DBG_OVERRIDE_CAMERA) ? renderer->debugCam3D : renderer->cam3D;
 }
