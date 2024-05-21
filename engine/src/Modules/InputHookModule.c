@@ -36,6 +36,26 @@ typedef struct Data
 
 static Data* g_Data = NULL;
 
+static HookItem* CreateHookItem(unsigned int modifierFlags, RayGE_InputHook hook)
+{
+	HookItem* item = MEMPOOL_CALLOC_STRUCT(MEMPOOL_INPUT, HookItem);
+
+	item->hook = hook;
+	item->modifierFlags = modifierFlags;
+
+	return item;
+}
+
+static void DestroyHookItem(HookItem* item)
+{
+	if ( !item )
+	{
+		return;
+	}
+
+	MEMPOOL_FREE(item);
+}
+
 static HookInputHashItem* CreateInputHashItem(int id)
 {
 	HookInputHashItem* item = MEMPOOL_CALLOC_STRUCT(MEMPOOL_INPUT, HookInputHashItem);
@@ -50,13 +70,13 @@ static void DestroyInputHashItem(HookInputHashItem* item)
 		return;
 	}
 
-	HookItem* deletedElement = NULL;
+	HookItem* elementToDelete = NULL;
 	HookItem* temp = NULL;
 
-	DL_FOREACH_SAFE(item->list, deletedElement, temp)
+	DL_FOREACH_SAFE(item->list, elementToDelete, temp)
 	{
-		DL_DELETE(item->list, deletedElement);
-		MEMPOOL_FREE(deletedElement);
+		DL_DELETE(item->list, elementToDelete);
+		DestroyHookItem(elementToDelete);
 	}
 
 	MEMPOOL_FREE(item);
@@ -217,10 +237,41 @@ void InputHookModule_AddHook(RayGE_InputSource source, int id, unsigned int modi
 		HASH_ADD_INT(g_Data->inputHash[source], id, hashItem);
 	}
 
-	HookItem* hookItem = MEMPOOL_CALLOC_STRUCT(MEMPOOL_INPUT, HookItem);
-	hookItem->hook = hook;
-	hookItem->modifierFlags = modifierFlags;
+	HookItem* hookItem = CreateHookItem(modifierFlags, hook);
 	DL_APPEND(hashItem->list, hookItem);
+}
+
+void InputHookModule_RemoveAllHooksForInput(RayGE_InputSource source, int id)
+{
+	RAYGE_ASSERT_VALID(g_Data);
+
+	if ( !g_Data )
+	{
+		return;
+	}
+
+	if ( source >= INPUT_SOURCE__COUNT )
+	{
+		Logging_PrintLine(RAYGE_LOG_ERROR, "Invalid input source provided when adding input hook");
+		return;
+	}
+
+	HookInputHashItem* hashItem = NULL;
+	HASH_FIND_INT(g_Data->inputHash[source], &id, hashItem);
+
+	if ( !hashItem )
+	{
+		return;
+	}
+
+	HookItem* item = NULL;
+	HookItem* temp = NULL;
+
+	DL_FOREACH_SAFE(hashItem->list, item, temp)
+	{
+		DL_DELETE(hashItem->list, item);
+		DestroyHookItem(item);
+	}
 }
 
 void InputHookModule_ProcessInput(void)

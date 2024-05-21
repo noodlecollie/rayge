@@ -33,6 +33,7 @@ void InputHookModule_Init(void);
 void InputHookModule_ShutDown(void);
 
 void InputHookModule_AddHook(RayGE_InputSource source, int id, unsigned int modifierFlags, RayGE_InputHook hook);
+void InputHookModule_RemoveAllHooksForInput(RayGE_InputSource source, int id);
 
 // Expected to be called *after* input module has processed input.
 void InputHookModule_ProcessInput(void);
