@@ -5,8 +5,14 @@
 #include "raylib.h"
 #include "Nuklear/Nuklear.h"
 
-static struct nk_context* g_NKContext = NULL;
-static const RayGE_UIMenu* g_CurrentMenu = NULL;
+typedef struct Data
+{
+	struct nk_context* nkContext;
+	const RayGE_UIMenu* currentMenu;
+	bool inPoll;
+} Data;
+
+static Data g_Data;
 static bool g_Initialised = false;
 
 void UIModule_Init(void)
@@ -16,10 +22,11 @@ void UIModule_Init(void)
 		return;
 	}
 
-	g_NKContext = InitNuklearEx(RendererModule_GetDefaultUIFont(), RENDERERMODULE_DEFAULT_FONT_SIZE);
-	RAYGE_ENSURE(g_NKContext, "Unable to create Nuklear context");
+	memset(&g_Data, 0, sizeof(g_Data));
 
-	g_CurrentMenu = NULL;
+	g_Data.nkContext = InitNuklearEx(RendererModule_GetDefaultUIFont(), RENDERERMODULE_DEFAULT_FONT_SIZE);
+	RAYGE_ENSURE(g_Data.nkContext, "Unable to create Nuklear context");
+
 	g_Initialised = true;
 }
 
@@ -30,10 +37,8 @@ void UIModule_ShutDown(void)
 		return;
 	}
 
-	g_CurrentMenu = NULL;
-
-	UnloadNuklear(g_NKContext);
-	g_NKContext = NULL;
+	UnloadNuklear(g_Data.nkContext);
+	memset(&g_Data, 0, sizeof(g_Data));
 
 	g_Initialised = false;
 }
@@ -47,25 +52,25 @@ const RayGE_UIMenu* UIModule_GetCurrentMenu(void)
 		return NULL;
 	}
 
-	return g_CurrentMenu;
+	return g_Data.currentMenu;
 }
 
 void UIModule_SetCurrentMenu(const RayGE_UIMenu* menu)
 {
 	RAYGE_ASSERT_VALID(g_Initialised);
 
-	if ( !g_Initialised || menu == g_CurrentMenu )
+	if ( !g_Initialised || menu == g_Data.currentMenu )
 	{
 		return;
 	}
 
 	UIModule_ClearCurrentMenu();
 
-	g_CurrentMenu = menu;
+	g_Data.currentMenu = menu;
 
-	if ( g_CurrentMenu && g_CurrentMenu->Show )
+	if ( g_Data.currentMenu && g_Data.currentMenu->Show )
 	{
-		g_CurrentMenu->Show(g_NKContext, g_CurrentMenu->userData);
+		g_Data.currentMenu->Show(g_Data.nkContext, g_Data.currentMenu->userData);
 	}
 }
 
@@ -78,31 +83,38 @@ void UIModule_ClearCurrentMenu(void)
 		return;
 	}
 
-	if ( g_CurrentMenu && g_CurrentMenu->Hide )
+	if ( g_Data.currentMenu && g_Data.currentMenu->Hide )
 	{
-		g_CurrentMenu->Hide(g_NKContext, g_CurrentMenu->userData);
+		g_Data.currentMenu->Hide(g_Data.nkContext, g_Data.currentMenu->userData);
 	}
 
-	g_CurrentMenu = NULL;
+	g_Data.currentMenu = NULL;
 }
 
 bool UIModule_HasCurrentMenu(void)
 {
 	RAYGE_ASSERT_VALID(g_Initialised);
 
-	return g_Initialised && g_CurrentMenu;
+	return g_Initialised && g_Data.currentMenu;
 }
 
 void UIModule_PollCurrentMenu(void)
 {
 	RAYGE_ASSERT_VALID(g_Initialised);
 
-	if ( !g_Initialised || !g_CurrentMenu || !g_CurrentMenu->Poll )
+	if ( !g_Initialised )
 	{
 		return;
 	}
 
-	const bool shouldStayOpen = g_CurrentMenu->Poll(g_NKContext, g_CurrentMenu->userData);
+	if ( !g_Data.currentMenu || !g_Data.currentMenu->Poll )
+	{
+		return;
+	}
+
+	g_Data.inPoll = true;
+	const bool shouldStayOpen = g_Data.currentMenu->Poll(g_Data.nkContext, g_Data.currentMenu->userData);
+	g_Data.inPoll = false;
 
 	if ( !shouldStayOpen )
 	{
@@ -119,7 +131,7 @@ void UIModule_ProcessInput(void)
 		return;
 	}
 
-	UpdateNuklear(g_NKContext);
+	UpdateNuklear(g_Data.nkContext);
 }
 
 void UIModule_Draw(void)
@@ -141,29 +153,5 @@ void UIModule_Draw(void)
 	}
 
 	Renderer_SetDrawingModeDirect(renderer);
-	DrawNuklear(g_NKContext);
-}
-
-void UIModule_Poll(void)
-{
-	RAYGE_ASSERT_VALID(g_Initialised);
-
-	if ( !g_Initialised )
-	{
-		return;
-	}
-
-	UpdateNuklear(g_NKContext);
-
-	if ( !g_CurrentMenu )
-	{
-		return;
-	}
-
-	if ( g_CurrentMenu->Poll )
-	{
-		g_CurrentMenu->Poll(g_NKContext, g_CurrentMenu->userData);
-	}
-
-	DrawNuklear(g_NKContext);
+	DrawNuklear(g_Data.nkContext);
 }

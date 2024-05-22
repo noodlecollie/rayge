@@ -42,7 +42,7 @@ static void SwapEngineLibPathPreference(void)
 
 static void* LoadEngineLibrary(void)
 {
-	printf("Attempting to load engine library: %s\n", g_EngineLibPaths[0]);
+	printf("LAUNCHER: Attempting to load engine library: %s\n", g_EngineLibPaths[0]);
 	void* engineLibrary = wzl_load_library(g_EngineLibPaths[0]);
 
 	if ( engineLibrary )
@@ -50,7 +50,7 @@ static void* LoadEngineLibrary(void)
 		return engineLibrary;
 	}
 
-	printf("Failed to load %s, falling back to %s\n", g_EngineLibPaths[0], g_EngineLibPaths[1]);
+	printf("LAUNCHER: Failed to load %s, falling back to %s\n", g_EngineLibPaths[0], g_EngineLibPaths[1]);
 	return wzl_load_library(g_EngineLibPaths[1]);
 }
 
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
 
 	if ( !engineLibrary )
 	{
-		fprintf(stderr, "Failed to load engine library\n");
+		fprintf(stderr, "LAUNCHER: Failed to load engine library\n");
 		return RAYGE_LAUNCHER_EXIT_FAIL_ENGINE_LOAD;
 	}
 
@@ -82,7 +82,7 @@ int main(int argc, char** argv)
 
 	if ( !runFuncPtr )
 	{
-		fprintf(stderr, "Failed to look up function in engine library\n");
+		fprintf(stderr, "LAUNCHER: Failed to look up function in engine library\n");
 		return RAYGE_LAUNCHER_EXIT_FAIL_ENGINE_LOAD;
 	}
 
