@@ -9,11 +9,33 @@ typedef struct Data
 {
 	struct nk_context* nkContext;
 	const RayGE_UIMenu* currentMenu;
+	const RayGE_UIMenu* nextMenu;
+	bool nextMenuWaiting;
 	bool inPoll;
 } Data;
 
 static Data g_Data;
 static bool g_Initialised = false;
+
+static void SwitchMenu(Data* data, const RayGE_UIMenu* newMenu)
+{
+	if ( data->currentMenu == newMenu )
+	{
+		return;
+	}
+
+	if ( data->currentMenu && data->currentMenu->Hide )
+	{
+		data->currentMenu->Hide(data->nkContext, data->currentMenu->userData);
+	}
+
+	data->currentMenu = newMenu;
+
+	if ( data->currentMenu && data->currentMenu->Show )
+	{
+		data->currentMenu->Show(data->nkContext, data->currentMenu->userData);
+	}
+}
 
 void UIModule_Init(void)
 {
@@ -64,31 +86,19 @@ void UIModule_SetCurrentMenu(const RayGE_UIMenu* menu)
 		return;
 	}
 
-	UIModule_ClearCurrentMenu();
-
-	g_Data.currentMenu = menu;
-
-	if ( g_Data.currentMenu && g_Data.currentMenu->Show )
+	if ( g_Data.inPoll )
 	{
-		g_Data.currentMenu->Show(g_Data.nkContext, g_Data.currentMenu->userData);
+		g_Data.nextMenu = menu;
+		g_Data.nextMenuWaiting = true;
+		return;
 	}
+
+	SwitchMenu(&g_Data, menu);
 }
 
 void UIModule_ClearCurrentMenu(void)
 {
-	RAYGE_ASSERT_VALID(g_Initialised);
-
-	if ( !g_Initialised )
-	{
-		return;
-	}
-
-	if ( g_Data.currentMenu && g_Data.currentMenu->Hide )
-	{
-		g_Data.currentMenu->Hide(g_Data.nkContext, g_Data.currentMenu->userData);
-	}
-
-	g_Data.currentMenu = NULL;
+	UIModule_SetCurrentMenu(NULL);
 }
 
 bool UIModule_HasCurrentMenu(void)
@@ -118,7 +128,15 @@ void UIModule_PollCurrentMenu(void)
 
 	if ( !shouldStayOpen )
 	{
-		UIModule_ClearCurrentMenu();
+		SwitchMenu(&g_Data, NULL);
+	}
+
+	// Check if any new menu was requested during the poll.
+	if ( g_Data.nextMenuWaiting )
+	{
+		SwitchMenu(&g_Data, g_Data.nextMenu);
+		g_Data.nextMenu = NULL;
+		g_Data.nextMenuWaiting = false;
 	}
 }
 
