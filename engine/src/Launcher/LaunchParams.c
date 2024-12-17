@@ -122,6 +122,24 @@ bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 				g_LaunchState.enableMemPoolDebugging = true;
 				break;
 			}
+
+			case '?':
+			default:
+			{
+				cag_option_print_error(&context, stderr);
+
+				const int index = cag_option_get_error_index(&context);
+
+				// If someone's passed -abc instead of --abc, print a hint about it.
+				if ( index >= 0 && index < params->argc && params->argv[index][0] == '-' &&
+					 strlen(params->argv[index]) > 2 )
+				{
+					fprintf(stderr, "This looks like a long option - did you mean -%s?\n", params->argv[index]);
+				}
+
+				// Quit here.
+				return false;
+			}
 		}
 	}
 
