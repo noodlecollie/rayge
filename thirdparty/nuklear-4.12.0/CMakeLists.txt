@@ -9,6 +9,10 @@ target_include_directories(nuklear PUBLIC
 	include
 )
 
+target_compile_definitions(nuklear PUBLIC
+	NK_INCLUDE_FIXED_TYPES # Ensures no confusion over long vs. long long between compilers
+)
+
 target_link_libraries(nuklear PUBLIC
 	raylib
 )

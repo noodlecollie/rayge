@@ -41,7 +41,7 @@ static char* StrDup(const char* str)
 	return out;
 }
 
-static void EnsureApplicationDirectory()
+static void EnsureApplicationDirectory(void)
 {
 	if ( g_NativeApplicationDirectory[0] )
 	{

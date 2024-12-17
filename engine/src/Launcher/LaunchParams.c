@@ -131,7 +131,7 @@ bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 				const int index = cag_option_get_error_index(&context);
 
 				// If someone's passed -abc instead of --abc, print a hint about it.
-				if ( index >= 0 && index < params->argc && params->argv[index][0] == '-' &&
+				if ( index >= 0 && (size_t)index < params->argc && params->argv[index][0] == '-' &&
 					 strlen(params->argv[index]) > 2 )
 				{
 					fprintf(stderr, "This looks like a long option - did you mean -%s?\n", params->argv[index]);

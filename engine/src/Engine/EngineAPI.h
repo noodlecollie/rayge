@@ -22,12 +22,22 @@ const RayGE_Engine_API_Current* RAYGE_ENGINE_CDECL EngineAPI_ExchangeAPIsWithGam
 );
 
 // Helper macro for calling callbacks only if they've been set
-#define INVOKE_CALLBACK(cb, ...) \
+#define INVOKE_CALLBACK_V(cb, ...) \
 	do \
 	{ \
 		if ( (cb) ) \
 		{ \
 			(cb)(__VA_ARGS__); \
+		} \
+	} \
+	while ( false )
+
+#define INVOKE_CALLBACK(cb) \
+	do \
+	{ \
+		if ( (cb) ) \
+		{ \
+			(cb)(); \
 		} \
 	} \
 	while ( false )
