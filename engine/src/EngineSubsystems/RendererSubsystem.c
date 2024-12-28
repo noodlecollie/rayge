@@ -1,5 +1,5 @@
 #include <stdbool.h>
-#include "Modules/RendererModule.h"
+#include "EngineSubsystems/RendererSubsystem.h"
 #include "MemPool/MemPoolManager.h"
 #include "BinaryResources/DMMono_Regular.h"
 #include "BinaryResources/OpenSans_Medium.h"
@@ -15,7 +15,7 @@ typedef struct SubsystemData
 
 static SubsystemData* g_Data = NULL;
 
-void RendererModule_Init(void)
+void RendererSubsystem_Init(void)
 {
 	if ( g_Data )
 	{
@@ -61,7 +61,7 @@ void RendererModule_Init(void)
 	SetTargetFPS(60);
 }
 
-void RendererModule_ShutDown(void)
+void RendererSubsystem_ShutDown(void)
 {
 	if ( !g_Data )
 	{
@@ -76,25 +76,25 @@ void RendererModule_ShutDown(void)
 	g_Data = NULL;
 }
 
-bool RendererModule_IsInitialised(void)
+bool RendererSubsystem_IsInitialised(void)
 {
 	return g_Data != NULL;
 }
 
-bool RendererModule_WindowCloseRequested(void)
+bool RendererSubsystem_WindowCloseRequested(void)
 {
 	RAYGE_ASSERT_VALID(g_Data);
 	return g_Data && WindowShouldClose();
 }
 
-RayGE_Renderer* RendererModule_GetRenderer(void)
+RayGE_Renderer* RendererSubsystem_GetRenderer(void)
 {
 	RAYGE_ASSERT_VALID(g_Data);
 
 	return g_Data ? g_Data->renderer : NULL;
 }
 
-Font RendererModule_GetDefaultMonoFont(void)
+Font RendererSubsystem_GetDefaultMonoFont(void)
 {
 	RAYGE_ASSERT_VALID(g_Data);
 
@@ -106,7 +106,7 @@ Font RendererModule_GetDefaultMonoFont(void)
 	return g_Data->defaultMonoFont;
 }
 
-Font RendererModule_GetDefaultUIFont(void)
+Font RendererSubsystem_GetDefaultUIFont(void)
 {
 	RAYGE_ASSERT_VALID(g_Data);
 

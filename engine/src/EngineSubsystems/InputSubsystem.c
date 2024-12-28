@@ -1,4 +1,4 @@
-#include "Modules/InputModule.h"
+#include "EngineSubsystems/InputSubsystem.h"
 #include "MemPool/MemPoolManager.h"
 #include "Logging/Logging.h"
 #include "Input/InputBuffer.h"
@@ -53,7 +53,7 @@ static void DestroyInputData(InputData* data)
 	MEMPOOL_FREE(data);
 }
 
-void InputModule_Init(void)
+void InputSubsystem_Init(void)
 {
 	if ( g_Data )
 	{
@@ -63,7 +63,7 @@ void InputModule_Init(void)
 	g_Data = CreateInputData();
 }
 
-void InputModule_ShutDown(void)
+void InputSubsystem_ShutDown(void)
 {
 	if ( !g_Data )
 	{
@@ -74,7 +74,7 @@ void InputModule_ShutDown(void)
 	g_Data = NULL;
 }
 
-void InputModule_ClearAllInputThisFrame(void)
+void InputSubsystem_ClearAllInputThisFrame(void)
 {
 	RAYGE_ASSERT_VALID(g_Data);
 
@@ -86,7 +86,7 @@ void InputModule_ClearAllInputThisFrame(void)
 	g_Data->clearAllInputThisFrame = true;
 }
 
-const RayGE_InputBuffer* InputModule_GetInputForSource(RayGE_InputSource source)
+const RayGE_InputBuffer* InputSubsystem_GetInputForSource(RayGE_InputSource source)
 {
 	RAYGE_ASSERT_VALID(g_Data);
 	RAYGE_ASSERT_VALID(source < INPUT_SOURCE__COUNT);
@@ -99,7 +99,7 @@ const RayGE_InputBuffer* InputModule_GetInputForSource(RayGE_InputSource source)
 	return g_Data->inputClasses[source].buffer;
 }
 
-void InputModule_NewFrame(void)
+void InputSubsystem_NewFrame(void)
 {
 	RAYGE_ASSERT_VALID(g_Data);
 
@@ -116,7 +116,7 @@ void InputModule_NewFrame(void)
 	}
 }
 
-void InputModule_ProcessInput(void)
+void InputSubsystem_ProcessInput(void)
 {
 	RAYGE_ASSERT_VALID(g_Data);
 

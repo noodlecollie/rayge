@@ -1,9 +1,9 @@
-#include "Modules/SceneModule.h"
+#include "EngineSubsystems/SceneSubsystem.h"
 #include "Debugging.h"
 
 static RayGE_Scene* g_Scene = NULL;
 
-void SceneModule_Init(void)
+void SceneSubsystem_Init(void)
 {
 	if ( g_Scene )
 	{
@@ -14,7 +14,7 @@ void SceneModule_Init(void)
 	g_Scene = Scene_Create(1024);
 }
 
-void SceneModule_ShutDown(void)
+void SceneSubsystem_ShutDown(void)
 {
 	if ( !g_Scene )
 	{
@@ -25,7 +25,7 @@ void SceneModule_ShutDown(void)
 	g_Scene = NULL;
 }
 
-RayGE_Scene* SceneModule_GetScene(void)
+RayGE_Scene* SceneSubsystem_GetScene(void)
 {
 	RAYGE_ASSERT_VALID(g_Scene);
 	return g_Scene;

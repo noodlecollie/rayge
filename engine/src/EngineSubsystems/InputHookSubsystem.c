@@ -1,5 +1,5 @@
-#include "Modules/InputHookModule.h"
-#include "Modules/UIModule.h"
+#include "EngineSubsystems/InputHookSubsystem.h"
+#include "EngineSubsystems/UISubsystem.h"
 #include "Logging/Logging.h"
 #include "Input/InputBufferKeyboard.h"
 #include "utlist.h"
@@ -178,7 +178,7 @@ static void CheckAndCallHook(int id, RayGE_InputState state, void* userData)
 	}
 }
 
-void InputHookModule_Init(void)
+void InputHookSubsystem_Init(void)
 {
 	if ( g_Data )
 	{
@@ -188,7 +188,7 @@ void InputHookModule_Init(void)
 	g_Data = CreateData();
 }
 
-void InputHookModule_ShutDown(void)
+void InputHookSubsystem_ShutDown(void)
 {
 	if ( !g_Data )
 	{
@@ -199,7 +199,7 @@ void InputHookModule_ShutDown(void)
 	g_Data = NULL;
 }
 
-void InputHookModule_AddHook(RayGE_InputSource source, int id, unsigned int modifierFlags, RayGE_InputHook hook)
+void InputHookSubsystem_AddHook(RayGE_InputSource source, int id, unsigned int modifierFlags, RayGE_InputHook hook)
 {
 	RAYGE_ASSERT_VALID(g_Data);
 
@@ -241,7 +241,7 @@ void InputHookModule_AddHook(RayGE_InputSource source, int id, unsigned int modi
 	DL_APPEND(hashItem->list, hookItem);
 }
 
-void InputHookModule_RemoveAllHooksForInput(RayGE_InputSource source, int id)
+void InputHookSubsystem_RemoveAllHooksForInput(RayGE_InputSource source, int id)
 {
 	RAYGE_ASSERT_VALID(g_Data);
 
@@ -274,7 +274,7 @@ void InputHookModule_RemoveAllHooksForInput(RayGE_InputSource source, int id)
 	}
 }
 
-void InputHookModule_ProcessInput(void)
+void InputHookSubsystem_ProcessInput(void)
 {
 	RAYGE_ASSERT_VALID(g_Data);
 
@@ -283,14 +283,14 @@ void InputHookModule_ProcessInput(void)
 		return;
 	}
 
-	const bool uiIsOpen = UIModule_HasCurrentMenu();
+	const bool uiIsOpen = UISubsystem_HasCurrentMenu();
 
 	// Deal with all newly inactive inputs before all newly active ones.
 	for ( size_t source = 0; source < INPUT_SOURCE__COUNT; ++source )
 	{
 		const RayGE_InputSource inputSource = (RayGE_InputSource)source;
 
-		const RayGE_InputBuffer* buffer = InputModule_GetInputForSource(inputSource);
+		const RayGE_InputBuffer* buffer = InputSubsystem_GetInputForSource(inputSource);
 		RAYGE_ENSURE(buffer, "Expected valid input buffer for source");
 
 		const CallbackInfo cbInfo = {
@@ -306,7 +306,7 @@ void InputHookModule_ProcessInput(void)
 	{
 		const RayGE_InputSource inputSource = (RayGE_InputSource)source;
 
-		const RayGE_InputBuffer* buffer = InputModule_GetInputForSource(inputSource);
+		const RayGE_InputBuffer* buffer = InputSubsystem_GetInputForSource(inputSource);
 		RAYGE_ENSURE(buffer, "Expected valid input buffer for source");
 
 		const CallbackInfo cbInfo = {

@@ -1,9 +1,9 @@
 #include "Hooks/MenuHooks.h"
-#include "Modules/UIModule.h"
+#include "EngineSubsystems/UISubsystem.h"
 #include "Logging/Logging.h"
-#include "Modules/CommandModule.h"
+#include "EngineSubsystems/CommandSubsystem.h"
 #include "MemPool/MemPoolManager.h"
-#include "Modules/InputHookModule.h"
+#include "EngineSubsystems/InputHookSubsystem.h"
 #include "Input/KeyboardModifiers.h"
 #include "UI/SceneDebugUI.h"
 #include "UI/TestUI.h"
@@ -14,8 +14,8 @@
 typedef struct StateItem
 {
 	struct StateItem* next;
-	const CommandModule_CommandHandle* showCmd;
-	const CommandModule_CommandHandle* hideCmd;
+	const CommandSubsystem_CommandHandle* showCmd;
+	const CommandSubsystem_CommandHandle* hideCmd;
 	const RayGE_UIMenu* menu;
 } StateItem;
 
@@ -37,12 +37,12 @@ static void HandleCommand(const char* commandName, void* userData)
 	if ( commandName[0] == '+' )
 	{
 		Logging_PrintLine(RAYGE_LOG_DEBUG, "Show menu command: %s", commandName);
-		UIModule_SetCurrentMenu(menu);
+		UISubsystem_SetCurrentMenu(menu);
 	}
 	else if ( commandName[0] == '-' )
 	{
 		Logging_PrintLine(RAYGE_LOG_DEBUG, "Hide menu command: %s", commandName);
-		UIModule_ClearCurrentMenu();
+		UISubsystem_ClearCurrentMenu();
 	}
 	else
 	{
@@ -56,15 +56,15 @@ static void HandleHook(RayGE_InputSource source, int id, const RayGE_InputBuffer
 
 	const StateItem* state = (const StateItem*)userData;
 
-	if ( state->menu && UIModule_GetCurrentMenu() != state->menu )
+	if ( state->menu && UISubsystem_GetCurrentMenu() != state->menu )
 	{
 		Logging_PrintLine(RAYGE_LOG_TRACE, "Triggering show menu for source %d key %d", source, id);
-		CommandModule_InvokeCommand(state->showCmd);
+		CommandSubsystem_InvokeCommand(state->showCmd);
 	}
 	else
 	{
 		Logging_PrintLine(RAYGE_LOG_TRACE, "Triggering hide menu for source %d key %d", source, id);
-		CommandModule_InvokeCommand(state->hideCmd);
+		CommandSubsystem_InvokeCommand(state->hideCmd);
 	}
 }
 
@@ -73,7 +73,7 @@ static void RegisterMenuCommands(StateItem* state, const char* name, const RayGE
 	char fullName[32];
 
 	wzl_sprintf(fullName, sizeof(fullName), "+%s", name);
-	const CommandModule_CommandHandle * showCmd = CommandModule_AddCommand(fullName, HandleCommand, (void*)menu);
+	const CommandSubsystem_CommandHandle * showCmd = CommandSubsystem_AddCommand(fullName, HandleCommand, (void*)menu);
 
 	if ( state )
 	{
@@ -81,7 +81,7 @@ static void RegisterMenuCommands(StateItem* state, const char* name, const RayGE
 	}
 
 	wzl_sprintf(fullName, sizeof(fullName), "-%s", name);
-	const CommandModule_CommandHandle * hideCmd = CommandModule_AddCommand(fullName, HandleCommand, (void*)menu);
+	const CommandSubsystem_CommandHandle * hideCmd = CommandSubsystem_AddCommand(fullName, HandleCommand, (void*)menu);
 
 	if ( state )
 	{
@@ -113,7 +113,7 @@ static void RegisterMenuWithModifiers(int key, unsigned int modifierFlags, const
 		.userData = state
 	};
 
-	InputHookModule_AddHook(INPUT_SOURCE_KEYBOARD, key, modifierFlags, hook);
+	InputHookSubsystem_AddHook(INPUT_SOURCE_KEYBOARD, key, modifierFlags, hook);
 }
 
 // static void RegisterMenu(int key, const char* name, const RayGE_UIMenu* menu)

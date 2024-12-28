@@ -1,9 +1,9 @@
 #include <stdarg.h>
 #include "Rendering/Renderer.h"
 #include "Rendering/RenderablePrimitives.h"
-#include "Modules/RendererModule.h"
+#include "EngineSubsystems/RendererSubsystem.h"
 #include "MemPool/MemPoolManager.h"
-#include "Modules/SceneModule.h"
+#include "EngineSubsystems/SceneSubsystem.h"
 #include "Scene/Entity.h"
 #include "Scene/Scene.h"
 #include "ResourceManagement/ResourceHandleUtils.h"
@@ -555,7 +555,7 @@ void Renderer_DrawAllActiveEntitiesInScene3D(RayGE_Renderer* renderer)
 		return;
 	}
 
-	RayGE_Scene* scene = SceneModule_GetScene();
+	RayGE_Scene* scene = SceneSubsystem_GetScene();
 	const uint32_t maxEntities = Scene_GetMaxEntities(scene);
 
 	for ( uint32_t index = 0; index < maxEntities; ++index )
@@ -579,7 +579,7 @@ void Renderer_DrawTextDev(RayGE_Renderer* renderer, int posX, int posY, Color co
 	}
 
 	DrawTextEx(
-		RendererModule_GetDefaultMonoFont(),
+		RendererSubsystem_GetDefaultMonoFont(),
 		text,
 		(Vector2) {(float)posX, (float)posY},
 		RENDERERMODULE_DEFAULT_FONT_SIZE,

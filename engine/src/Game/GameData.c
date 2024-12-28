@@ -3,7 +3,7 @@
 #include "RayGE/Platform.h"
 #include "cJSON.h"
 #include "JSON/JSONUtils.h"
-#include "Modules/FilesystemModule.h"
+#include "EngineSubsystems/FilesystemSubsystem.h"
 #include "Logging/Logging.h"
 #include "wzl_cutl/string.h"
 #include "Utils.h"
@@ -16,7 +16,7 @@
 
 typedef struct GameData
 {
-	FilesystemModule_Path clientLibrary;
+	FilesystemSubsystem_Path clientLibrary;
 } GameData;
 
 static GameData g_GameData;
@@ -25,7 +25,7 @@ static bool g_IsLoaded = false;
 static cJSON* ParseJSONFromFile(const char* path)
 {
 	size_t size = 0;
-	uint8_t* fileData = FilesystemModule_LoadFileData(path, &size);
+	uint8_t* fileData = FilesystemSubsystem_LoadFileData(path, &size);
 
 	if ( !fileData )
 	{
@@ -49,7 +49,7 @@ static cJSON* ParseJSONFromFile(const char* path)
 		);
 	}
 
-	FilesystemModule_UnloadFileData(fileData);
+	FilesystemSubsystem_UnloadFileData(fileData);
 	return out;
 }
 

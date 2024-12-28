@@ -1,6 +1,6 @@
-#include "Modules/UIModule.h"
+#include "EngineSubsystems/UISubsystem.h"
 #include "MemPool/MemPoolManager.h"
-#include "Modules/RendererModule.h"
+#include "EngineSubsystems/RendererSubsystem.h"
 #include "Debugging.h"
 #include "raylib.h"
 #include "Nuklear/Nuklear.h"
@@ -37,7 +37,7 @@ static void SwitchMenu(Data* data, const RayGE_UIMenu* newMenu)
 	}
 }
 
-void UIModule_Init(void)
+void UISubsystem_Init(void)
 {
 	if ( g_Initialised )
 	{
@@ -46,13 +46,13 @@ void UIModule_Init(void)
 
 	memset(&g_Data, 0, sizeof(g_Data));
 
-	g_Data.nkContext = InitNuklearEx(RendererModule_GetDefaultUIFont(), RENDERERMODULE_DEFAULT_FONT_SIZE);
+	g_Data.nkContext = InitNuklearEx(RendererSubsystem_GetDefaultUIFont(), RENDERERMODULE_DEFAULT_FONT_SIZE);
 	RAYGE_ENSURE(g_Data.nkContext, "Unable to create Nuklear context");
 
 	g_Initialised = true;
 }
 
-void UIModule_ShutDown(void)
+void UISubsystem_ShutDown(void)
 {
 	if ( !g_Initialised )
 	{
@@ -65,7 +65,7 @@ void UIModule_ShutDown(void)
 	g_Initialised = false;
 }
 
-const RayGE_UIMenu* UIModule_GetCurrentMenu(void)
+const RayGE_UIMenu* UISubsystem_GetCurrentMenu(void)
 {
 	RAYGE_ASSERT_VALID(g_Initialised);
 
@@ -77,7 +77,7 @@ const RayGE_UIMenu* UIModule_GetCurrentMenu(void)
 	return g_Data.currentMenu;
 }
 
-void UIModule_SetCurrentMenu(const RayGE_UIMenu* menu)
+void UISubsystem_SetCurrentMenu(const RayGE_UIMenu* menu)
 {
 	RAYGE_ASSERT_VALID(g_Initialised);
 
@@ -96,19 +96,19 @@ void UIModule_SetCurrentMenu(const RayGE_UIMenu* menu)
 	SwitchMenu(&g_Data, menu);
 }
 
-void UIModule_ClearCurrentMenu(void)
+void UISubsystem_ClearCurrentMenu(void)
 {
-	UIModule_SetCurrentMenu(NULL);
+	UISubsystem_SetCurrentMenu(NULL);
 }
 
-bool UIModule_HasCurrentMenu(void)
+bool UISubsystem_HasCurrentMenu(void)
 {
 	RAYGE_ASSERT_VALID(g_Initialised);
 
 	return g_Initialised && g_Data.currentMenu;
 }
 
-void UIModule_PollCurrentMenu(void)
+void UISubsystem_PollCurrentMenu(void)
 {
 	RAYGE_ASSERT_VALID(g_Initialised);
 
@@ -140,7 +140,7 @@ void UIModule_PollCurrentMenu(void)
 	}
 }
 
-void UIModule_ProcessInput(void)
+void UISubsystem_ProcessInput(void)
 {
 	RAYGE_ASSERT_VALID(g_Initialised);
 
@@ -152,7 +152,7 @@ void UIModule_ProcessInput(void)
 	UpdateNuklear(g_Data.nkContext);
 }
 
-void UIModule_Draw(void)
+void UISubsystem_Draw(void)
 {
 	RAYGE_ASSERT_VALID(g_Initialised);
 
@@ -161,7 +161,7 @@ void UIModule_Draw(void)
 		return;
 	}
 
-	RayGE_Renderer* renderer = RendererModule_GetRenderer();
+	RayGE_Renderer* renderer = RendererSubsystem_GetRenderer();
 
 	RAYGE_ASSERT_VALID(renderer && Renderer_IsInFrame(renderer));
 

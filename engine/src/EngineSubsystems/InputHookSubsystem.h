@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Modules/InputModule.h"
+#include "EngineSubsystems/InputSubsystem.h"
 #include "Input/InputBuffer.h"
 
 typedef enum RayGE_InputHookTriggerFlag
@@ -29,11 +29,11 @@ typedef struct RayGE_InputHook
 	void* userData;
 } RayGE_InputHook;
 
-void InputHookModule_Init(void);
-void InputHookModule_ShutDown(void);
+void InputHookSubsystem_Init(void);
+void InputHookSubsystem_ShutDown(void);
 
-void InputHookModule_AddHook(RayGE_InputSource source, int id, unsigned int modifierFlags, RayGE_InputHook hook);
-void InputHookModule_RemoveAllHooksForInput(RayGE_InputSource source, int id);
+void InputHookSubsystem_AddHook(RayGE_InputSource source, int id, unsigned int modifierFlags, RayGE_InputHook hook);
+void InputHookSubsystem_RemoveAllHooksForInput(RayGE_InputSource source, int id);
 
-// Expected to be called *after* input module has processed input.
-void InputHookModule_ProcessInput(void);
+// Expected to be called *after* input subsystem has processed input.
+void InputHookSubsystem_ProcessInput(void);

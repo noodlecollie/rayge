@@ -1,4 +1,4 @@
-#include "Modules/CommandModule.h"
+#include "EngineSubsystems/CommandSubsystem.h"
 #include "MemPool/MemPoolManager.h"
 #include "Logging/Logging.h"
 #include "Debugging.h"
@@ -7,22 +7,22 @@
 #define UTHASH_POOLED_MEMPOOL MEMPOOL_COMMANDS
 #include "UTUtils/UTHash_Pooled.h"
 
-struct CommandModule_CommandHandle
+struct CommandSubsystem_CommandHandle
 {
 	char* name;
-	CommandModule_Callback callback;
+	CommandSubsystem_Callback callback;
 	void* userData;
 	UT_hash_handle hh;
 };
 
 typedef struct CommandRegistry
 {
-	CommandModule_CommandHandle* commandHash;
+	CommandSubsystem_CommandHandle* commandHash;
 } CommandRegistry;
 
 static CommandRegistry* g_Registry = NULL;
 
-static void FreeCommandItem(CommandModule_CommandHandle* item)
+static void FreeCommandItem(CommandSubsystem_CommandHandle* item)
 {
 	if ( !item )
 	{
@@ -39,8 +39,8 @@ static void FreeCommandItem(CommandModule_CommandHandle* item)
 
 static void FreeAllCommandItems(CommandRegistry* registry)
 {
-	CommandModule_CommandHandle* item = NULL;
-	CommandModule_CommandHandle* tmp = NULL;
+	CommandSubsystem_CommandHandle* item = NULL;
+	CommandSubsystem_CommandHandle* tmp = NULL;
 
 	HASH_ITER(hh, registry->commandHash, item, tmp)
 	{
@@ -70,19 +70,19 @@ static char* TrimCommandName(const char* name)
 	return buffer;
 }
 
-static CommandModule_CommandHandle* FindCommandByName(CommandRegistry* registry, const char* name)
+static CommandSubsystem_CommandHandle* FindCommandByName(CommandRegistry* registry, const char* name)
 {
-	CommandModule_CommandHandle* item = NULL;
+	CommandSubsystem_CommandHandle* item = NULL;
 	HASH_FIND_STR(registry->commandHash, name, item);
 	return item;
 }
 
-static CommandModule_CommandHandle*
-AddCommand(CommandRegistry* registry, char* name, CommandModule_Callback callback, void* userData)
+static CommandSubsystem_CommandHandle*
+AddCommand(CommandRegistry* registry, char* name, CommandSubsystem_Callback callback, void* userData)
 {
 	Logging_PrintLine(RAYGE_LOG_TRACE, "Adding command: %s", name);
 
-	CommandModule_CommandHandle* item = MEMPOOL_CALLOC_STRUCT(MEMPOOL_COMMANDS, CommandModule_CommandHandle);
+	CommandSubsystem_CommandHandle* item = MEMPOOL_CALLOC_STRUCT(MEMPOOL_COMMANDS, CommandSubsystem_CommandHandle);
 	item->name = name;
 	item->callback = callback;
 	item->userData = userData;
@@ -92,7 +92,7 @@ AddCommand(CommandRegistry* registry, char* name, CommandModule_Callback callbac
 	return item;
 }
 
-void CommandModule_Init(void)
+void CommandSubsystem_Init(void)
 {
 	if ( g_Registry )
 	{
@@ -102,7 +102,7 @@ void CommandModule_Init(void)
 	g_Registry = MEMPOOL_CALLOC_STRUCT(MEMPOOL_COMMANDS, CommandRegistry);
 }
 
-void CommandModule_ShutDown(void)
+void CommandSubsystem_ShutDown(void)
 {
 	if ( !g_Registry )
 	{
@@ -115,8 +115,8 @@ void CommandModule_ShutDown(void)
 	g_Registry = NULL;
 }
 
-const CommandModule_CommandHandle*
-CommandModule_AddCommand(const char* name, CommandModule_Callback callback, void* userData)
+const CommandSubsystem_CommandHandle*
+CommandSubsystem_AddCommand(const char* name, CommandSubsystem_Callback callback, void* userData)
 {
 	RAYGE_ASSERT_VALID(g_Registry);
 
@@ -173,7 +173,7 @@ CommandModule_AddCommand(const char* name, CommandModule_Callback callback, void
 	return NULL;
 }
 
-const CommandModule_CommandHandle* CommandModule_FindCommand(const char* commandName)
+const CommandSubsystem_CommandHandle* CommandSubsystem_FindCommand(const char* commandName)
 {
 	RAYGE_ASSERT_VALID(g_Registry);
 
@@ -190,7 +190,7 @@ const CommandModule_CommandHandle* CommandModule_FindCommand(const char* command
 	return FindCommandByName(g_Registry, commandName);
 }
 
-void CommandModule_InvokeCommand(const CommandModule_CommandHandle* command)
+void CommandSubsystem_InvokeCommand(const CommandSubsystem_CommandHandle* command)
 {
 	RAYGE_ASSERT_VALID(g_Registry);
 

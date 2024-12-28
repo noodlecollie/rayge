@@ -37,6 +37,22 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Engine/Engine.c
 	src/Engine/EngineAPI.h
 	src/Engine/EngineAPI.c
+	src/EngineSubsystems/CommandSubsystem.h
+	src/EngineSubsystems/CommandSubsystem.c
+	src/EngineSubsystems/FilesystemSubsystem.h
+	src/EngineSubsystems/FilesystemSubsystem.c
+	src/EngineSubsystems/InputHookSubsystem.h
+	src/EngineSubsystems/InputHookSubsystem.c
+	src/EngineSubsystems/InputSubsystem.h
+	src/EngineSubsystems/InputSubsystem.c
+	src/EngineSubsystems/EngineSubsystemManager.h
+	src/EngineSubsystems/EngineSubsystemManager.c
+	src/EngineSubsystems/RendererSubsystem.h
+	src/EngineSubsystems/RendererSubsystem.c
+	src/EngineSubsystems/SceneSubsystem.h
+	src/EngineSubsystems/SceneSubsystem.c
+	src/EngineSubsystems/UISubsystem.h
+	src/EngineSubsystems/UISubsystem.c
 	src/Game/GameData.h
 	src/Game/GameData.c
 	src/Game/GameLoader.h
@@ -61,22 +77,6 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Logging/Logging.c
 	src/MemPool/MemPoolManager.h
 	src/MemPool/MemPoolManager.c
-	src/Modules/CommandModule.h
-	src/Modules/CommandModule.c
-	src/Modules/FilesystemModule.h
-	src/Modules/FilesystemModule.c
-	src/Modules/InputHookModule.h
-	src/Modules/InputHookModule.c
-	src/Modules/InputModule.h
-	src/Modules/InputModule.c
-	src/Modules/ModuleManager.h
-	src/Modules/ModuleManager.c
-	src/Modules/RendererModule.h
-	src/Modules/RendererModule.c
-	src/Modules/SceneModule.h
-	src/Modules/SceneModule.c
-	src/Modules/UIModule.h
-	src/Modules/UIModule.c
 	src/Rendering/RenderableAPI.h
 	src/Rendering/RenderableAPI.c
 	src/Rendering/RenderablePrimitives.h

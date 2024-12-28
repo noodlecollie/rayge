@@ -2,11 +2,11 @@
 #include "Engine/Engine.h"
 #include "Engine/EngineAPI.h"
 #include "Logging/Logging.h"
-#include "Modules/ModuleManager.h"
-#include "Modules/UIModule.h"
-#include "Modules/InputModule.h"
-#include "Modules/InputHookModule.h"
-#include "Modules/SceneModule.h"
+#include "EngineSubsystems/EngineSubsystemManager.h"
+#include "EngineSubsystems/UISubsystem.h"
+#include "EngineSubsystems/InputSubsystem.h"
+#include "EngineSubsystems/InputHookSubsystem.h"
+#include "EngineSubsystems/SceneSubsystem.h"
 #include "MemPool/MemPoolManager.h"
 #include "Hooks/HookManager.h"
 #include "Engine/EngineAPI.h"
@@ -18,7 +18,7 @@
 #include "wzl_cutl/memory.h"
 
 // TODO: Remove this once we move the rendering elsewhere
-#include "Modules/RendererModule.h"
+#include "EngineSubsystems/RendererSubsystem.h"
 #include "Rendering/Renderer.h"
 #include "raylib.h"
 #include "UI/TestUI.h"
@@ -95,7 +95,7 @@ static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 // TODO: Remove this once we move the rendering elsewhere
 static void VisualiseEntities(RayGE_Renderer* renderer)
 {
-	RayGE_Scene* scene = SceneModule_GetScene();
+	RayGE_Scene* scene = SceneSubsystem_GetScene();
 	RayGE_Entity* firstEnt = Scene_GetActiveEntity(scene, 0);
 
 	if ( firstEnt )
@@ -116,14 +116,14 @@ static void RunFrameInput(void)
 {
 	RAYGE_ENSURE_VALID(g_State == ENGINE_STATE_PROCESSING_INPUT);
 
-	InputModule_NewFrame();
-	InputModule_ProcessInput();
-	InputHookModule_ProcessInput();
+	InputSubsystem_NewFrame();
+	InputSubsystem_ProcessInput();
+	InputHookSubsystem_ProcessInput();
 
-	if ( UIModule_HasCurrentMenu() )
+	if ( UISubsystem_HasCurrentMenu() )
 	{
-		UIModule_ProcessInput();
-		UIModule_PollCurrentMenu();
+		UISubsystem_ProcessInput();
+		UISubsystem_PollCurrentMenu();
 	}
 }
 
@@ -131,7 +131,7 @@ static void RunFrameRender(void)
 {
 	RAYGE_ENSURE_VALID(g_State == ENGINE_STATE_RENDERING);
 
-	RayGE_Renderer* renderer = RendererModule_GetRenderer();
+	RayGE_Renderer* renderer = RendererSubsystem_GetRenderer();
 
 	// Frame setup
 	Renderer_SetBackgroundColour(renderer, BLACK);
@@ -142,7 +142,7 @@ static void RunFrameRender(void)
 	// TODO: Remove this once rendering is formalised more
 	VisualiseEntities(renderer);
 
-	UIModule_Draw();
+	UISubsystem_Draw();
 
 	// End rendering frame
 	Renderer_EndFrame(renderer);
@@ -154,7 +154,7 @@ static bool RunFrame(void)
 
 	g_State = ENGINE_STATE_PROCESSING_INPUT;
 
-	bool windowShouldClose = RendererModule_WindowCloseRequested();
+	bool windowShouldClose = RendererSubsystem_WindowCloseRequested();
 	RunFrameInput();
 
 	g_State = ENGINE_STATE_RENDERING;
@@ -187,7 +187,7 @@ void Engine_StartUp(void)
 	VerifyAllEngineAPIFunctionPointersAreValid();
 
 	MemPoolManager_Init();
-	ModuleManager_InitAll();
+	EngineSubsystemManager_InitAll();
 	HookManager_RegisterAll();
 
 	g_Initialised = true;
@@ -211,7 +211,7 @@ void Engine_ShutDown(void)
 	Logging_PrintLine(RAYGE_LOG_INFO, "RayGE engine shutting down.");
 
 	HookManager_UnregisterAll();
-	ModuleManager_ShutDownAll();
+	EngineSubsystemManager_ShutDownAll();
 	MemPoolManager_ShutDown();
 
 	Logging_ShutDown();

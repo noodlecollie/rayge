@@ -4,8 +4,8 @@
 #include "UI/SceneDebugUI.h"
 #include "Logging/Logging.h"
 #include "Nuklear/Nuklear.h"
-#include "Modules/RendererModule.h"
-#include "Modules/SceneModule.h"
+#include "EngineSubsystems/RendererSubsystem.h"
+#include "EngineSubsystems/SceneSubsystem.h"
 #include "UI/UIHelpers.h"
 #include "wzl_cutl/string.h"
 #include "raylib.h"
@@ -51,7 +51,7 @@ static uint64_t CheckDebugFlag(struct nk_context* context, const char* label, ui
 
 static void UpdateWindowState(WindowState* state)
 {
-	RayGE_Renderer* renderer = RendererModule_GetRenderer();
+	RayGE_Renderer* renderer = RendererSubsystem_GetRenderer();
 	Camera3D debugCamera = Renderer_GetDebugCamera3D(renderer);
 
 	state->doubleCameraFOV = debugCamera.fovy * 2.0f;
@@ -60,7 +60,7 @@ static void UpdateWindowState(WindowState* state)
 
 static void ApplyWindowState(WindowState* state)
 {
-	RayGE_Renderer* renderer = RendererModule_GetRenderer();
+	RayGE_Renderer* renderer = RendererSubsystem_GetRenderer();
 	Camera3D debugCamera = Renderer_GetDebugCamera3D(renderer);
 
 	debugCamera.fovy = state->doubleCameraFOV / 2.0f;
@@ -75,7 +75,7 @@ static void DrawFrameStatsGroup(struct nk_context* context)
 
 	if ( nk_group_begin_titled(context, "frame_state", "Frame Stats", UI_DEFAULT_GROUP_FLAGS) )
 	{
-		const RayGE_Scene* scene = SceneModule_GetScene();
+		const RayGE_Scene* scene = SceneSubsystem_GetScene();
 
 		const float ratios[] = {0.70f, 0.30f};
 		nk_layout_row(context, NK_DYNAMIC, UI_DEFAULT_ROW_HEIGHT, 2, ratios);
@@ -110,7 +110,7 @@ static void DrawRenderDebugFlagGroup(struct nk_context* context)
 
 	if ( nk_group_begin_titled(context, "render_debug_flags", "Render Debug Flags", UI_DEFAULT_GROUP_FLAGS) )
 	{
-		RayGE_Renderer* renderer = RendererModule_GetRenderer();
+		RayGE_Renderer* renderer = RendererSubsystem_GetRenderer();
 		uint64_t debugFlags = Renderer_GetDebugFlags(renderer);
 
 		nk_layout_row_dynamic(context, UI_DEFAULT_ROW_HEIGHT, 1);

@@ -1,5 +1,5 @@
 #include "Logging/Logging.h"
-#include "Modules/FilesystemModule.h"
+#include "EngineSubsystems/FilesystemSubsystem.h"
 #include "Launcher/LaunchParams.h"
 #include "Game/GameLoader.h"
 #include "Engine/EngineAPI.h"
@@ -12,7 +12,7 @@ static void* LoadGameLibrary(const RayGE_LaunchParams* params)
 	// TODO: Support loading from a specific directory if passed in params.
 	(void)params;
 
-	if ( FilesystemModule_DirectoryExists(DEFAULT_GAME_DIR) )
+	if ( FilesystemSubsystem_DirectoryExists(DEFAULT_GAME_DIR) )
 	{
 		return GameLoader_LoadLibraryFromDirectory(DEFAULT_GAME_DIR);
 	}

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "GameLoader.h"
-#include "Modules/FilesystemModule.h"
+#include "EngineSubsystems/FilesystemSubsystem.h"
 #include "Logging/Logging.h"
 #include "Engine/EngineAPI.h"
 #include "wzl_cutl/libloader.h"
@@ -12,11 +12,11 @@ static char* ComputeGameLibraryAbsolutePath(const char* dirPath)
 	const char* libPath = GameData_GetGameLibraryPath();
 	Logging_PrintLine(RAYGE_LOG_DEBUG, "Using game client library: %s", libPath);
 
-	FilesystemModule_Path libPathRelativeToJson;
+	FilesystemSubsystem_Path libPathRelativeToJson;
 	wzl_sprintf(libPathRelativeToJson, sizeof(libPathRelativeToJson), "%s/%s", dirPath, libPath);
 
 	char* absPath = (char*)malloc(FILESYSTEM_MAX_ABS_PATH);
-	FilesystemModule_MakeAbsolute(libPathRelativeToJson, absPath, FILESYSTEM_MAX_ABS_PATH);
+	FilesystemSubsystem_MakeAbsolute(libPathRelativeToJson, absPath, FILESYSTEM_MAX_ABS_PATH);
 
 	Logging_PrintLine(RAYGE_LOG_TRACE, "Absolute path to game client library: %s", absPath);
 	return absPath;
@@ -29,7 +29,7 @@ static void* LoadGameLibraryFromGameJSON(const char* dirPath)
 
 	do
 	{
-		FilesystemModule_Path gameJsonPath;
+		FilesystemSubsystem_Path gameJsonPath;
 		wzl_sprintf(gameJsonPath, sizeof(gameJsonPath), "%s/game.json", dirPath);
 
 		if ( !GameData_Load(gameJsonPath) )

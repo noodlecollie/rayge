@@ -2,7 +2,7 @@
 #include <string.h>
 #include "raylib.h"
 #include "RayGE/Platform.h"
-#include "Modules/FilesystemModule.h"
+#include "EngineSubsystems/FilesystemSubsystem.h"
 #include "MemPool/MemPoolManager.h"
 #include "Logging/Logging.h"
 #include "Debugging.h"
@@ -16,7 +16,7 @@
 #define PATH_SEP_CH '/'
 #endif
 
-static FilesystemModule_LongPath g_NativeApplicationDirectory;
+static FilesystemSubsystem_LongPath g_NativeApplicationDirectory;
 
 // TODO: Replace this with wzl_strdup once we've set up the allocators properly
 static char* StrDup(const char* str)
@@ -236,7 +236,7 @@ static char* AbsoluteNativePathToRelativePath(const char* absNativePath)
 	return relPath;
 }
 
-static void FreeEntryContents(FilesystemModule_PathEntry* entry)
+static void FreeEntryContents(FilesystemSubsystem_PathEntry* entry)
 {
 	if ( entry && entry->path )
 	{
@@ -244,31 +244,31 @@ static void FreeEntryContents(FilesystemModule_PathEntry* entry)
 	}
 }
 
-void FilesystemModule_Init(void)
+void FilesystemSubsystem_Init(void)
 {
 	// Nothing yet.
 	// Probably want to set up application directory here.
 }
 
-void FilesystemModule_ShutDown(void)
+void FilesystemSubsystem_ShutDown(void)
 {
 	// Nothing yet.
 }
 
-FilesystemModule_PathList* FilesystemModule_ListDirectory(const char* path)
+FilesystemSubsystem_PathList* FilesystemSubsystem_ListDirectory(const char* path)
 {
 	char* nativeAbsPath = RelativePathToAbsoluteNativePath(path);
 	FilePathList list = LoadDirectoryFiles(nativeAbsPath);
 	MEMPOOL_FREE(nativeAbsPath);
 
-	FilesystemModule_PathList* outList = MEMPOOL_CALLOC_STRUCT(MEMPOOL_FILESYSTEM, FilesystemModule_PathList);
+	FilesystemSubsystem_PathList* outList = MEMPOOL_CALLOC_STRUCT(MEMPOOL_FILESYSTEM, FilesystemSubsystem_PathList);
 
 	outList->count = (size_t)WZL_MAX(list.count, 0);
 
 	if ( outList->count > 0 )
 	{
-		outList->entries = (FilesystemModule_PathEntry*)
-			MEMPOOL_CALLOC(MEMPOOL_FILESYSTEM, outList->count, sizeof(FilesystemModule_PathEntry));
+		outList->entries = (FilesystemSubsystem_PathEntry*)
+			MEMPOOL_CALLOC(MEMPOOL_FILESYSTEM, outList->count, sizeof(FilesystemSubsystem_PathEntry));
 
 		for ( size_t index = 0; index < outList->count; ++index )
 		{
@@ -280,7 +280,7 @@ FilesystemModule_PathList* FilesystemModule_ListDirectory(const char* path)
 	return outList;
 }
 
-void FilesystemModule_FreePathList(FilesystemModule_PathList* list)
+void FilesystemSubsystem_FreePathList(FilesystemSubsystem_PathList* list)
 {
 	if ( !list )
 	{
@@ -296,7 +296,7 @@ void FilesystemModule_FreePathList(FilesystemModule_PathList* list)
 	MEMPOOL_FREE(list);
 }
 
-bool FilesystemModule_DirectoryExists(const char* path)
+bool FilesystemSubsystem_DirectoryExists(const char* path)
 {
 	char* nativePath = RelativePathToAbsoluteNativePath(path);
 	const bool exists = DirectoryExists(nativePath);
@@ -305,7 +305,7 @@ bool FilesystemModule_DirectoryExists(const char* path)
 	return exists;
 }
 
-uint8_t* FilesystemModule_LoadFileData(const char* path, size_t* size)
+uint8_t* FilesystemSubsystem_LoadFileData(const char* path, size_t* size)
 {
 	char* nativePath = RelativePathToAbsoluteNativePath(path);
 
@@ -322,7 +322,7 @@ uint8_t* FilesystemModule_LoadFileData(const char* path, size_t* size)
 	return data;
 }
 
-void FilesystemModule_UnloadFileData(uint8_t* data)
+void FilesystemSubsystem_UnloadFileData(uint8_t* data)
 {
 	if ( data )
 	{
@@ -330,7 +330,7 @@ void FilesystemModule_UnloadFileData(uint8_t* data)
 	}
 }
 
-bool FilesystemModule_MakeAbsolute(const char* relPath, char* outBuffer, size_t outBufferSize)
+bool FilesystemSubsystem_MakeAbsolute(const char* relPath, char* outBuffer, size_t outBufferSize)
 {
 	if ( !outBuffer || outBufferSize < 1 )
 	{
