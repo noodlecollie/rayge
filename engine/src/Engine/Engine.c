@@ -112,6 +112,11 @@ static void VisualiseEntities(RayGE_Renderer* renderer)
 	Renderer_DrawAllActiveEntitiesInScene3D(renderer);
 }
 
+static void RunFrameDeserialisation(void)
+{
+	// TODO
+}
+
 static void RunFrameInput(void)
 {
 	RAYGE_ENSURE_VALID(g_State == ENGINE_STATE_PROCESSING_INPUT);
@@ -125,6 +130,16 @@ static void RunFrameInput(void)
 		UISubsystem_ProcessInput();
 		UISubsystem_PollCurrentMenu();
 	}
+}
+
+static void RunFrameLogic(void)
+{
+	// TODO
+}
+
+static void RunFrameSimulation(void)
+{
+	// TODO
 }
 
 static void RunFrameRender(void)
@@ -148,17 +163,33 @@ static void RunFrameRender(void)
 	Renderer_EndFrame(renderer);
 }
 
+static void RunFrameSerialisation(void)
+{
+	// TODO
+}
+
 static bool RunFrame(void)
 {
 	RAYGE_ENSURE_VALID(g_State == ENGINE_STATE_INTER_FRAME);
 
-	g_State = ENGINE_STATE_PROCESSING_INPUT;
+	g_State = ENGINE_STATE_DESERIALISING;
+	RunFrameDeserialisation();
 
-	bool windowShouldClose = RendererSubsystem_WindowCloseRequested();
+	g_State = ENGINE_STATE_PROCESSING_INPUT;
+	const bool windowShouldClose = RendererSubsystem_IsWindowCloseRequested();
 	RunFrameInput();
+
+	g_State = ENGINE_STATE_PROCESSING_LOGIC;
+	RunFrameLogic();
+
+	g_State = ENGINE_STATE_SIMULATING;
+	RunFrameSimulation();
 
 	g_State = ENGINE_STATE_RENDERING;
 	RunFrameRender();
+
+	g_State = ENGINE_STATE_SERIALISING;
+	RunFrameSerialisation();
 
 	g_State = ENGINE_STATE_INTER_FRAME;
 	return windowShouldClose;

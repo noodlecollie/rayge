@@ -12,7 +12,7 @@ bool RendererSubsystem_IsInitialised(void);
 
 // The close request usually comes from the underlying platform,
 // eg. if someone has pressed the close button.
-bool RendererSubsystem_WindowCloseRequested(void);
+bool RendererSubsystem_IsWindowCloseRequested(void);
 
 RayGE_Renderer* RendererSubsystem_GetRenderer(void);
 Font RendererSubsystem_GetDefaultMonoFont(void);

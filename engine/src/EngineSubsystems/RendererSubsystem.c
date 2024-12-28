@@ -81,7 +81,7 @@ bool RendererSubsystem_IsInitialised(void)
 	return g_Data != NULL;
 }
 
-bool RendererSubsystem_WindowCloseRequested(void)
+bool RendererSubsystem_IsWindowCloseRequested(void)
 {
 	RAYGE_ASSERT_VALID(g_Data);
 	return g_Data && WindowShouldClose();
