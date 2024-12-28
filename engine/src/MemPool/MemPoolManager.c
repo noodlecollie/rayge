@@ -10,6 +10,12 @@
 #include "Debugging.h"
 #include "Utils.h"
 
+// Disable some seemingly buggy GCC warnings for this file,
+// since we will be doing some wacky things with pointers.
+#ifndef _MSC_VER
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+
 #define HEAD_SENTINEL_VALUE 0xF9A23BAD
 #define TAIL_SENTINEL_VALUE ~(HEAD_SENTINEL_VALUE)
 
