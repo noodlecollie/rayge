@@ -7,12 +7,15 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED YES)
 set(CMAKE_POSITION_INDEPENDENT_CODE YES)
 
-option(CMAKE_COMPILE_WARNING_AS_ERROR "If set, any compiler warnings are treated as errors." TRUE)
-option(RAYGE_INSTALL_SANITY_TEST "If set, a separate directory will be created under the install prefix for the sanity test game." FALSE)
-option(BUILD_TESTING "If set, builds tests for the engine" OFF)
+option(CMAKE_COMPILE_WARNING_AS_ERROR "If set, any compiler warnings are treated as errors." YES)
+option(RAYGE_INSTALL_SANITY_TEST "If set, a separate directory will be created under the install prefix for the sanity test game." NO)
+option(BUILD_TESTING "If set, builds tests for the engine" NO)
 
 # This must go here, so that it is configured before the later options are set up.
+set(OLD_WARNINGS_AS_ERRORS ${CMAKE_COMPILE_WARNING_AS_ERROR})
+set(CMAKE_COMPILE_WARNING_AS_ERROR NO)
 add_subdirectory(thirdparty)
+set(CMAKE_COMPILE_WARNING_AS_ERROR ${OLD_WARNINGS_AS_ERRORS})
 
 if(BUILD_TESTING)
 	enable_testing()

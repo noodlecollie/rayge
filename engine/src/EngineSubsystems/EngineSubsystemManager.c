@@ -54,9 +54,8 @@ void EngineSubsystemManager_ShutDownAll(void)
 		return;
 	}
 
-	const SubsystemInitAndShutdown* end = g_Subsystems - 1;
-
-	for ( const SubsystemInitAndShutdown* subsystem = g_Subsystems + RAYGE_ARRAY_SIZE(g_Subsystems) - 1; subsystem > end;
+	for ( const SubsystemInitAndShutdown* subsystem = g_Subsystems + RAYGE_ARRAY_SIZE(g_Subsystems) - 1;
+		  subsystem >= g_Subsystems;
 		  --subsystem )
 	{
 		if ( subsystem->ShutDown )
