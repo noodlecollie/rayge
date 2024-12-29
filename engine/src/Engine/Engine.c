@@ -7,6 +7,8 @@
 #include "EngineSubsystems/InputSubsystem.h"
 #include "EngineSubsystems/InputHookSubsystem.h"
 #include "EngineSubsystems/SceneSubsystem.h"
+#include "EngineSubsystems/RendererSubsystem.h"
+#include "BehaviouralSubsystems/BSysManager.h"
 #include "MemPool/MemPoolManager.h"
 #include "Hooks/HookManager.h"
 #include "Engine/EngineAPI.h"
@@ -16,12 +18,6 @@
 #include "Identity/Identity.h"
 #include "Debugging.h"
 #include "wzl_cutl/memory.h"
-
-// TODO: Remove this once we move the rendering elsewhere
-#include "EngineSubsystems/RendererSubsystem.h"
-#include "Rendering/Renderer.h"
-#include "raylib.h"
-#include "UI/TestUI.h"
 
 #define NUM_ENGINE_API_FUNCTIONS (sizeof(RayGE_Engine_API_Current) / sizeof(void*))
 
@@ -37,7 +33,6 @@ typedef union EngineAPIVerifyWrapper
 } EngineAPIVerifyWrapper;
 
 static bool g_Initialised = false;
-static RayGE_EngineState g_State = ENGINE_STATE_IDLE;
 
 static void* WzlMalloc(size_t size)
 {
@@ -92,35 +87,8 @@ static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 	}
 }
 
-// TODO: Remove this once we move the rendering elsewhere
-static void VisualiseEntities(RayGE_Renderer* renderer)
-{
-	RayGE_Scene* scene = SceneSubsystem_GetScene();
-	RayGE_Entity* firstEnt = Scene_GetActiveEntity(scene, 0);
-
-	if ( firstEnt )
-	{
-		RayGE_ComponentHeader* cmpHeader = Entity_GetFirstComponentOfType(firstEnt, RAYGE_COMPONENTTYPE_SPATIAL);
-
-		if ( cmpHeader )
-		{
-			COMPONENTDATA_SPATIAL(cmpHeader)->angles.yaw += 3.0f;
-		}
-	}
-
-	Renderer_SetDrawingMode3D(renderer, Renderer_GetDefaultCamera3D());
-	Renderer_DrawAllActiveEntitiesInScene3D(renderer);
-}
-
-static void RunFrameDeserialisation(void)
-{
-	// TODO
-}
-
 static void RunFrameInput(void)
 {
-	RAYGE_ENSURE_VALID(g_State == ENGINE_STATE_PROCESSING_INPUT);
-
 	InputSubsystem_NewFrame();
 	InputSubsystem_ProcessInput();
 	InputHookSubsystem_ProcessInput();
@@ -132,66 +100,17 @@ static void RunFrameInput(void)
 	}
 }
 
-static void RunFrameLogic(void)
-{
-	// TODO
-}
-
-static void RunFrameSimulation(void)
-{
-	// TODO
-}
-
-static void RunFrameRender(void)
-{
-	RAYGE_ENSURE_VALID(g_State == ENGINE_STATE_RENDERING);
-
-	RayGE_Renderer* renderer = RendererSubsystem_GetRenderer();
-
-	// Frame setup
-	Renderer_SetBackgroundColour(renderer, BLACK);
-
-	// Begin rendering frame
-	Renderer_BeginFrame(renderer);
-
-	// TODO: Remove this once rendering is formalised more
-	VisualiseEntities(renderer);
-
-	UISubsystem_Draw();
-
-	// End rendering frame
-	Renderer_EndFrame(renderer);
-}
-
-static void RunFrameSerialisation(void)
-{
-	// TODO
-}
-
 static bool RunFrame(void)
 {
-	RAYGE_ENSURE_VALID(g_State == ENGINE_STATE_INTER_FRAME);
-
-	g_State = ENGINE_STATE_DESERIALISING;
-	RunFrameDeserialisation();
-
-	g_State = ENGINE_STATE_PROCESSING_INPUT;
 	const bool windowShouldClose = RendererSubsystem_IsWindowCloseRequested();
+
+	BSysManager_Invoke(BSYS_STAGE_DESERIALISATION);
 	RunFrameInput();
+	BSysManager_Invoke(BSYS_STAGE_LOGIC);
+	BSysManager_Invoke(BSYS_STAGE_SIMULATION);
+	BSysManager_Invoke(BSYS_STAGE_RENDERING);
+	BSysManager_Invoke(BSYS_STAGE_SERIALISATION);
 
-	g_State = ENGINE_STATE_PROCESSING_LOGIC;
-	RunFrameLogic();
-
-	g_State = ENGINE_STATE_SIMULATING;
-	RunFrameSimulation();
-
-	g_State = ENGINE_STATE_RENDERING;
-	RunFrameRender();
-
-	g_State = ENGINE_STATE_SERIALISING;
-	RunFrameSerialisation();
-
-	g_State = ENGINE_STATE_INTER_FRAME;
 	return windowShouldClose;
 }
 
@@ -201,8 +120,6 @@ void Engine_StartUp(void)
 	{
 		return;
 	}
-
-	g_State = ENGINE_STATE_IDLE;
 
 	// Ensure the memory delegates are set up before we do anything else.
 	wzl_set_memory_delegates((wzl_memory_delegates) {
@@ -237,8 +154,6 @@ void Engine_ShutDown(void)
 		return;
 	}
 
-	g_State = ENGINE_STATE_IDLE;
-
 	Logging_PrintLine(RAYGE_LOG_INFO, "RayGE engine shutting down.");
 
 	HookManager_UnregisterAll();
@@ -252,10 +167,6 @@ void Engine_ShutDown(void)
 
 void Engine_RunToCompletion(void)
 {
-	RAYGE_ENSURE_VALID(g_State == ENGINE_STATE_IDLE);
-
-	g_State = ENGINE_STATE_INTER_FRAME;
-
 	// TODO: These callbacks should probably be elsewhere
 	INVOKE_CALLBACK(g_GameLibCallbacks.scene.SceneBegin);
 
@@ -267,13 +178,5 @@ void Engine_RunToCompletion(void)
 	}
 	while ( !windowShouldClose );
 
-	RAYGE_ENSURE_VALID(g_State == ENGINE_STATE_INTER_FRAME);
 	INVOKE_CALLBACK(g_GameLibCallbacks.scene.SceneEnd);
-
-	g_State = ENGINE_STATE_IDLE;
-}
-
-RayGE_EngineState Engine_GetCurrentState(void)
-{
-	return g_Initialised ? g_State : ENGINE_STATE_IDLE;
 }

@@ -14,7 +14,7 @@
 
 void RayGE_DebugBreak(void);
 
-static inline void RayGE_EnsureTrue(
+static inline void RayGE_CheckInvariant(
 	bool isFatal,
 	bool expression,
 	const char* expressionStr,
@@ -58,25 +58,29 @@ static inline void RayGE_EnsureTrue(
 	);
 }
 
-#define RAYGE_ENSURE_EX(isFatal, expr, ...) \
+#define RAYGE_CHECK_INVARIANT(isFatal, expr, ...) \
 	do \
 	{ \
 		bool exprResult = !!(expr); \
 		if ( !exprResult ) \
 		{ \
-			RayGE_EnsureTrue((isFatal), exprResult, (#expr), __FILE__, __LINE__, __func__, __VA_ARGS__); \
+			RayGE_CheckInvariant((isFatal), exprResult, (#expr), __FILE__, __LINE__, __func__, __VA_ARGS__); \
 		} \
 	} \
 	while ( false )
 
-#define RAYGE_ENSURE(expr, ...) RAYGE_ENSURE_EX(true, expr, __VA_ARGS__)
-#define RAYGE_ENSURE_VALID(expr) RAYGE_ENSURE_EX(true, expr, "Required state was not valid")
-#define RAYGE_EXPECT(expr, ...) RAYGE_ENSURE_EX(false, expr, __VA_ARGS__)
+// ENSURE macros are fatal if the condition fails.
+#define RAYGE_ENSURE(expr, ...) RAYGE_CHECK_INVARIANT(true, expr, __VA_ARGS__)
+#define RAYGE_ENSURE_VALID(expr) RAYGE_CHECK_INVARIANT(true, expr, "Required state was not valid")
 
+// EXPECT macros are non-fatal and print an error.
+#define RAYGE_EXPECT(expr, ...) RAYGE_CHECK_INVARIANT(false, expr, __VA_ARGS__)
+
+// FATAL macros always halt execution if they are hit.
 #define RAYGE_FATAL_EX(condition, ...) \
 	do \
 	{ \
-		RayGE_EnsureTrue(true, false, condition, __FILE__, __LINE__, __func__, __VA_ARGS__); \
+		RayGE_CheckInvariant(true, false, condition, __FILE__, __LINE__, __func__, __VA_ARGS__); \
 	} \
 	while ( false )
 
@@ -84,13 +88,15 @@ static inline void RayGE_EnsureTrue(
 
 // Only active in debug builds:
 #if RAYGE_DEBUG()
+// ENSURES in debug, does nothing in release
 #define RAYGE_ASSERT(expr, ...) RAYGE_ENSURE(expr, __VA_ARGS__)
-#define RAYGE_ASSERT_EXPECT(expr, ...) RAYGE_ASSERT(expr, __VA_ARGS__)
 #define RAYGE_ASSERT_VALID(expr) RAYGE_ENSURE_VALID(expr)
 #define RAYGE_ASSERT_UNREACHABLE(...) RAYGE_FATAL_EX("<Encountered Unreachable Code>", __VA_ARGS__)
+// ENSURES in debug, EXPECTS in release
+#define RAYGE_ASSERT_EXPECT(expr, ...) RAYGE_ASSERT(expr, __VA_ARGS__)
 #else
 #define RAYGE_ASSERT(expr, ...)
-#define RAYGE_ASSERT_EXPECT(expr, ...) RAYGE_EXPECT(expr, __VA_ARGS__)
 #define RAYGE_ASSERT_VALID(expr)
 #define RAYGE_ASSERT_UNREACHABLE(...)
+#define RAYGE_ASSERT_EXPECT(expr, ...) RAYGE_EXPECT(expr, __VA_ARGS__)
 #endif

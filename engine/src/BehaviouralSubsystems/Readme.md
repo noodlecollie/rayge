@@ -1,0 +1,3 @@
+Behavioural subsystems (or `BSys`) are sytems within the engine which provide some functionality within the engine, and which expose this to entities via a component. If an entity wishes to use a particular set of behaviour, it can add the relevant component to itself. Covnersely, if an entity does not have a component for a particular subsystem, that subsystem will not act upon it.
+
+A good way of thinking about this is considering physically simulated entities. If an entity wants physics simulation, it should add the physics component to itself. Only entities which have a physics component attached will take part in physics simulations.

@@ -29,6 +29,12 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	include/RayGE/Private/InterfaceUtils.h
 	include/RayGE/Private/Launcher.h
 
+	src/BehaviouralSubsystems/BSysManager.h
+	src/BehaviouralSubsystems/BSysManager.c
+	src/BehaviouralSubsystems/RenderableBSys.h
+	src/BehaviouralSubsystems/RenderableBSys.c
+	src/BehaviouralSubsystems/SpatialBSys.h
+	src/BehaviouralSubsystems/SpatialBSys.c
 	src/BinaryResources/DMMono_Regular.h
 	src/BinaryResources/DMMono_Regular.c
 	src/BinaryResources/OpenSans_Medium.h
