@@ -47,7 +47,7 @@ jobs:
         build-dir: ${{runner.workspace}}/build
         build-type: MinSizeRel
         target: all
-        configure-options: "-DCMAKE_TOOLCHAIN_FILE=${{runner.workspace}}/rayge/cmake/toolchains/zig-toolchain-x86_64-linux-gnu.cmake"
+        configure-options: "-DCMAKE_TOOLCHAIN_FILE=${{runner.workspace}}/rayge/cmake/zig-cmake-toolchains/zig-toolchain-x86_64-linux-gnu.cmake"
 
   build-windows:
     name: Build on Windows
