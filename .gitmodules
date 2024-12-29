@@ -19,3 +19,6 @@
 [submodule "thirdparty/cwalk-1.2.9/cwalk-1.2.9"]
 	path = thirdparty/cwalk-1.2.9/cwalk-1.2.9
 	url = https://github.com/likle/cwalk.git
+[submodule "cmake/zig-cmake-toolchains"]
+	path = cmake/zig-cmake-toolchains
+	url = https://github.com/starofrainnight/zig-cmake-toolchains.git
