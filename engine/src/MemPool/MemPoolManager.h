@@ -15,6 +15,7 @@ typedef enum MemPool_Category
 	MEMPOOL_HOOKS,
 	MEMPOOL_FILESYSTEM,
 	MEMPOOL_WZL_CUTL,
+	MEMPOOL_LOGGING,
 
 	MEMPOOL__COUNT
 } MemPool_Category;

@@ -5,9 +5,6 @@
 #include <stddef.h>
 #include "RayGE/APIs/Logging.h"
 
-// Including the null terminator
-#define LOG_MESSAGE_MAX_LENGTH 512
-
 void Logging_Init(void);
 void Logging_ShutDown(void);
 void Logging_SetLogLevel(RayGE_Log_Level level);

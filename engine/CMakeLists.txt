@@ -79,6 +79,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Launcher/Launcher.c
 	src/Launcher/LaunchParams.h
 	src/Launcher/LaunchParams.c
+	src/Logging/LogBackingBuffer.h
+	src/Logging/LogBackingBuffer.c
 	src/Logging/Logging.h
 	src/Logging/Logging.c
 	src/MemPool/MemPoolManager.h
