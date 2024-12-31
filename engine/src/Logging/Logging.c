@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
-#include <time.h>
 #include "RayGE/APIs/Logging.h"
 #include "RayGE/Private/Launcher.h"
 #include "Logging/Logging.h"
