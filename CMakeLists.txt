@@ -31,6 +31,8 @@ include(rayge_utilities)
 # targets can make use of them.
 declare_dependent_file("${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib-5.0/raylib-5.0/src/raymath.h" RAYMATH_HEADER_PATH)
 
+get_raylib_graphics_type(RAYGE_GRAPHICS_TYPE)
+
 set(VCS_COMMIT_ID "notset")
 set(VCS_TAG_ID "notset")
 
