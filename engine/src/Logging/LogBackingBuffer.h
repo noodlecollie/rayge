@@ -22,3 +22,7 @@ const char* LogBackingBuffer_Begin(const LogBackingBuffer* buffer);
 
 // Number of characters in the printable string, not including the null terminator.
 size_t LogBackingBuffer_StringLength(const LogBackingBuffer* buffer);
+
+// Max number of characters that the printable string can be, including the null terminator.
+// This is based on the max capacity and double-buffering.
+size_t LogBackingBuffer_MaxStringLength(const LogBackingBuffer* buffer);

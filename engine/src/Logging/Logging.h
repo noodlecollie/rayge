@@ -20,6 +20,17 @@ const char* Logging_GetLogBufferBase(void);
 // Use with caution.
 size_t Logging_GetLogBufferTotalMessageLength(void);
 
+// This is the max length a printable string can be,
+// and the maximum value that may be returned
+// by Logging_GetLogBufferTotalMessageLength(). It
+// does not include the null terminator.
+size_t Logging_GetLogBufferMaxMessageLength(void);
+
+// Returns the value of the log counter, which is incremented each time
+// a message is logged. This is useful for knowing when the log buffer
+// contents have changed.
+size_t Logging_GetLogCounter(void);
+
 static inline void Logging_PrintLine(RayGE_Log_Level level, const char* format, ...)
 {
 	va_list args;

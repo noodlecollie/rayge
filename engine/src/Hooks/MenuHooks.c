@@ -7,6 +7,7 @@
 #include "Input/KeyboardModifiers.h"
 #include "UI/SceneDebugUI.h"
 #include "UI/TestUI.h"
+#include "UI/DeveloperConsole.h"
 #include "Debugging.h"
 #include "wzl_cutl/string.h"
 #include "utlist.h"
@@ -116,13 +117,14 @@ static void RegisterMenuWithModifiers(int key, unsigned int modifierFlags, const
 	InputHookSubsystem_AddHook(INPUT_SOURCE_KEYBOARD, key, modifierFlags, hook);
 }
 
-// static void RegisterMenu(int key, const char* name, const RayGE_UIMenu* menu)
-// {
-// 	RegisterMenuWithModifiers(key, KEYMOD_NONE, name, menu);
-// }
+static void RegisterMenu(int key, const char* name, const RayGE_UIMenu* menu)
+{
+	RegisterMenuWithModifiers(key, KEYMOD_NONE, name, menu);
+}
 
 static void RegisterMenus(void)
 {
+	RegisterMenu(KEY_GRAVE, "menu_developerconsole", &Menu_DeveloperConsole);
 	RegisterMenuWithModifiers(KEY_GRAVE, KEYMOD_CTRL, "menu_debug", &Menu_SceneDebugUI);
 
 	// Menus which are not bound to specific keys, but can be shown by executing commands manually:

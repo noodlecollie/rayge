@@ -6,6 +6,7 @@ struct LogBackingBuffer
 {
 	char* base;
 	size_t lengthInBytes;
+	size_t maxStringLength;  // Not including terminator
 
 	char* primaryStringBegin;
 	size_t primaryStringLength;  // Not including terminator
@@ -92,6 +93,7 @@ LogBackingBuffer* LogBackingBuffer_Create(size_t maxCapacityInBytes)
 	LogBackingBuffer* buffer = MEMPOOL_CALLOC_STRUCT(MEMPOOL_LOGGING, LogBackingBuffer);
 
 	buffer->lengthInBytes = maxCapacityInBytes;
+	buffer->maxStringLength = (maxCapacityInBytes / 2) - 1;
 	buffer->base = MEMPOOL_MALLOC(MEMPOOL_LOGGING, buffer->lengthInBytes);
 	buffer->base[0] = '\0';
 	buffer->primaryStringBegin = buffer->base;
@@ -169,6 +171,7 @@ const char* LogBackingBuffer_Append(LogBackingBuffer* buffer, const char* string
 		if ( nextLineBegin )
 		{
 			// Move the beginning of the primary string to start here.
+			buffer->primaryStringLength -= nextLineBegin - buffer->primaryStringBegin;
 			buffer->primaryStringBegin = nextLineBegin;
 		}
 		else
@@ -188,6 +191,11 @@ const char* LogBackingBuffer_Append(LogBackingBuffer* buffer, const char* string
 		PromoteSecondaryString(buffer);
 	}
 
+	RAYGE_ASSERT(
+		buffer->primaryStringLength <= buffer->maxStringLength,
+		"String exceeded max allowed length"
+	);
+
 	return buffer->primaryStringBegin;
 }
 
@@ -203,4 +211,11 @@ size_t LogBackingBuffer_StringLength(const LogBackingBuffer* buffer)
 	RAYGE_ASSERT_VALID(buffer);
 
 	return buffer ? buffer->primaryStringLength : 0;
+}
+
+size_t LogBackingBuffer_MaxStringLength(const LogBackingBuffer* buffer)
+{
+	RAYGE_ASSERT_VALID(buffer);
+
+	return buffer ? buffer->maxStringLength : 0;
 }

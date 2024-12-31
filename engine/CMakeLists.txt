@@ -101,6 +101,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Scene/Scene.c
 	src/Scene/SceneAPI.h
 	src/Scene/SceneAPI.c
+	src/UI/DeveloperConsole.h
+	src/UI/DeveloperConsole.c
 	src/UI/SceneDebugUI.h
 	src/UI/SceneDebugUI.c
 	src/UI/TestUI.h
