@@ -5,6 +5,7 @@ add_subdirectory(wzl-cutl)
 add_subdirectory(cargs-1.1.0)
 add_subdirectory(debugbreak-1.0)
 add_subdirectory(nuklear-4.12.0)
+add_subdirectory(imgui-1.91.6)
 add_subdirectory(uthash-2.3.0)
 
 if(BUILD_TESTING)
