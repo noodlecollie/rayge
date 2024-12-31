@@ -22,3 +22,6 @@
 [submodule "cmake/zig-cmake-toolchains"]
 	path = cmake/zig-cmake-toolchains
 	url = https://github.com/starofrainnight/zig-cmake-toolchains.git
+[submodule "thirdparty/imgui-1.91.6/imgui-1.91.6"]
+	path = thirdparty/imgui-1.91.6/imgui-1.91.6
+	url = https://github.com/ocornut/imgui.git
