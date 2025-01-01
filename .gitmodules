@@ -22,9 +22,9 @@
 [submodule "cmake/zig-cmake-toolchains"]
 	path = cmake/zig-cmake-toolchains
 	url = https://github.com/starofrainnight/zig-cmake-toolchains.git
-[submodule "thirdparty/imgui-1.91.6/imgui-1.91.6"]
-	path = thirdparty/imgui-1.91.6/imgui-1.91.6
-	url = https://github.com/ocornut/imgui.git
 [submodule "thirdparty/rlImGui-583d4fe/rlImGui-583d4fe"]
 	path = thirdparty/rlImGui-583d4fe/rlImGui-583d4fe
 	url = https://github.com/raylib-extras/rlImGui.git
+[submodule "thirdparty/cimgui-1.53.1/cimgui-1.53.1"]
+	path = thirdparty/cimgui-1.53.1/cimgui-1.53.1
+	url = https://github.com/cimgui/cimgui.git

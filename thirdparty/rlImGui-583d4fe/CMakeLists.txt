@@ -14,7 +14,7 @@ target_include_directories(rlImGui PUBLIC
 target_link_libraries(rlImGui
 	PUBLIC
 	raylib
-	imgui
+	cimgui
 
 	PRIVATE
 	$<$<PLATFORM_ID:Linux>:pthread>
