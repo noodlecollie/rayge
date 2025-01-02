@@ -150,6 +150,7 @@ target_link_libraries(${TARGETNAME_ENGINE}
 	debugbreak
 	nuklear
 	ut-utils
+	rlImGui
 )
 
 target_compile_definitions(${TARGETNAME_ENGINE}

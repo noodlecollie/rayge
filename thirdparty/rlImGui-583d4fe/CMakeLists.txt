@@ -1,15 +1,17 @@
+# These files are just copied into this directory,
+# because until https://github.com/raylib-extras/rlImGui/pull/84
+# is in, we need to fix their code for them.
+
 project(rlImGui LANGUAGES CXX)
 
 add_library(rlImGui STATIC
-	rlImGui-583d4fe/imgui_impl_raylib.h
-	rlImGui-583d4fe/rlImGui.cpp
-	rlImGui-583d4fe/rlImGui.h
-	rlImGui-583d4fe/rlImGuiColors.h
+	imgui_impl_raylib.h
+	rlImGui.cpp
+	rlImGui.h
+	rlImGuiColors.h
 )
 
-target_include_directories(rlImGui PUBLIC
-	rlImGui-583d4fe
-)
+target_include_directories(rlImGui PUBLIC .)
 
 target_link_libraries(rlImGui
 	PUBLIC
@@ -29,6 +31,7 @@ target_link_libraries(rlImGui
 target_compile_definitions(rlImGui
 	PUBLIC
 	NO_FONT_AWESOME
+	CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 	$<$<PLATFORM_ID:Windows>:_WIN32>
 
 	PRIVATE
