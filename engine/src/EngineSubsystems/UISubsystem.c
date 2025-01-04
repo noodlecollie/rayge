@@ -2,8 +2,10 @@
 #include "MemPool/MemPoolManager.h"
 #include "EngineSubsystems/RendererSubsystem.h"
 #include "Debugging.h"
+#include "cimgui.h"
 #include "raylib.h"
 #include "Nuklear/Nuklear.h"
+#include "Integrations/ImGuiBackend.h"
 
 typedef struct Data
 {
@@ -49,6 +51,9 @@ void UISubsystem_Init(void)
 	g_Data.nkContext = InitNuklearEx(RendererSubsystem_GetDefaultUIFont(), RENDERERMODULE_DEFAULT_FONT_SIZE);
 	RAYGE_ENSURE(g_Data.nkContext, "Unable to create Nuklear context");
 
+	ImGui_ImplRaylib_Init();
+	ImGui_ImplRaylib_BuildFontAtlas();
+
 	g_Initialised = true;
 }
 
@@ -58,6 +63,8 @@ void UISubsystem_ShutDown(void)
 	{
 		return;
 	}
+
+	ImGui_ImplRaylib_Shutdown();
 
 	UnloadNuklear(g_Data.nkContext);
 	memset(&g_Data, 0, sizeof(g_Data));
@@ -150,6 +157,7 @@ void UISubsystem_ProcessInput(void)
 	}
 
 	UpdateNuklear(g_Data.nkContext);
+	ImGui_ImplRaylib_ProcessEvents();
 }
 
 void UISubsystem_Draw(void)
@@ -172,4 +180,8 @@ void UISubsystem_Draw(void)
 
 	Renderer_SetDrawingModeDirect(renderer);
 	DrawNuklear(g_Data.nkContext);
+
+	ImGui_ImplRaylib_NewFrame();
+	igShowDemoWindow(NULL);
+	ImGui_ImplRaylib_Render();
 }

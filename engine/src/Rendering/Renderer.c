@@ -625,7 +625,15 @@ void Renderer_DirectDrawImGui(RayGE_Renderer* renderer)
 	}
 
 	ImGuiIO* io = igGetIO();
+	RAYGE_ASSERT_VALID(io);
+
 	ImDrawData* drawData = igGetDrawData();
+	RAYGE_ASSERT_VALID(drawData);
+
+	if ( !io || !drawData )
+	{
+		return;
+	}
 
 	rlDrawRenderBatchActive();
 	rlDisableBackfaceCulling();
@@ -646,7 +654,8 @@ void Renderer_DirectDrawImGui(RayGE_Renderer* renderer)
 		batch.indexCount = (size_t)commandList->IdxBuffer.Size;
 		batch.vertexCount = (size_t)commandList->VtxBuffer.Size;
 
-		Renderer_RawVertex2D* vertices = (Renderer_RawVertex2D*)MEMPOOL_MALLOC(MEMPOOL_RENDERER, batch.vertexCount);
+		Renderer_RawVertex2D* vertices =
+			(Renderer_RawVertex2D*)MEMPOOL_MALLOC(MEMPOOL_RENDERER, batch.vertexCount * sizeof(Renderer_RawVertex2D));
 
 		for ( size_t vIndex = 0; vIndex < batch.vertexCount; ++vIndex )
 		{

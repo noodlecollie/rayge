@@ -54,7 +54,10 @@ static void Invoke(BSys_Stage stage)
 	// TODO: Remove this once rendering is formalised more
 	VisualiseEntities(renderer);
 
-	UISubsystem_Draw();
+	if ( UISubsystem_HasCurrentMenu() )
+	{
+		UISubsystem_Draw();
+	}
 
 	// End rendering frame
 	Renderer_EndFrame(renderer);

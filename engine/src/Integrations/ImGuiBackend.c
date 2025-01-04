@@ -15,6 +15,8 @@
 
 typedef struct Data
 {
+	ImGuiContext* context;
+
 	bool lastFrameFocused;
 	bool lastControlPressed;
 	bool lastShiftPressed;
@@ -472,12 +474,21 @@ void ImGui_ImplRaylib_Init(void)
 
 	memset(&g_Data, 0, sizeof(g_Data));
 
+	g_Data.context = igCreateContext(NULL);
+	igSetCurrentContext(g_Data.context);
+
 	g_Data.lastFrameFocused = IsWindowFocused();
 	g_Data.currentMouseCursor = ImGuiMouseCursor_COUNT;
+
+	ImGuiIO* io = igGetIO();
+	RAYGE_ASSERT_VALID(io);
+	ImFontAtlas_AddFontDefault(io->Fonts, NULL);
+	igStyleColorsDark(NULL);
 
 	SetUpKeyMap(&g_Data);
 	SetUpCursorMap(&g_Data);
 	SetUpBackend();
+	ReloadFonts(&g_Data);
 
 	g_Initialised = true;
 }
@@ -521,6 +532,7 @@ void ImGui_ImplRaylib_NewFrame(void)
 	}
 
 	UpdateImGuiIOValuesOnFrameBegin(&g_Data, GetFrameTime());
+	igNewFrame();
 }
 
 void ImGui_ImplRaylib_ProcessEvents(void)
@@ -543,6 +555,8 @@ void ImGui_ImplRaylib_Render(void)
 	{
 		return;
 	}
+
+	igRender();
 
 	RayGE_Renderer* renderer = RendererSubsystem_GetRenderer();
 	Renderer_SetDrawingModeDirect(renderer);
