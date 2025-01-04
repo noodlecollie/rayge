@@ -1,3 +1,5 @@
+project(rayge_engine LANGUAGES C)
+
 add_library(${TARGETNAME_ENGINE} SHARED)
 
 set_target_properties(${TARGETNAME_ENGINE} PROPERTIES OUTPUT_NAME_DEBUG "${TARGETNAME_ENGINE}-debug")
@@ -74,6 +76,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Input/InputBufferKeyboard.h
 	src/Input/InputBufferKeyboard.c
 	src/Input/KeyboardModifiers.h
+	src/Integrations/ImGuiBackend.h
+	src/Integrations/ImGuiBackend.c
 	src/JSON/JSONUtils.h
 	src/JSON/JSONUtils.c
 	src/Launcher/Launcher.c

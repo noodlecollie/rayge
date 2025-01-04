@@ -1,5 +1,7 @@
 #include <stdarg.h>
+#include <limits.h>
 #include "Rendering/Renderer.h"
+#include "RayGE/External/raymath.h"
 #include "Rendering/RenderablePrimitives.h"
 #include "EngineSubsystems/RendererSubsystem.h"
 #include "MemPool/MemPoolManager.h"
@@ -9,6 +11,9 @@
 #include "ResourceManagement/ResourceHandleUtils.h"
 #include "Conversions.h"
 #include "Debugging.h"
+#include "raylib.h"
+#include "rlgl.h"
+#include "cimgui.h"
 
 #define DBG_LOCATION_MARKER_RADIUS 4.0f
 #define MAX_DEV_TEXT_LENGTH 256
@@ -147,6 +152,13 @@ static void TransitionToDrawMode(RayGE_Renderer* renderer, DrawMode mode)
 			}
 		}
 	}
+}
+
+static void DrawRawVertex2D(const Renderer_RawVertex2D* vertex)
+{
+	rlColor4ub(vertex->col.r, vertex->col.g, vertex->col.b, vertex->col.a);
+	rlTexCoord2f(vertex->uv.x, vertex->uv.y);
+	rlVertex2f(vertex->pos.x, vertex->pos.y);
 }
 
 static void DrawEntityLocation(RayGE_Entity* entity)
@@ -571,7 +583,7 @@ void Renderer_DrawAllActiveEntitiesInScene3D(RayGE_Renderer* renderer)
 	}
 }
 
-void Renderer_DrawTextDev(RayGE_Renderer* renderer, int posX, int posY, Color color, const char* text)
+void Renderer_DirectDrawTextDev(RayGE_Renderer* renderer, int posX, int posY, Color color, const char* text)
 {
 	if ( !VerifyInDrawMode(renderer, DRAWMODE_DIRECT) )
 	{
@@ -588,7 +600,7 @@ void Renderer_DrawTextDev(RayGE_Renderer* renderer, int posX, int posY, Color co
 	);
 }
 
-void Renderer_FormatTextDev(RayGE_Renderer* renderer, int posX, int posY, Color color, const char* format, ...)
+void Renderer_DirectFormatTextDev(RayGE_Renderer* renderer, int posX, int posY, Color color, const char* format, ...)
 {
 	if ( !VerifyInDrawMode(renderer, DRAWMODE_DIRECT) )
 	{
@@ -602,5 +614,165 @@ void Renderer_FormatTextDev(RayGE_Renderer* renderer, int posX, int posY, Color 
 	wzl_vsprintf(buffer, sizeof(buffer), format, args);
 	va_end(args);
 
-	Renderer_DrawTextDev(renderer, posX, posY, color, buffer);
+	Renderer_DirectDrawTextDev(renderer, posX, posY, color, buffer);
+}
+
+void Renderer_DirectDrawImGui(RayGE_Renderer* renderer)
+{
+	if ( !VerifyInDrawMode(renderer, DRAWMODE_DIRECT) )
+	{
+		return;
+	}
+
+	ImGuiIO* io = igGetIO();
+	ImDrawData* drawData = igGetDrawData();
+
+	rlDrawRenderBatchActive();
+	rlDisableBackfaceCulling();
+
+	for ( int cmdListIndex = 0; cmdListIndex < drawData->CmdLists.Size; ++cmdListIndex )
+	{
+		const ImDrawList* commandList = drawData->CmdLists.Data[cmdListIndex];
+
+		if ( commandList->VtxBuffer.Size < 1 || commandList->IdxBuffer.Size < 1 )
+		{
+			continue;
+		}
+
+		Renderer_RawBatch2D batch;
+		memset(&batch, 0, sizeof(batch));
+
+		batch.indices = commandList->IdxBuffer.Data;
+		batch.indexCount = (size_t)commandList->IdxBuffer.Size;
+		batch.vertexCount = (size_t)commandList->VtxBuffer.Size;
+
+		Renderer_RawVertex2D* vertices = (Renderer_RawVertex2D*)MEMPOOL_MALLOC(MEMPOOL_RENDERER, batch.vertexCount);
+
+		for ( size_t vIndex = 0; vIndex < batch.vertexCount; ++vIndex )
+		{
+			const ImDrawVert* vSrc = commandList->VtxBuffer.Data;
+			Renderer_RawVertex2D* vDest = &vertices[vIndex];
+
+			vDest->col.r = vSrc->col & 0xFF000000;
+			vDest->col.g = vSrc->col & 0x00FF0000;
+			vDest->col.b = vSrc->col & 0x0000FF00;
+			vDest->col.a = vSrc->col & 0x000000FF;
+
+			vDest->pos = (Vector2) {vSrc->pos.x, vSrc->pos.y};
+			vDest->uv = (Vector2) {vSrc->uv.x, vSrc->uv.y};
+		}
+
+		batch.vertices = vertices;
+
+		for ( int cmdBufferIndex = 0; cmdBufferIndex < commandList->CmdBuffer.Size; ++cmdBufferIndex )
+		{
+			const ImDrawCmd* cmd = &commandList->CmdBuffer.Data[cmdBufferIndex];
+
+			const Rectangle clipRect = {
+				cmd->ClipRect.x - drawData->DisplayPos.x,
+				cmd->ClipRect.y - drawData->DisplayPos.y,
+				cmd->ClipRect.z - (cmd->ClipRect.x - drawData->DisplayPos.x),
+				cmd->ClipRect.w - (cmd->ClipRect.y - drawData->DisplayPos.y)
+			};
+
+			rlEnableScissorTest();
+
+			Vector2 scale = {io->DisplayFramebufferScale.x, io->DisplayFramebufferScale.y};
+
+#if !defined(__APPLE__)
+			if ( !IsWindowState(FLAG_WINDOW_HIGHDPI) )
+			{
+				scale.x = 1;
+				scale.y = 1;
+			}
+#endif
+
+			rlScissor(
+				(int)(clipRect.x * scale.x),
+				(int)((io->DisplaySize.y - (int)(clipRect.y + clipRect.height)) * scale.y),
+				(int)(clipRect.width * scale.x),
+				(int)(clipRect.height * scale.y)
+			);
+
+			if ( cmd->UserCallback )
+			{
+				cmd->UserCallback(commandList, cmd);
+				continue;
+			}
+
+			batch.textureID = cmd->TextureId;
+			Renderer_DirectDrawTriangles2D(renderer, &batch, cmd->IdxOffset, cmd->ElemCount);
+
+			rlDrawRenderBatchActive();
+		}
+
+		MEMPOOL_FREE(vertices);
+	}
+
+	rlSetTexture(0);
+	rlDisableScissorTest();
+	rlEnableBackfaceCulling();
+}
+
+void Renderer_DirectDrawTriangles2D(
+	RayGE_Renderer* renderer,
+	const Renderer_RawBatch2D* batch,
+	size_t indexOffset,
+	size_t indexCount
+)
+{
+	if ( !VerifyInDrawMode(renderer, DRAWMODE_DIRECT) )
+	{
+		return;
+	}
+
+	RAYGE_ASSERT_VALID(batch);
+	RAYGE_ASSERT(batch->vertices && batch->vertexCount > 0, "No vertices were provided");
+	RAYGE_ASSERT(batch->indices && batch->indexCount > 0, "No indices were provided");
+
+	if ( !batch || !batch->vertices || batch->vertexCount < 1 || !batch->indices || batch->indexCount < 1 )
+	{
+		return;
+	}
+
+	if ( indexOffset >= batch->indexCount )
+	{
+		// Nothing to draw.
+		return;
+	}
+
+	if ( indexCount < 1 || indexCount > batch->indexCount )
+	{
+		indexCount = batch->indexCount;
+	}
+
+	const size_t triangleCount = indexCount / 3;
+
+	if ( triangleCount < 1 )
+	{
+		// Nothing to draw.
+		return;
+	}
+
+	rlBegin(RL_TRIANGLES);
+	rlSetTexture(batch->textureID);
+
+	for ( size_t triIndex = 0; triIndex < triangleCount; ++triIndex )
+	{
+		Renderer_Index indexA = batch->indices[(3 * triIndex) + indexOffset];
+		Renderer_Index indexB = batch->indices[(3 * triIndex) + indexOffset + 1];
+		Renderer_Index indexC = batch->indices[(3 * triIndex) + indexOffset + 2];
+
+		if ( indexA >= batch->vertexCount || indexB >= batch->vertexCount || indexC >= batch->vertexCount )
+		{
+			RAYGE_ASSERT(false, "One or more indices were out of range of the vertex buffer");
+			continue;
+		}
+
+		DrawRawVertex2D(&batch->vertices[indexA]);
+		DrawRawVertex2D(&batch->vertices[indexB]);
+		DrawRawVertex2D(&batch->vertices[indexC]);
+	}
+
+	rlEnd();
 }
