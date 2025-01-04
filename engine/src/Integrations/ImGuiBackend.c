@@ -556,6 +556,7 @@ void ImGui_ImplRaylib_Render(void)
 		return;
 	}
 
+	// Must always be called, or Renderer_DirectDrawImGui() may fail.
 	igRender();
 
 	RayGE_Renderer* renderer = RendererSubsystem_GetRenderer();

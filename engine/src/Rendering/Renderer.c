@@ -628,7 +628,7 @@ void Renderer_DirectDrawImGui(RayGE_Renderer* renderer)
 	RAYGE_ASSERT_VALID(io);
 
 	ImDrawData* drawData = igGetDrawData();
-	RAYGE_ASSERT_VALID(drawData);
+	RAYGE_ASSERT(drawData, "Null draw data received from ImGui - did you call igRender()?");
 
 	if ( !io || !drawData )
 	{
@@ -659,13 +659,13 @@ void Renderer_DirectDrawImGui(RayGE_Renderer* renderer)
 
 		for ( size_t vIndex = 0; vIndex < batch.vertexCount; ++vIndex )
 		{
-			const ImDrawVert* vSrc = commandList->VtxBuffer.Data;
+			const ImDrawVert* vSrc = &commandList->VtxBuffer.Data[vIndex];
 			Renderer_RawVertex2D* vDest = &vertices[vIndex];
 
-			vDest->col.r = vSrc->col & 0xFF000000;
-			vDest->col.g = vSrc->col & 0x00FF0000;
-			vDest->col.b = vSrc->col & 0x0000FF00;
-			vDest->col.a = vSrc->col & 0x000000FF;
+			vDest->col.r = (unsigned char)(vSrc->col & 0x000000FF);
+			vDest->col.g = (unsigned char)((vSrc->col & 0x0000FF00) >> 8);
+			vDest->col.b = (unsigned char)((vSrc->col & 0x00FF0000) >> 16);
+			vDest->col.a = (unsigned char)((vSrc->col & 0xFF000000) >> 24);
 
 			vDest->pos = (Vector2) {vSrc->pos.x, vSrc->pos.y};
 			vDest->uv = (Vector2) {vSrc->uv.x, vSrc->uv.y};

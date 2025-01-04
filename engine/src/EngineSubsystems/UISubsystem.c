@@ -29,6 +29,7 @@ static void SwitchMenu(Data* data, const RayGE_UIMenu* newMenu)
 	if ( data->currentMenu && data->currentMenu->Hide )
 	{
 		data->currentMenu->Hide(data->nkContext, data->currentMenu->userData);
+		nk_clear(g_Data.nkContext);
 	}
 
 	data->currentMenu = newMenu;
@@ -124,6 +125,9 @@ void UISubsystem_PollCurrentMenu(void)
 		return;
 	}
 
+	// Must always be called, so that ImGui is in a known state for the draw call later.
+	ImGui_ImplRaylib_NewFrame();
+
 	if ( !g_Data.currentMenu || !g_Data.currentMenu->Poll )
 	{
 		return;
@@ -181,7 +185,5 @@ void UISubsystem_Draw(void)
 	Renderer_SetDrawingModeDirect(renderer);
 	DrawNuklear(g_Data.nkContext);
 
-	ImGui_ImplRaylib_NewFrame();
-	igShowDemoWindow(NULL);
 	ImGui_ImplRaylib_Render();
 }
