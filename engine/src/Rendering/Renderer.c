@@ -709,7 +709,7 @@ void Renderer_DirectDrawImGui(RayGE_Renderer* renderer)
 				continue;
 			}
 
-			batch.textureID = cmd->TextureId;
+			batch.textureID = (unsigned int)cmd->TextureId;
 			Renderer_DirectDrawTriangles2D(renderer, &batch, cmd->IdxOffset, cmd->ElemCount);
 
 			rlDrawRenderBatchActive();
