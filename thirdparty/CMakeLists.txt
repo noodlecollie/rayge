@@ -4,7 +4,6 @@ add_subdirectory(cwalk-1.2.9)
 add_subdirectory(wzl-cutl)
 add_subdirectory(cargs-1.1.0)
 add_subdirectory(debugbreak-1.0)
-add_subdirectory(nuklear-4.12.0)
 add_subdirectory(cimgui-1.53.1)
 add_subdirectory(uthash-2.3.0)
 
