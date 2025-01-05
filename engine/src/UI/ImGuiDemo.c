@@ -3,26 +3,20 @@
 
 static bool g_WindowActive = false;
 
-static void Show(struct nk_context* context, void* userData)
+static void Show(void* userData)
 {
-	(void)context;
-
 	bool* windowActive = (bool*)userData;
 	*windowActive = true;
 }
 
-static void Hide(struct nk_context* context, void* userData)
+static void Hide(void* userData)
 {
-	(void)context;
-
 	bool* windowActive = (bool*)userData;
 	*windowActive = false;
 }
 
-static bool Poll(struct nk_context* context, void* userData)
+static bool Poll(void* userData)
 {
-	(void)context;
-
 	bool* windowActive = (bool*)userData;
 
 	if ( *windowActive )

@@ -1,17 +1,16 @@
 #pragma once
 
 #include <stdbool.h>
-#include "Nuklear/Nuklear.h"
 
 typedef struct RayGE_UIMenu
 {
 	void* userData;
 
-	void (*Show)(struct nk_context* context, void* userData);
-	void (*Hide)(struct nk_context* context, void* userData);
+	void (*Show)(void* userData);
+	void (*Hide)(void* userData);
 
 	// Return false if the menu should close.
-	bool (*Poll)(struct nk_context* context, void* userData);
+	bool (*Poll)(void* userData);
 } RayGE_UIMenu;
 
 void UISubsystem_Init(void);

@@ -4,7 +4,6 @@
 #include "Debugging.h"
 #include "cimgui.h"
 #include "raylib.h"
-#include "Nuklear/Nuklear.h"
 #include "Integrations/ImGuiBackend.h"
 
 typedef struct Data
@@ -28,15 +27,14 @@ static void SwitchMenu(Data* data, const RayGE_UIMenu* newMenu)
 
 	if ( data->currentMenu && data->currentMenu->Hide )
 	{
-		data->currentMenu->Hide(data->nkContext, data->currentMenu->userData);
-		nk_clear(g_Data.nkContext);
+		data->currentMenu->Hide(data->currentMenu->userData);
 	}
 
 	data->currentMenu = newMenu;
 
 	if ( data->currentMenu && data->currentMenu->Show )
 	{
-		data->currentMenu->Show(data->nkContext, data->currentMenu->userData);
+		data->currentMenu->Show(data->currentMenu->userData);
 	}
 }
 
@@ -48,9 +46,6 @@ void UISubsystem_Init(void)
 	}
 
 	memset(&g_Data, 0, sizeof(g_Data));
-
-	g_Data.nkContext = InitNuklearEx(RendererSubsystem_GetDefaultUIFont(), RENDERERMODULE_DEFAULT_FONT_SIZE);
-	RAYGE_ENSURE(g_Data.nkContext, "Unable to create Nuklear context");
 
 	ImGui_ImplRaylib_Init();
 	ImGui_ImplRaylib_BuildFontAtlas();
@@ -66,8 +61,6 @@ void UISubsystem_ShutDown(void)
 	}
 
 	ImGui_ImplRaylib_Shutdown();
-
-	UnloadNuklear(g_Data.nkContext);
 	memset(&g_Data, 0, sizeof(g_Data));
 
 	g_Initialised = false;
@@ -134,7 +127,7 @@ void UISubsystem_PollCurrentMenu(void)
 	}
 
 	g_Data.inPoll = true;
-	const bool shouldStayOpen = g_Data.currentMenu->Poll(g_Data.nkContext, g_Data.currentMenu->userData);
+	const bool shouldStayOpen = g_Data.currentMenu->Poll(g_Data.currentMenu->userData);
 	g_Data.inPoll = false;
 
 	if ( !shouldStayOpen )
@@ -160,7 +153,6 @@ void UISubsystem_ProcessInput(void)
 		return;
 	}
 
-	UpdateNuklear(g_Data.nkContext);
 	ImGui_ImplRaylib_ProcessEvents();
 }
 
@@ -183,7 +175,5 @@ void UISubsystem_Draw(void)
 	}
 
 	Renderer_SetDrawingModeDirect(renderer);
-	DrawNuklear(g_Data.nkContext);
-
 	ImGui_ImplRaylib_Render();
 }

@@ -5,8 +5,6 @@
 #include "Logging/Logging.h"
 #include "EngineSubsystems/RendererSubsystem.h"
 #include "EngineSubsystems/SceneSubsystem.h"
-#include "UI/UIHelpers.h"
-#include "wzl_cutl/string.h"
 #include "raylib.h"
 #include "cimgui.h"
 
@@ -70,7 +68,7 @@ static void DrawCameraOverrideGroup(WindowState* state)
 	igDragFloat3("Position", (float*)&state->cameraPos, 1.0f, -FLT_MAX, FLT_MAX, "%.0f", 0);
 }
 
-static void DrawRenderDebugFlagGroup()
+static void DrawRenderDebugFlagGroup(void)
 {
 	RayGE_Renderer* renderer = RendererSubsystem_GetRenderer();
 	uint64_t debugFlags = Renderer_GetDebugFlags(renderer);
@@ -83,28 +81,20 @@ static void DrawRenderDebugFlagGroup()
 	Renderer_SetDebugFlags(renderer, debugFlags);
 }
 
-static void Show(struct nk_context* context, void* userData)
+static void Show(void* userData)
 {
-	(void)context;
-
 	((WindowState*)userData)->showPane = true;
-
 	Logging_PrintLine(RAYGE_LOG_TRACE, "Showing scene debug UI");
 }
 
-static void Hide(struct nk_context* context, void* userData)
+static void Hide( void* userData)
 {
-	(void)context;
-
 	((WindowState*)userData)->showPane = false;
-
 	Logging_PrintLine(RAYGE_LOG_TRACE, "Hiding scene debug UI");
 }
 
-static bool Poll(struct nk_context* context, void* userData)
+static bool Poll(void* userData)
 {
-	(void)context;
-
 	WindowState* windowState = (WindowState*)userData;
 
 	if ( !windowState->showPane )
