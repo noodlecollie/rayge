@@ -3,23 +3,29 @@
 #include "RayGE/APIs/Logging.h"
 #include "RayGE/Private/Launcher.h"
 #include "Logging/Logging.h"
-#include "Logging/LogBackingBuffer.h"
 #include "Launcher/LaunchParams.h"
+#include "MemPool//MemPoolManager.h"
 #include "Debugging.h"
 #include "raylib.h"
 #include "wzl_cutl/string.h"
-#include "wzl_cutl/time.h"
+#include "utlist.h"
 
 #ifndef RAYGE_LOG_BUFFER_SIZE
 #define RAYGE_LOG_BUFFER_SIZE 4096
 #endif
 
+typedef struct Listener
+{
+	struct Listener* next;
+	Logging_Callback callback;
+	void* userData;
+} Listener;
+
 typedef struct LogData
 {
 	RayGE_Log_Level logLevel;
-	LogBackingBuffer* backingBuffer;
-	size_t messageCounter;
 	bool printing;
+	Listener* listeners;
 } LogData;
 
 static LogData g_LogData;
@@ -97,6 +103,33 @@ static RayGE_Log_Level RaylibLogLevelToRayGELogLevel(int inLevel)
 	}
 }
 
+static void SetBackendDebugLogsEnabled(bool enabled)
+{
+	SetTraceLogLevel(enabled ? LOG_DEBUG : LOG_NONE);
+}
+
+static void DeleteAllListeners(void)
+{
+	Listener* item = NULL;
+	Listener* temp = NULL;
+
+	LL_FOREACH_SAFE(g_LogData.listeners, item, temp)
+	{
+		LL_DELETE(g_LogData.listeners, item);
+		MEMPOOL_FREE(item);
+	}
+}
+
+static void EmitOnAllListeners(RayGE_Log_Level level, const char* message, size_t length)
+{
+	Listener* item = NULL;
+
+	LL_FOREACH(g_LogData.listeners, item)
+	{
+		item->callback(level, message, length, item->userData);
+	}
+}
+
 static size_t AppendToLogBufferV(char** buffer, size_t* bufferSize, const char* format, va_list args)
 {
 	if ( *bufferSize < 1 )
@@ -152,7 +185,7 @@ static void PrintLogMessageLine(RayGE_Log_Level level, const char* source, const
 
 	g_LogData.printing = true;
 
-	char messageBuffer[LOG_BUFFER_MESSAGE_MAX_LENGTH];
+	char messageBuffer[LOG_MESSAGE_MAX_LENGTH];
 	char* cursor = messageBuffer;
 	size_t bytesLeft = sizeof(messageBuffer);
 
@@ -166,9 +199,12 @@ static void PrintLogMessageLine(RayGE_Log_Level level, const char* source, const
 	AppendToLogBufferV(&cursor, &bytesLeft, format, args);
 	AppendToLogBuffer(&cursor, &bytesLeft, "\n");
 
+	// bytesLeft is decremented by the number of characters that we wrote.
+	// The difference between its current and original value is the length.
+	const size_t messageLength = sizeof(messageBuffer) - bytesLeft;
+
 	printf("%s", messageBuffer);
-	LogBackingBuffer_Append(g_LogData.backingBuffer, messageBuffer, sizeof(messageBuffer) - bytesLeft);
-	++g_LogData.messageCounter;
+	EmitOnAllListeners(level, messageBuffer, messageLength);
 
 	if ( level == RAYGE_LOG_FATAL )
 	{
@@ -191,115 +227,97 @@ static void RaylibLogCallback(int logLevel, const char* format, va_list args)
 
 void Logging_Init(void)
 {
+	RAYGE_ASSERT_BREAK(!g_Initialised);
+
 	if ( g_Initialised )
 	{
 		return;
 	}
 
-	Logging_SetBackendDebugLogsEnabled(LaunchParams_GetLaunchState()->enableBackendDebugLogs);
+	SetBackendDebugLogsEnabled(LaunchParams_GetLaunchState()->enableBackendDebugLogs);
 	SetTraceLogCallback(&RaylibLogCallback);
 
 	g_LogData.logLevel = LaunchParams_GetLaunchState()->defaultLogLevel;
-	g_LogData.backingBuffer = LogBackingBuffer_Create(RAYGE_LOG_BUFFER_SIZE);
-	g_LogData.messageCounter = 0;
 
 	g_Initialised = true;
 }
 
 void Logging_ShutDown(void)
 {
+	RAYGE_ASSERT_BREAK(g_Initialised);
+
 	if ( !g_Initialised )
 	{
 		return;
 	}
 
+	RAYGE_ASSERT_BREAK(!g_LogData.printing);
+
+	DeleteAllListeners();
+
 	g_Initialised = false;
 	g_LogData.logLevel = RAYGE_LOG_NONE;
-	g_LogData.messageCounter = 0;
 
 	SetTraceLogLevel(LOG_NONE);
 	SetTraceLogCallback(NULL);
-
-	LogBackingBuffer_Destroy(g_LogData.backingBuffer);
-	g_LogData.backingBuffer = NULL;
 }
 
 void Logging_SetLogLevel(RayGE_Log_Level level)
 {
+	RAYGE_ASSERT_BREAK(g_Initialised);
+
 	if ( !g_Initialised )
 	{
 		return;
 	}
+
+	RAYGE_ASSERT_BREAK(!g_LogData.printing);
 
 	g_LogData.logLevel = level;
 }
 
 void Logging_SetBackendDebugLogsEnabled(bool enabled)
 {
+	RAYGE_ASSERT_BREAK(g_Initialised);
+
 	if ( !g_Initialised )
 	{
 		return;
 	}
 
-	SetTraceLogLevel(enabled ? LOG_DEBUG : LOG_NONE);
+	RAYGE_ASSERT_BREAK(!g_LogData.printing);
+
+	SetBackendDebugLogsEnabled(enabled);
 }
 
 void Logging_PrintLineV(RayGE_Log_Level level, const char* format, va_list args)
 {
+	RAYGE_ASSERT_BREAK(g_Initialised);
+
 	if ( !g_Initialised )
 	{
 		return;
 	}
 
+	RAYGE_ASSERT_BREAK(!g_LogData.printing);
+
 	PrintLogMessageLine(level, NULL, format, args);
 }
 
-const char* Logging_GetLogBufferBase(void)
+void Logging_AddListener(Logging_Callback callback, void* userData)
 {
+	RAYGE_ASSERT_BREAK(g_Initialised);
+
 	if ( !g_Initialised )
 	{
-		return NULL;
+		return;
 	}
 
-	return LogBackingBuffer_Begin(g_LogData.backingBuffer);
-}
+	RAYGE_ASSERT_BREAK(!g_LogData.printing);
 
-size_t Logging_GetLogBufferTotalMessageLength(void)
-{
-	if ( !g_Initialised )
-	{
-		return 0;
-	}
+	Listener* listener = MEMPOOL_CALLOC_STRUCT(MEMPOOL_LOGGING, Listener);
+	listener->callback = callback;
+	listener->userData = userData;
 
-	return LogBackingBuffer_StringLength(g_LogData.backingBuffer);
-}
-
-size_t Logging_GetLogBufferMaxMessageLength(void)
-{
-	if ( !g_Initialised )
-	{
-		return 0;
-	}
-
-	return LogBackingBuffer_MaxStringLength(g_LogData.backingBuffer);
-}
-
-size_t Logging_GetLogCounter(void)
-{
-	if ( !g_Initialised )
-	{
-		return 0;
-	}
-
-	return g_LogData.messageCounter;
-}
-
-size_t Logging_GetBufferTotalSize(void)
-{
-	if ( !g_Initialised )
-	{
-		return 0;
-	}
-
-	return RAYGE_LOG_BUFFER_SIZE;
+	LL_APPEND(g_LogData.listeners, listener);
 }
