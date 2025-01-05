@@ -119,7 +119,7 @@ PassesModifierChecks(RayGE_InputSource source, const RayGE_InputBuffer* inputBuf
 		return true;
 	}
 
-	if ( requiredModifiers == 0 )
+	if ( requiredModifiers == KEYMOD_NONE )
 	{
 		// No need to check anything.
 		return true;
@@ -128,7 +128,14 @@ PassesModifierChecks(RayGE_InputSource source, const RayGE_InputBuffer* inputBuf
 	// Get the current modifiers.
 	RayGE_KeyboardModifiers currentModifiers = InputBuffer_GetCurrentKeyboardModifiers(inputBuffer);
 
+	// If we require that no modifiers are present at all, the check becomes simple:
+	if ( requiredModifiers & KEYMOD_REQUIRE_NONE )
+	{
+		return currentModifiers == KEYMOD_NONE;
+	}
+
 	// Restrict the modifiers to only the ones we need to check.
+	requiredModifiers &= KEYMOD_CHECK_MASK;
 	currentModifiers &= requiredModifiers;
 
 	// Toggle all the required modifiers.

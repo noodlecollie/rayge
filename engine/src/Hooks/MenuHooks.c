@@ -119,7 +119,7 @@ static void RegisterMenuWithModifiers(int key, unsigned int modifierFlags, const
 
 static void RegisterMenu(int key, const char* name, const RayGE_UIMenu* menu)
 {
-	RegisterMenuWithModifiers(key, KEYMOD_NONE, name, menu);
+	RegisterMenuWithModifiers(key, KEYMOD_REQUIRE_NONE, name, menu);
 }
 
 static void RegisterMenus(void)

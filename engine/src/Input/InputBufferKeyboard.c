@@ -37,7 +37,8 @@ static RayGE_KeyboardModifiers GetKeyboardModifiers(const int* bufferData, size_
 		}
 	}
 
-	return modifiers;
+	// Mask for sanity:
+	return modifiers & KEYMOD_CHECK_MASK;
 }
 
 void InputBuffer_PopulateFromKeyboard(RayGE_InputBuffer* buffer)
