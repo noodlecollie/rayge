@@ -3,43 +3,28 @@
 #include <float.h>
 #include "UI/SceneDebugUI.h"
 #include "Logging/Logging.h"
-#include "Nuklear/Nuklear.h"
 #include "EngineSubsystems/RendererSubsystem.h"
 #include "EngineSubsystems/SceneSubsystem.h"
 #include "UI/UIHelpers.h"
 #include "wzl_cutl/string.h"
 #include "raylib.h"
+#include "cimgui.h"
 
 typedef struct WindowState
 {
+	bool showPane;
 	float doubleCameraFOV;
 	Vector3 cameraPos;
 } WindowState;
 
 static WindowState g_WindowState;
 
-static void VAFormRow(struct nk_context* context, const char* label, const char* valueFormat, ...)
+static uint64_t CheckDebugFlag(const char* label, uint64_t existingFlags, uint64_t flag)
 {
-	nk_label(context, label, NK_TEXT_ALIGN_LEFT);
+	bool flagState = (existingFlags & flag) != 0;
+	igCheckbox(label, &flagState);
 
-	char buffer[32];
-
-	va_list args;
-	va_start(args, valueFormat);
-	wzl_vsprintf(buffer, sizeof(buffer), valueFormat, args);
-	va_end(args);
-
-	nk_label(context, buffer, NK_TEXT_ALIGN_LEFT);
-}
-
-static void BeginDynamicGroup(struct nk_context* context, int numInternalRows)
-{
-	nk_layout_row_dynamic(context, UI_TITLED_GROUPBOX_MIN_HEIGHT + ((float)numInternalRows * UI_DEFAULT_ROW_HEIGHT), 1);
-}
-
-static uint64_t CheckDebugFlag(struct nk_context* context, const char* label, uint64_t existingFlags, uint64_t flag)
-{
-	if ( nk_check_label(context, label, (existingFlags & flag) != 0) )
+	if ( flagState )
 	{
 		return existingFlags | flag;
 	}
@@ -69,65 +54,40 @@ static void ApplyWindowState(WindowState* state)
 	Renderer_SetDebugCamera3D(renderer, debugCamera);
 }
 
-static void DrawFrameStatsGroup(struct nk_context* context)
+static void DrawFrameStatsGroup(void)
 {
-	BeginDynamicGroup(context, 2);
+	const RayGE_Scene* scene = SceneSubsystem_GetScene();
 
-	if ( nk_group_begin_titled(context, "frame_state", "Frame Stats", UI_DEFAULT_GROUP_FLAGS) )
-	{
-		const RayGE_Scene* scene = SceneSubsystem_GetScene();
-
-		const float ratios[] = {0.70f, 0.30f};
-		nk_layout_row(context, NK_DYNAMIC, UI_DEFAULT_ROW_HEIGHT, 2, ratios);
-
-		VAFormRow(context, "FPS:", "%d", GetFPS());
-		VAFormRow(context, "Active entities:", "%zu", Scene_GetActiveEntities(scene));
-
-		nk_group_end(context);
-	}
+	igSeparatorText("Frame Stats");
+	igText("FPS: %d", GetFPS());
+	igText("Active entities: %zu", Scene_GetActiveEntities(scene));
 }
 
-static void DrawCameraOverrideGroup(struct nk_context* context, WindowState* state)
+static void DrawCameraOverrideGroup(WindowState* state)
 {
-	nk_layout_row_dynamic(context, 150.0f, 1);
-
-	if ( nk_group_begin_titled(context, "camera_override", "Camera Override", UI_DEFAULT_GROUP_FLAGS) )
-	{
-		nk_layout_row_dynamic(context, UI_DEFAULT_ROW_HEIGHT, 1);
-
-		nk_property_float(context, "FOV", 5.0f, &state->doubleCameraFOV, 160.0f, 0.5f, 0.5f);
-		nk_property_float(context, "X", -FLT_MAX, &state->cameraPos.x, FLT_MAX, 1.0f, 1.0f);
-		nk_property_float(context, "Y", -FLT_MAX, &state->cameraPos.y, FLT_MAX, 1.0f, 1.0f);
-		nk_property_float(context, "Z", -FLT_MAX, &state->cameraPos.z, FLT_MAX, 1.0f, 1.0f);
-
-		nk_group_end(context);
-	}
+	igSeparatorText("Camera Override");
+	igDragFloat("FOV", &state->doubleCameraFOV, 0.25f, 5.0f, 160.0f, "%.0f", 0);
+	igDragFloat3("Position", (float*)&state->cameraPos, 1.0f, -FLT_MAX, FLT_MAX, "%.0f", 0);
 }
 
-static void DrawRenderDebugFlagGroup(struct nk_context* context)
+static void DrawRenderDebugFlagGroup()
 {
-	BeginDynamicGroup(context, 2);
+	RayGE_Renderer* renderer = RendererSubsystem_GetRenderer();
+	uint64_t debugFlags = Renderer_GetDebugFlags(renderer);
 
-	if ( nk_group_begin_titled(context, "render_debug_flags", "Render Debug Flags", UI_DEFAULT_GROUP_FLAGS) )
-	{
-		RayGE_Renderer* renderer = RendererSubsystem_GetRenderer();
-		uint64_t debugFlags = Renderer_GetDebugFlags(renderer);
+	igSeparatorText("Render Debug Flags");
 
-		nk_layout_row_dynamic(context, UI_DEFAULT_ROW_HEIGHT, 1);
+	debugFlags = CheckDebugFlag("Draw Locations", debugFlags, RENDERER_DBG_DRAW_LOCATIONS);
+	debugFlags = CheckDebugFlag("Override Camera", debugFlags, RENDERER_DBG_OVERRIDE_CAMERA);
 
-		debugFlags = CheckDebugFlag(context, "Draw Locations", debugFlags, RENDERER_DBG_DRAW_LOCATIONS);
-		debugFlags = CheckDebugFlag(context, "Override Camera", debugFlags, RENDERER_DBG_OVERRIDE_CAMERA);
-
-		Renderer_SetDebugFlags(renderer, debugFlags);
-
-		nk_group_end(context);
-	}
+	Renderer_SetDebugFlags(renderer, debugFlags);
 }
 
 static void Show(struct nk_context* context, void* userData)
 {
 	(void)context;
-	(void)userData;
+
+	((WindowState*)userData)->showPane = true;
 
 	Logging_PrintLine(RAYGE_LOG_TRACE, "Showing scene debug UI");
 }
@@ -135,36 +95,44 @@ static void Show(struct nk_context* context, void* userData)
 static void Hide(struct nk_context* context, void* userData)
 {
 	(void)context;
-	(void)userData;
+
+	((WindowState*)userData)->showPane = false;
 
 	Logging_PrintLine(RAYGE_LOG_TRACE, "Hiding scene debug UI");
 }
 
 static bool Poll(struct nk_context* context, void* userData)
 {
+	(void)context;
+
 	WindowState* windowState = (WindowState*)userData;
-	bool shouldStayOpen = false;
 
-	if ( nk_begin_titled(
-			 context,
-			 "debugui",
-			 "Debug",
-			 (struct nk_rect) {0.0f, 0.0f, 250.0f, (float)GetRenderHeight()},
-			 UI_DEFAULT_PANE_FLAGS | NK_WINDOW_CLOSABLE
-		 ) )
+	if ( !windowState->showPane )
 	{
-		shouldStayOpen = true;
-		UpdateWindowState(windowState);
-
-		DrawFrameStatsGroup(context);
-		DrawCameraOverrideGroup(context, windowState);
-		DrawRenderDebugFlagGroup(context);
-
-		ApplyWindowState(windowState);
+		return false;
 	}
 
-	nk_end(context);
-	return shouldStayOpen;
+	igSetNextWindowPos((ImVec2) {0.0f, 0.0f}, 0, (ImVec2) {0.0f, 0.0f});
+	igSetNextWindowSize((ImVec2) {250.0f, (float)GetRenderHeight()}, 0);
+
+	const ImGuiWindowFlags winFlags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoCollapse;
+
+	if ( igBegin("Debug UI", NULL, winFlags) )
+	{
+		UpdateWindowState(windowState);
+
+		DrawFrameStatsGroup();
+		igSpacing();
+		DrawCameraOverrideGroup(windowState);
+		igSpacing();
+		DrawRenderDebugFlagGroup();
+
+		ApplyWindowState(windowState);
+		igEnd();
+	}
+
+	return true;
 }
 
 const RayGE_UIMenu Menu_SceneDebugUI = {
