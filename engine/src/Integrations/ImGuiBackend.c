@@ -3,6 +3,7 @@
 #include "Rendering/Renderer.h"
 #include "EngineSubsystems/RendererSubsystem.h"
 #include "cimgui.h"
+#include "cimgui_assert.h"
 #include "raylib.h"
 #include "Debugging.h"
 
@@ -33,6 +34,12 @@ typedef struct Data
 
 static Data g_Data;
 static bool g_Initialised = false;
+
+static void
+CImGuiAssertHandler(bool expression, const char* description, const char* file, int line, const char* function)
+{
+	RayGE_CheckInvariant(true, expression, description, file, line, function, "<ImGui assertion failed>");
+}
 
 static bool IsAnyCtrlKeyDown(void)
 {
@@ -472,6 +479,8 @@ void ImGui_ImplRaylib_Init(void)
 		return;
 	}
 
+	cimgui_set_assert_handler(CImGuiAssertHandler);
+
 	memset(&g_Data, 0, sizeof(g_Data));
 
 	g_Data.context = igCreateContext(NULL);
@@ -520,6 +529,8 @@ void ImGui_ImplRaylib_Shutdown(void)
 	io->Fonts->TexID = 0;
 
 	SetFontTextureFromImage(&g_Data, NULL);
+
+	cimgui_set_assert_handler(NULL);
 }
 
 void ImGui_ImplRaylib_NewFrame(void)

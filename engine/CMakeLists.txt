@@ -154,11 +154,16 @@ target_link_libraries(${TARGETNAME_ENGINE}
 	debugbreak
 	nuklear
 	ut-utils
-	rlImGui
+	cimgui
 )
 
 target_compile_definitions(${TARGETNAME_ENGINE}
 	PRIVATE
 	RAYGE_PRODUCER
 	$<$<BOOL:BUILD_TESTING>:RAYGE_BUILD_TESTING_FLAG>
+
+	# This is required to be defined on the consumer
+	# of cimgui ONLY. If it's defined on cimgui itself,
+	# everything breaks.
+	CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 )

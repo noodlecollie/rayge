@@ -6,7 +6,6 @@ add_subdirectory(cargs-1.1.0)
 add_subdirectory(debugbreak-1.0)
 add_subdirectory(nuklear-4.12.0)
 add_subdirectory(cimgui-1.53.1)
-add_subdirectory(rlImGui-583d4fe)
 add_subdirectory(uthash-2.3.0)
 
 if(BUILD_TESTING)
