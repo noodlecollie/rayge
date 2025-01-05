@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/wzl-cutl/wzl-cutl/cmake_public;${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-project(rayge LANGUAGES C)
+project(rayge LANGUAGES C CXX)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED YES)
@@ -30,6 +30,8 @@ include(rayge_utilities)
 # we keep paths to them at the root level so that other
 # targets can make use of them.
 declare_dependent_file("${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/raylib-5.0/raylib-5.0/src/raymath.h" RAYMATH_HEADER_PATH)
+
+get_raylib_graphics_type(RAYGE_GRAPHICS_TYPE)
 
 set(VCS_COMMIT_ID "notset")
 set(VCS_TAG_ID "notset")

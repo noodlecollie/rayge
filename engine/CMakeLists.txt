@@ -1,3 +1,5 @@
+project(rayge_engine LANGUAGES C)
+
 add_library(${TARGETNAME_ENGINE} SHARED)
 
 set_target_properties(${TARGETNAME_ENGINE} PROPERTIES OUTPUT_NAME_DEBUG "${TARGETNAME_ENGINE}-debug")
@@ -74,6 +76,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Input/InputBufferKeyboard.h
 	src/Input/InputBufferKeyboard.c
 	src/Input/KeyboardModifiers.h
+	src/Integrations/ImGuiBackend.h
+	src/Integrations/ImGuiBackend.c
 	src/JSON/JSONUtils.h
 	src/JSON/JSONUtils.c
 	src/Launcher/Launcher.c
@@ -101,12 +105,10 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Scene/Scene.c
 	src/Scene/SceneAPI.h
 	src/Scene/SceneAPI.c
-	src/UI/DeveloperConsole.h
-	src/UI/DeveloperConsole.c
+	src/UI/ImGuiDemo.h
+	src/UI/ImGuiDemo.c
 	src/UI/SceneDebugUI.h
 	src/UI/SceneDebugUI.c
-	src/UI/TestUI.h
-	src/UI/TestUI.c
 	src/UTUtils/UTHash_Pooled.h
 	src/Conversions.h
 	src/Debugging.h
@@ -148,12 +150,17 @@ target_link_libraries(${TARGETNAME_ENGINE}
 	cwalk
 	cargs
 	debugbreak
-	nuklear
 	ut-utils
+	cimgui
 )
 
 target_compile_definitions(${TARGETNAME_ENGINE}
 	PRIVATE
 	RAYGE_PRODUCER
 	$<$<BOOL:BUILD_TESTING>:RAYGE_BUILD_TESTING_FLAG>
+
+	# This is required to be defined on the consumer
+	# of cimgui ONLY. If it's defined on cimgui itself,
+	# everything breaks.
+	CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 )

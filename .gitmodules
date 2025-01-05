@@ -7,9 +7,6 @@
 [submodule "thirdparty/catch2-3.5.4/catch2-3.5.4"]
 	path = thirdparty/catch2-3.5.4/catch2-3.5.4
 	url = https://github.com/catchorg/Catch2.git
-[submodule "thirdparty/nuklear-4.12.0/nuklear-4.12.0"]
-	path = thirdparty/nuklear-4.12.0/nuklear-4.12.0
-	url = https://github.com/Immediate-Mode-UI/Nuklear.git
 [submodule "thirdparty/cJSON-1.7.17/cJSON-1.7.17"]
 	path = thirdparty/cJSON-1.7.17/cJSON-1.7.17
 	url = https://github.com/DaveGamble/cJSON.git
@@ -22,3 +19,6 @@
 [submodule "cmake/zig-cmake-toolchains"]
 	path = cmake/zig-cmake-toolchains
 	url = https://github.com/starofrainnight/zig-cmake-toolchains.git
+[submodule "thirdparty/cimgui-1.53.1/cimgui-1.53.1"]
+	path = thirdparty/cimgui-1.53.1/cimgui-1.53.1
+	url = https://github.com/cimgui/cimgui.git
