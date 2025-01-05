@@ -79,7 +79,7 @@ static inline void RayGE_GameCallbacks_Init(RayGE_GameCallbacks* callbacks)
 
 Game library:
 
-```
+```c
 static RayGE_GameCallbacks g_Callbacks;
 
 MYGAME_EXPORT const RayGE_GameCallbacks* __cdecl RayGE_GameCallbacks_Get(void)
@@ -94,7 +94,7 @@ MYGAME_EXPORT const RayGE_GameCallbacks* __cdecl RayGE_GameCallbacks_Get(void)
 
 Engine library:
 
-```
+```c
 typedef const RayGE_GameCallbacks* (__cdecl * GetCallbacksFunc)(void);
 
 const RayGE_GameCallbacks* GetGameCallbacks(void* gameLibrary)
