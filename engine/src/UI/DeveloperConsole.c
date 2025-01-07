@@ -4,6 +4,7 @@
 #include "UI/DeveloperConsole.h"
 #include "Logging/Logging.h"
 #include "MemPool/MemPoolManager.h"
+#include "Commands/CommandParser.h"
 #include "Debugging.h"
 #include "wzl_cutl/math.h"
 #include "cimgui.h"
@@ -72,7 +73,7 @@ static void AddLogMessage(Data* data, RayGE_Log_Level level, char* message, size
 	entry->message = message;
 	entry->length = length;
 	entry->level = level;
-};
+}
 
 static void AcceptLogMessage(RayGE_Log_Level level, const char* message, size_t length, void* userData)
 {
@@ -140,7 +141,7 @@ static void ExecuteCurrentCommand(char* command)
 		return;
 	}
 
-	Logging_PrintLine(RAYGE_LOG_INFO, "TODO: Execute command \"%s\"", command);
+	CommandParser_ParseAndExecute(command);
 	command[0] = '\0';
 }
 
