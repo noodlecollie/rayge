@@ -23,6 +23,7 @@ void Logging_PrintLineV(RayGE_Log_Level level, const char* format, va_list args)
 // Must be initialised beforehand.
 // On shutdown, all listeners are unregistered.
 void Logging_AddListener(Logging_Callback callback, void* userData);
+void Logging_RemoveListener(Logging_Callback callback);
 
 static inline void Logging_PrintLine(RayGE_Log_Level level, const char* format, ...)
 {

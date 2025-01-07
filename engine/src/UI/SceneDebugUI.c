@@ -128,6 +128,8 @@ static bool Poll(void* userData)
 const RayGE_UIMenu Menu_SceneDebugUI = {
 	&g_WindowState,
 
+	NULL,  // Init
+	NULL,  // ShutDown
 	Show,
 	Hide,
 	Poll,

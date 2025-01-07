@@ -30,6 +30,8 @@ static bool Poll(void* userData)
 const RayGE_UIMenu Menu_ImGuiDemo = {
 	&g_WindowActive,
 
+	NULL,  // Init
+	NULL,  // ShutDown
 	Show,
 	Hide,
 	Poll,

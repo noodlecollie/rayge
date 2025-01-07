@@ -7,6 +7,7 @@
 #include "Input/KeyboardModifiers.h"
 #include "UI/SceneDebugUI.h"
 #include "UI/ImGuiDemo.h"
+#include "UI/DeveloperConsole.h"
 #include "Debugging.h"
 #include "wzl_cutl/string.h"
 #include "utlist.h"
@@ -22,6 +23,31 @@ typedef struct StateItem
 
 static StateItem* g_State = NULL;
 static bool g_Registered = false;
+
+static void ShutDownAllMenus(void)
+{
+	StateItem* item = NULL;
+
+	LL_FOREACH(g_State, item)
+	{
+		if ( item->menu->ShutDown )
+		{
+			item->menu->ShutDown(item->menu->userData);
+		}
+	}
+}
+
+static void DeleteAllStateItems(void)
+{
+	StateItem* item = NULL;
+	StateItem* temp = NULL;
+
+	LL_FOREACH_SAFE(g_State, item, temp)
+	{
+		LL_DELETE(g_State, item);
+		MEMPOOL_FREE(item);
+	}
+}
 
 static void HandleCommand(const char* commandName, void* userData)
 {
@@ -74,7 +100,7 @@ static void RegisterMenuCommands(StateItem* state, const char* name, const RayGE
 	char fullName[32];
 
 	wzl_sprintf(fullName, sizeof(fullName), "+%s", name);
-	const CommandSubsystem_CommandHandle * showCmd = CommandSubsystem_AddCommand(fullName, HandleCommand, (void*)menu);
+	const CommandSubsystem_CommandHandle* showCmd = CommandSubsystem_AddCommand(fullName, HandleCommand, (void*)menu);
 
 	if ( state )
 	{
@@ -82,7 +108,7 @@ static void RegisterMenuCommands(StateItem* state, const char* name, const RayGE
 	}
 
 	wzl_sprintf(fullName, sizeof(fullName), "-%s", name);
-	const CommandSubsystem_CommandHandle * hideCmd = CommandSubsystem_AddCommand(fullName, HandleCommand, (void*)menu);
+	const CommandSubsystem_CommandHandle* hideCmd = CommandSubsystem_AddCommand(fullName, HandleCommand, (void*)menu);
 
 	if ( state )
 	{
@@ -115,17 +141,23 @@ static void RegisterMenuWithModifiers(int key, unsigned int modifierFlags, const
 	};
 
 	InputHookSubsystem_AddHook(INPUT_SOURCE_KEYBOARD, key, modifierFlags, hook);
+
+	if ( state->menu->Init )
+	{
+		state->menu->Init(state->menu->userData);
+	}
 }
 
-// static void RegisterMenu(int key, const char* name, const RayGE_UIMenu* menu)
-// {
-// 	RegisterMenuWithModifiers(key, KEYMOD_REQUIRE_NONE, name, menu);
-// }
+static void RegisterMenu(int key, const char* name, const RayGE_UIMenu* menu)
+{
+	RegisterMenuWithModifiers(key, KEYMOD_REQUIRE_NONE, name, menu);
+}
 
 static void RegisterMenus(void)
 {
-	RegisterMenuWithModifiers(KEY_GRAVE, KEYMOD_CTRL, "menu_debug", &Menu_SceneDebugUI);
-	RegisterMenuWithModifiers(KEY_GRAVE, KEYMOD_CTRL | KEYMOD_ALT, "menu_imguidemo", &Menu_ImGuiDemo);
+	RegisterMenu(KEY_GRAVE, "Engine.Menu.DeveloperConsole", &Menu_DeveloperConsole);
+	RegisterMenuWithModifiers(KEY_GRAVE, KEYMOD_CTRL, "Engine.Menu.Debug", &Menu_SceneDebugUI);
+	RegisterMenuWithModifiers(KEY_GRAVE, KEYMOD_CTRL | KEYMOD_ALT, "Engine.Menu.ImGuiDemo", &Menu_ImGuiDemo);
 }
 
 void MenuHooks_Register(void)
@@ -146,14 +178,8 @@ void MenuHooks_Unregister(void)
 		return;
 	}
 
-	StateItem* item = NULL;
-	StateItem* temp = NULL;
-
-	LL_FOREACH_SAFE(g_State, item, temp)
-	{
-		LL_DELETE(g_State, item);
-		MEMPOOL_FREE(item);
-	}
+	ShutDownAllMenus();
+	DeleteAllStateItems();
 
 	// Just in case:
 	g_State = NULL;

@@ -307,8 +307,9 @@ void Logging_PrintLineV(RayGE_Log_Level level, const char* format, va_list args)
 void Logging_AddListener(Logging_Callback callback, void* userData)
 {
 	RAYGE_ASSERT_BREAK(g_Initialised);
+	RAYGE_ASSERT_BREAK(callback);
 
-	if ( !g_Initialised )
+	if ( !g_Initialised || !callback )
 	{
 		return;
 	}
@@ -320,4 +321,26 @@ void Logging_AddListener(Logging_Callback callback, void* userData)
 	listener->userData = userData;
 
 	LL_APPEND(g_LogData.listeners, listener);
+}
+
+void Logging_RemoveListener(Logging_Callback callback)
+{
+	RAYGE_ASSERT_BREAK(g_Initialised);
+
+	if ( !g_Initialised )
+	{
+		return;
+	}
+
+	Listener* item = NULL;
+	Listener* temp = NULL;
+
+	LL_FOREACH_SAFE(g_LogData.listeners, item, temp)
+	{
+		if ( item->callback == callback )
+		{
+			LL_DELETE(g_LogData.listeners, item);
+			return;
+		}
+	}
 }

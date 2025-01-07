@@ -6,6 +6,9 @@ typedef struct RayGE_UIMenu
 {
 	void* userData;
 
+	void (*Init)(void* userData);
+	void (*ShutDown)(void* userData);
+
 	void (*Show)(void* userData);
 	void (*Hide)(void* userData);
 
