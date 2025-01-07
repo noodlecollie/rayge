@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <string.h>
+#include <float.h>
 #include "UI/DeveloperConsole.h"
 #include "Logging/Logging.h"
 #include "MemPool/MemPoolManager.h"
@@ -8,6 +9,7 @@
 #include "cimgui.h"
 
 #define LOG_MESSAGE_LIST_CAPACITY 512
+#define MAX_COMMAND_LENGTH 256
 
 typedef struct LogMessage
 {
@@ -21,55 +23,52 @@ typedef struct Data
 	bool show;
 	LogMessage* logMessageList;
 	size_t logMessageCount;
+	size_t lastLogMessageIndex;
+	bool scrollToBottom;
+	char commandInputBuffer[MAX_COMMAND_LENGTH];
 } Data;
 
 static Data g_Data;
 static bool g_Initialised = false;
 
+static void FreeLogMessageContents(LogMessage* message)
+{
+	if ( message->message )
+	{
+		MEMPOOL_FREE(message->message);
+	}
+
+	memset(message, 0, sizeof(*message));
+}
+
 static void DeleteAllLogMessages(Data* data)
 {
 	for ( size_t index = 0; index < data->logMessageCount; ++index )
 	{
-		LogMessage* message = &data->logMessageList[index];
-
-		if ( message->message )
-		{
-			MEMPOOL_FREE(message->message);
-			message->message = NULL;
-			message->length = 0;
-		}
+		FreeLogMessageContents(&data->logMessageList[index]);
 	}
 
 	data->logMessageCount = 0;
 }
 
-static void ShiftLogMessages(Data* data)
-{
-	const size_t shift = LOG_MESSAGE_LIST_CAPACITY / 2;
-
-	memmove(
-		data->logMessageList,
-		data->logMessageList + shift,
-		(LOG_MESSAGE_LIST_CAPACITY - shift) * sizeof(LogMessage)
-	);
-
-	data->logMessageCount -= WZL_MIN(data->logMessageCount, shift);
-
-	memset(
-		data->logMessageList + data->logMessageCount,
-		0,
-		(LOG_MESSAGE_LIST_CAPACITY - data->logMessageCount) * sizeof(LogMessage)
-	);
-}
-
 static void AddLogMessage(Data* data, RayGE_Log_Level level, char* message, size_t length)
 {
-	if ( data->logMessageCount >= LOG_MESSAGE_LIST_CAPACITY )
+	if ( data->logMessageCount < LOG_MESSAGE_LIST_CAPACITY )
 	{
-		ShiftLogMessages(data);
+		data->lastLogMessageIndex = data->logMessageCount++;
+	}
+	else
+	{
+		data->lastLogMessageIndex = (data->lastLogMessageIndex + 1) % LOG_MESSAGE_LIST_CAPACITY;
 	}
 
-	LogMessage* entry = &data->logMessageList[data->logMessageCount++];
+	LogMessage* entry = &data->logMessageList[data->lastLogMessageIndex];
+
+	if ( data->logMessageCount >= LOG_MESSAGE_LIST_CAPACITY )
+	{
+		FreeLogMessageContents(entry);
+	}
+
 	entry->message = message;
 	entry->length = length;
 	entry->level = level;
@@ -126,6 +125,48 @@ static bool GetMessageColour(RayGE_Log_Level level, ImVec4* colour)
 	}
 }
 
+static int ConsoleInputCallback(ImGuiInputTextCallbackData* data)
+{
+	// Nothing here for now, but this callback must be provided
+	// or ImGui complains. We will probably do command completion here.
+	(void)data;
+	return 0;
+}
+
+static void ExecuteCurrentCommand(char* command)
+{
+	if ( !command || !command[0] )
+	{
+		return;
+	}
+
+	Logging_PrintLine(RAYGE_LOG_INFO, "TODO: Execute command \"%s\"", command);
+	command[0] = '\0';
+}
+
+static void DrawLogMessage(const LogMessage* message)
+{
+	if ( !message->message )
+	{
+		return;
+	}
+
+	ImVec4 colour = {1.0f, 1.0f, 1.0f, 1.0f};
+	const bool hasColour = GetMessageColour(message->level, &colour);
+
+	if ( hasColour )
+	{
+		igPushStyleColor_Vec4(ImGuiCol_Text, colour);
+	}
+
+	igTextWrapped("%s", message->message);
+
+	if ( hasColour )
+	{
+		igPopStyleColor(1);
+	}
+}
+
 static void Init(void* userData)
 {
 	Data* data = (Data*)userData;
@@ -135,6 +176,7 @@ static void Init(void* userData)
 		return;
 	}
 
+	data->commandInputBuffer[0] = '\0';
 	data->logMessageList = MEMPOOL_CALLOC(MEMPOOL_UI, LOG_MESSAGE_LIST_CAPACITY, sizeof(LogMessage));
 	Logging_AddListener(AcceptLogMessage, data);
 
@@ -152,6 +194,7 @@ static void ShutDown(void* userData)
 
 	Logging_RemoveListener(AcceptLogMessage);
 	DeleteAllLogMessages(data);
+	data->commandInputBuffer[0] = '\0';
 
 	MEMPOOL_FREE(data->logMessageList);
 	data->logMessageList = NULL;
@@ -178,32 +221,82 @@ static bool Poll(void* userData)
 		return false;
 	}
 
+	igSetNextWindowPos((ImVec2) {5.0f, 5.0f}, ImGuiCond_FirstUseEver, (ImVec2) {0.0f, 0.0f});
+	igSetNextWindowSize((ImVec2) {500.0f, 500.0f}, ImGuiCond_FirstUseEver);
+	igSetNextWindowSizeConstraints((ImVec2) {300.0f, 300.0f}, (ImVec2) {FLT_MAX, FLT_MAX}, NULL, NULL);
+
 	if ( igBegin("Developer Console", &data->show, ImGuiWindowFlags_NoCollapse) )
 	{
-		if ( igBeginChild_Str("ScrollingRegion", (ImVec2) {0, 0}, ImGuiChildFlags_NavFlattened, ImGuiWindowFlags_None) )
+		if ( igBeginChild_Str(
+				 "ScrollingRegion",
+				 (ImVec2) {0, -(igGetFrameHeight() + (3.0f * igGetStyle()->ItemSpacing.y))},
+				 ImGuiChildFlags_NavFlattened,
+				 ImGuiWindowFlags_AlwaysVerticalScrollbar
+			 ) )
 		{
-			for ( size_t index = 0; index < data->logMessageCount; ++index )
+			// TODO: We could optimise the following so we don't draw things that
+			// are way off the top of the text area.
+			// Note however that this might be made difficult by wrapped lines!
+			// Perhaps we need a table, since you can query whether a row has been clipped?
+
+			// All the messages that exist in the list in front of the last one
+			// we added (so all the really old messages):
+			for ( size_t index = data->lastLogMessageIndex + 1; index < LOG_MESSAGE_LIST_CAPACITY; ++index )
 			{
-				const LogMessage* message = &data->logMessageList[index];
-
-				ImVec4 colour = {1.0f, 1.0f, 1.0f, 1.0f};
-				const bool hasColour = GetMessageColour(message->level, &colour);
-
-				if ( hasColour )
-				{
-					igPushStyleColor_Vec4(ImGuiCol_Text, colour);
-				}
-
-				igTextWrapped("%s", message->message);
-
-				if ( hasColour )
-				{
-					igPopStyleColor(1);
-				}
+				DrawLogMessage(&data->logMessageList[index]);
 			}
+
+			// Then everything from the beginning to our last message:
+			for ( size_t index = 0; index <= data->lastLogMessageIndex; ++index )
+			{
+				DrawLogMessage(&data->logMessageList[index]);
+			}
+
+			if ( data->scrollToBottom || igGetScrollY() >= igGetScrollMaxY() )
+			{
+				igSetScrollHereY(1.0f);
+			}
+
+			data->scrollToBottom = false;
 		}
 
 		igEndChild();
+		igSeparator();
+		igSpacing();
+
+		bool reclaimFocus = false;
+		const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags_EnterReturnsTrue |
+			ImGuiInputTextFlags_EscapeClearsAll | ImGuiInputTextFlags_CallbackCompletion |
+			ImGuiInputTextFlags_CallbackHistory;
+
+		if ( igInputTextEx(
+				 "##",
+				 "",
+				 data->commandInputBuffer,
+				 sizeof(data->commandInputBuffer),
+				 (ImVec2) {-100.0f, igGetFrameHeight()},
+				 inputFlags,
+				 ConsoleInputCallback,
+				 data
+			 ) )
+		{
+			ExecuteCurrentCommand(data->commandInputBuffer);
+			reclaimFocus = true;
+		}
+
+		igSetItemDefaultFocus();
+
+		if ( reclaimFocus )
+		{
+			igSetKeyboardFocusHere(-1);
+		}
+
+		igSameLine(0.0f, -1.0f);
+
+		if ( igButton("Submit", (ImVec2) {-0.1f, igGetFrameHeight()}) )
+		{
+			ExecuteCurrentCommand(data->commandInputBuffer);
+		}
 	}
 
 	igEnd();
