@@ -8,14 +8,12 @@
 #include "cimgui.h"
 
 #define LOG_MESSAGE_LIST_CAPACITY 512
-#define INDICATOR_ERROR 'E'
-#define INDICATOR_WARNING 'W'
-#define INDICATOR_INFO 'I'
 
 typedef struct LogMessage
 {
-	size_t length;  // Not including terminator
+	RayGE_Log_Level level;
 	char* message;
+	size_t length;  // Not including terminator
 } LogMessage;
 
 typedef struct Data
@@ -64,7 +62,7 @@ static void ShiftLogMessages(Data* data)
 	);
 }
 
-static void AddLogMessage(Data* data, char* message, size_t length)
+static void AddLogMessage(Data* data, RayGE_Log_Level level, char* message, size_t length)
 {
 	if ( data->logMessageCount >= LOG_MESSAGE_LIST_CAPACITY )
 	{
@@ -74,6 +72,7 @@ static void AddLogMessage(Data* data, char* message, size_t length)
 	LogMessage* entry = &data->logMessageList[data->logMessageCount++];
 	entry->message = message;
 	entry->length = length;
+	entry->level = level;
 };
 
 static void AcceptLogMessage(RayGE_Log_Level level, const char* message, size_t length, void* userData)
@@ -89,32 +88,42 @@ static void AcceptLogMessage(RayGE_Log_Level level, const char* message, size_t 
 		return;
 	}
 
-	// +1 for terminator, +1 for level indicator.
-	char* messageBuffer = MEMPOOL_MALLOC(MEMPOOL_UI, length + 2);
+	// +1 for terminator
+	char* messageBuffer = MEMPOOL_MALLOC(MEMPOOL_UI, length + 1);
+	memcpy(messageBuffer, message, length + 1);
 
+	AddLogMessage(data, level, messageBuffer, length);
+}
+
+static bool GetMessageColour(RayGE_Log_Level level, ImVec4* colour)
+{
 	switch ( level )
 	{
 		case RAYGE_LOG_FATAL:
 		case RAYGE_LOG_ERROR:
 		{
-			messageBuffer[0] = INDICATOR_ERROR;
-			break;
+			if ( colour )
+			{
+				*colour = (ImVec4) {1.0f, 0.4f, 0.4f, 1.0f};
+			}
+
+			return true;
 		}
 
 		case RAYGE_LOG_WARNING:
 		{
-			messageBuffer[0] = INDICATOR_WARNING;
-			break;
+			if ( colour )
+			{
+				*colour = (ImVec4) {1.0f, 0.8f, 0.6f, 1.0f};
+			}
+			return true;
 		}
 
 		default:
 		{
-			messageBuffer[0] = INDICATOR_INFO;
+			return false;
 		}
 	}
-
-	memcpy(messageBuffer + 1, message, length + 1);
-	AddLogMessage(data, messageBuffer, length + 1);
 }
 
 static void Init(void* userData)
@@ -176,7 +185,21 @@ static bool Poll(void* userData)
 			for ( size_t index = 0; index < data->logMessageCount; ++index )
 			{
 				const LogMessage* message = &data->logMessageList[index];
-				igTextWrapped("%s", message->message + 1);
+
+				ImVec4 colour = {1.0f, 1.0f, 1.0f, 1.0f};
+				const bool hasColour = GetMessageColour(message->level, &colour);
+
+				if ( hasColour )
+				{
+					igPushStyleColor_Vec4(ImGuiCol_Text, colour);
+				}
+
+				igTextWrapped("%s", message->message);
+
+				if ( hasColour )
+				{
+					igPopStyleColor(1);
+				}
 			}
 		}
 
