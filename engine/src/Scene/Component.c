@@ -41,7 +41,7 @@ RayGE_ComponentImpl_Renderable* Component_CreateRenderable(void)
 	RayGE_ComponentImpl_Renderable* component =
 		CALLOC_COMPONENT(RayGE_ComponentImpl_Renderable, RAYGE_COMPONENTTYPE_RENDERABLE);
 
-	component->data.handle = RAYGE_INVALID_RESOURCE_HANDLE;
+	component->data.handle = RAYGE_NULL_RESOURCE_HANDLE;
 	component->data.color = (RayGE_Color){ 255, 255, 255, 255 };
 	component->data.scale = 1.0f;
 

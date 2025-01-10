@@ -17,4 +17,6 @@ typedef enum RayGE_RenderablePrimitive
 typedef struct RayGE_Renderable_API
 {
 	RayGE_ResourceHandle (*GetPrimitiveHandle)(RayGE_RenderablePrimitive primitive);
+	RayGE_ResourceHandle (*LoadTexture)(const char* path);
+	void (*UnloadTexture)(RayGE_ResourceHandle handle);
 } RayGE_Renderable_API;

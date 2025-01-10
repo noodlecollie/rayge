@@ -3,6 +3,7 @@
 #include "MemPool/MemPoolManager.h"
 #include "BinaryResources/DMMono_Regular.h"
 #include "BinaryResources/OpenSans_Medium.h"
+#include "Rendering/TextureResources.h"
 #include "Debugging.h"
 #include "raylib.h"
 
@@ -69,6 +70,7 @@ void RendererSubsystem_ShutDown(void)
 	}
 
 	Renderer_Destroy(g_Data->renderer);
+	TextureResources_UnloadAll();
 	UnloadFont(g_Data->defaultMonoFont);
 	UnloadFont(g_Data->defaultUIFont);
 	CloseWindow();

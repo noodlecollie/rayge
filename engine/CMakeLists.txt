@@ -95,6 +95,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Rendering/RenderablePrimitives.c
 	src/Rendering/Renderer.h
 	src/Rendering/Renderer.c
+	src/Rendering/TextureResources.h
+	src/Rendering/TextureResources.c
 	src/ResourceManagement/ResourceHandleUtils.h
 	src/ResourceManagement/ResourceHandleUtils.c
 	src/Scene/Component.h

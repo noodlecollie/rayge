@@ -12,7 +12,10 @@ typedef struct RayGE_ResourceHandle
 
 // The first of these is valid in constant assignments.
 // The second (according to the -pedantic flag) is not.
-// An invalid resource handle will never refer to a
-// valid resource.
-#define RAYGE_INIT_INVALID_RESOURCE_HANDLE {0, 0, 0}
-#define RAYGE_INVALID_RESOURCE_HANDLE (RAYGE_TYPE_LITERAL(RayGE_ResourceHandle) RAYGE_INIT_INVALID_RESOURCE_HANDLE)
+// A normal handle may not refer to a valid resource if,
+// for example, the resource it used to refer to has been
+// freed, but a null handle is guaranteed to never
+// be used to refer to any resource.
+#define RAYGE_INIT_NULL_RESOURCE_HANDLE {0, 0, 0}
+#define RAYGE_NULL_RESOURCE_HANDLE (RAYGE_TYPE_LITERAL(RayGE_ResourceHandle) RAYGE_INIT_NULL_RESOURCE_HANDLE)
+#define RAYGE_IS_NULL_RESOURCE_HANDLE(handle) ((handle).domain == 0 && (handle).index == 0 && (handle).key == 0)

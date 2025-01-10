@@ -157,7 +157,7 @@ RayGE_ResourceHandle Entity_CreateHandle(const RayGE_Entity* entity)
 {
 	if ( !entity )
 	{
-		return RAYGE_INVALID_RESOURCE_HANDLE;
+		return RAYGE_NULL_RESOURCE_HANDLE;
 	}
 
 	return Resource_CreateInternalHandle(RESOURCE_DOMAIN_ENTITY, entity->indexInParent, entity->key);

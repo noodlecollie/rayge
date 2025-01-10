@@ -5,7 +5,7 @@ RayGE_ResourceHandle RenderablePrimitive_GetHandle(RayGE_RenderablePrimitive pri
 {
 	if ( primitive <= RAYGE_RENDERABLE_PRIM_INVALID || primitive >= RAYGE_RENDERABLE_PRIM__COUNT )
 	{
-		return RAYGE_INVALID_RESOURCE_HANDLE;
+		return RAYGE_NULL_RESOURCE_HANDLE;
 	}
 
 	// Keys don't matter here since these resources aren't specific items,

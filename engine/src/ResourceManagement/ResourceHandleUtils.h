@@ -9,6 +9,7 @@ typedef enum RayGE_InternalResourceDomain
 	RESOURCE_DOMAIN_INVALID = 0,
 	RESOURCE_DOMAIN_ENTITY,
 	RESOURCE_DOMAIN_RENDERABLE_PRIMITIVE,
+	RESOURCE_DOMAIN_TEXTURE,
 
 	RESOURCE_DOMAIN__COUNT
 } RayGE_InternalResourceDomain;
@@ -16,6 +17,7 @@ typedef enum RayGE_InternalResourceDomain
 #define RESOURCEFLAG_INTERNAL_DOMAIN (1 << 31)
 #define RESOURCE_DOMAIN_ID_MASK ((uint32_t)0x7FFFFFFF)
 
+RayGE_ResourceHandle Resource_CreateHandle(RayGE_InternalResourceDomain domain, uint32_t index, uint64_t key);
 RayGE_ResourceHandle Resource_CreateInternalHandle(RayGE_InternalResourceDomain domain, uint32_t index, uint64_t key);
 uint64_t Resource_CreateKey(uint32_t index);
 RayGE_InternalResourceDomain Resource_GetInternalDomain(RayGE_ResourceHandle handle);
