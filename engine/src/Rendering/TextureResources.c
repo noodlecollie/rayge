@@ -40,6 +40,12 @@ typedef struct Data
 	size_t totalTextures;
 } Data;
 
+struct TextureResources_Iterator
+{
+	size_t batchIndex;
+	size_t entryIndex;
+};
+
 static Data g_Data;
 
 static void DeleteBatch(TextureBatch* batch)
@@ -122,7 +128,7 @@ static size_t GetFirstAvailableBatchIndex(Data* data)
 
 		if ( !data->batches[index]->isFull )
 		{
-			index;
+			return index;
 		}
 	}
 
@@ -240,6 +246,50 @@ static TextureEntry* FindTextureEntryByHandle(Data* data, RayGE_ResourceHandle h
 	return NULL;
 }
 
+static bool IteratorRefersToBatch(Data* data, const TextureResources_Iterator* iterator)
+{
+	return iterator && data->batches && iterator->batchIndex < NUM_TEXTURE_BATCHES &&
+		data->batches[iterator->batchIndex];
+}
+
+static bool IncrementIteratorToNextValidEntry(TextureResources_Iterator* iterator, const TextureBatch* batch)
+{
+	do
+	{
+		++iterator->entryIndex;
+	}
+	while ( iterator->entryIndex < RAYGE_ARRAY_SIZE(batch->textures) &&
+			batch->textures[iterator->entryIndex].texture.id == 0 );
+
+	return iterator->entryIndex < RAYGE_ARRAY_SIZE(batch->textures);
+}
+
+static bool IncrementIteratorToNextValidBatch(Data* data, TextureResources_Iterator* iterator)
+{
+	RAYGE_ASSERT_VALID(data && data->batches);
+
+	iterator->entryIndex = 0;
+
+	do
+	{
+		++iterator->batchIndex;
+	}
+	while ( iterator->batchIndex < NUM_TEXTURE_BATCHES && !data->batches[iterator->batchIndex] );
+
+	return iterator->batchIndex < NUM_TEXTURE_BATCHES;
+}
+
+static TextureEntry* GetEntryFromIterator(Data* data, TextureResources_Iterator* iterator)
+{
+	if ( !IteratorRefersToBatch(data, iterator) || iterator->entryIndex >= TEXTURE_BATCH_SIZE )
+	{
+		return NULL;
+	}
+
+	TextureBatch* batch = data->batches[iterator->batchIndex];
+	return &batch->textures[iterator->entryIndex];
+};
+
 RayGE_ResourceHandle TextureResources_LoadTexture(const char* path)
 {
 	if ( !path || !(*path) )
@@ -295,4 +345,77 @@ void TextureResources_UnloadAll(void)
 {
 	DeleteAllHashEntries(&g_Data);
 	DeleteAllBatches(&g_Data);
+}
+
+size_t TextureResources_NumTextures(void)
+{
+	return g_Data.totalTextures;
+}
+
+TextureResources_Iterator* TextureResources_CreateBeginIterator(void)
+{
+	if ( !g_Data.batches || g_Data.totalTextures < 1 )
+	{
+		return NULL;
+	}
+
+	TextureResources_Iterator* iterator = MEMPOOL_CALLOC_STRUCT(MEMPOOL_RESOURCE_MANAGEMENT, TextureResources_Iterator);
+	return iterator;
+}
+
+void TextureResources_DestroyIterator(TextureResources_Iterator* iterator)
+{
+	if ( !iterator )
+	{
+		return;
+	}
+
+	MEMPOOL_FREE(iterator);
+}
+
+bool TextureResources_IncrementIterator(TextureResources_Iterator* iterator)
+{
+	if ( !IteratorRefersToBatch(&g_Data, iterator) )
+	{
+		false;
+	}
+
+	bool nextBatchValid = false;
+
+	do
+	{
+		TextureBatch* batch = g_Data.batches[iterator->batchIndex];
+
+		if ( IncrementIteratorToNextValidEntry(iterator, batch) )
+		{
+			return true;
+		}
+
+		nextBatchValid = IncrementIteratorToNextValidBatch(&g_Data, iterator);
+
+		if ( nextBatchValid )
+		{
+			batch = g_Data.batches[iterator->batchIndex];
+
+			if ( batch->textures[iterator->entryIndex].texture.id != 0 )
+			{
+				return true;
+			}
+		}
+	}
+	while ( nextBatchValid );
+
+	return false;
+}
+
+Texture2D TextureResourcesIterator_GetTexture(TextureResources_Iterator* iterator)
+{
+	TextureEntry* entry = GetEntryFromIterator(&g_Data, iterator);
+	return entry ? entry->texture : (Texture2D){0, 0, 0, 0, 0};
+}
+
+const char* TextureResourcesIterator_GetPath(TextureResources_Iterator* iterator)
+{
+	TextureEntry* entry = GetEntryFromIterator(&g_Data, iterator);
+	return entry ? entry->hashItem->path : NULL;
 }
