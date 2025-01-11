@@ -25,6 +25,8 @@ const RayGE_Engine_API_Current g_EngineAPI = {
 	// Renderable
 	{
 		RenderableAPI_GetPrimitiveHandle,
+		RenderableAPI_LoadTexture,
+		RenderableAPI_UnloadTexture,
 	}
 };
 
