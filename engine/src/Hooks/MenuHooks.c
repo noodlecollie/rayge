@@ -64,12 +64,12 @@ static void HandleCommand(const char* commandName, void* userData)
 	if ( commandName[0] == '+' )
 	{
 		Logging_PrintLine(RAYGE_LOG_DEBUG, "Show menu command: %s", commandName);
-		UISubsystem_SetCurrentMenu(menu);
+		UISubsystem_ShowMenu(menu);
 	}
 	else if ( commandName[0] == '-' )
 	{
 		Logging_PrintLine(RAYGE_LOG_DEBUG, "Hide menu command: %s", commandName);
-		UISubsystem_ClearCurrentMenu();
+		UISubsystem_HideMenu(menu);
 	}
 	else
 	{
@@ -83,7 +83,7 @@ static void HandleHook(RayGE_InputSource source, int id, const RayGE_InputBuffer
 
 	const StateItem* state = (const StateItem*)userData;
 
-	if ( state->menu && UISubsystem_GetCurrentMenu() != state->menu )
+	if ( state->menu && !UISubsystem_IsMenuActive(state->menu) )
 	{
 		Logging_PrintLine(RAYGE_LOG_TRACE, "Triggering show menu for source %d key %d", source, id);
 		CommandSubsystem_InvokeCommand(state->showCmd);

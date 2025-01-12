@@ -93,8 +93,7 @@ static void RunFrameInput(void)
 	InputSubsystem_ProcessInput();
 	InputHookSubsystem_ProcessInput();
 	UISubsystem_ProcessInput();
-
-	UISubsystem_PollCurrentMenu();
+	UISubsystem_Poll();
 }
 
 static bool RunFrame(void)

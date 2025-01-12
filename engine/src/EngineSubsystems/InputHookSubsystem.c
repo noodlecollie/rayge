@@ -290,7 +290,7 @@ void InputHookSubsystem_ProcessInput(void)
 		return;
 	}
 
-	const bool uiIsOpen = UISubsystem_HasCurrentMenu();
+	const bool uiIsOpen = UISubsystem_HasActiveMenus();
 
 	// Deal with all newly inactive inputs before all newly active ones.
 	for ( size_t source = 0; source < INPUT_SOURCE__COUNT; ++source )

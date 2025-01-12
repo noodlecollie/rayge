@@ -30,6 +30,7 @@ typedef struct TextureEntry
 typedef struct TextureBatch
 {
 	TextureEntry textures[TEXTURE_BATCH_SIZE];
+	bool isNotEmpty;
 	bool isFull;
 } TextureBatch;
 
@@ -135,18 +136,28 @@ static size_t GetFirstAvailableBatchIndex(Data* data)
 	return SIZE_MAX;
 }
 
-static void UpdateFullFlag(TextureBatch* batch)
+static void UpdateBatchFlags(TextureBatch* batch)
 {
+	batch->isFull = true;
+	batch->isNotEmpty = false;
+
 	for ( size_t index = 0; index < RAYGE_ARRAY_SIZE(batch->textures); ++index )
 	{
 		if ( batch->textures->texture.id == 0 )
 		{
 			batch->isFull = false;
+		}
+		else
+		{
+			batch->isNotEmpty = true;
+		}
+
+		if ( !batch->isFull && batch->isNotEmpty )
+		{
+			// We can quit now - there will be no more changes to any flags.
 			return;
 		}
 	}
-
-	batch->isFull = true;
 }
 
 static void ClearTextureEntry(Data* data, TextureEntry* entry)
@@ -185,7 +196,7 @@ static RayGE_ResourceHandle AddTextureToBatch(Data* data, TextureEntry entryToAd
 
 	RAYGE_ENSURE(index < RAYGE_ARRAY_SIZE(batch->textures), "Overflowed texture batch! This should never happen!");
 
-	UpdateFullFlag(batch);
+	UpdateBatchFlags(batch);
 
 	return Resource_CreateHandle(RESOURCE_DOMAIN_TEXTURE, (uint32_t)batchIndex, entryToAdd.key);
 }
@@ -274,7 +285,8 @@ static bool IncrementIteratorToNextValidBatch(Data* data, TextureResources_Itera
 	{
 		++iterator->batchIndex;
 	}
-	while ( iterator->batchIndex < NUM_TEXTURE_BATCHES && !data->batches[iterator->batchIndex] );
+	while ( iterator->batchIndex < NUM_TEXTURE_BATCHES && (!data->batches[iterator->batchIndex] ||
+			!(data->batches[iterator->batchIndex]->isNotEmpty)) );
 
 	return iterator->batchIndex < NUM_TEXTURE_BATCHES;
 }
@@ -303,7 +315,7 @@ RayGE_ResourceHandle TextureResources_LoadTexture(const char* path)
 			RAYGE_LOG_ERROR,
 			"Cannot load texture %s: reached maximum of %zu textures",
 			path,
-			MAX_TEXTURES
+			g_Data.totalTextures
 		);
 
 		return RAYGE_NULL_RESOURCE_HANDLE;
@@ -411,7 +423,7 @@ bool TextureResources_IncrementIterator(TextureResources_Iterator* iterator)
 Texture2D TextureResourcesIterator_GetTexture(TextureResources_Iterator* iterator)
 {
 	TextureEntry* entry = GetEntryFromIterator(&g_Data, iterator);
-	return entry ? entry->texture : (Texture2D){0, 0, 0, 0, 0};
+	return entry ? entry->texture : (Texture2D) {0, 0, 0, 0, 0};
 }
 
 const char* TextureResourcesIterator_GetPath(TextureResources_Iterator* iterator)

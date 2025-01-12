@@ -19,11 +19,12 @@ typedef struct RayGE_UIMenu
 void UISubsystem_Init(void);
 void UISubsystem_ShutDown(void);
 
-const RayGE_UIMenu* UISubsystem_GetCurrentMenu(void);
-void UISubsystem_SetCurrentMenu(const RayGE_UIMenu* menu);
-void UISubsystem_ClearCurrentMenu(void);
-bool UISubsystem_HasCurrentMenu(void);
-void UISubsystem_PollCurrentMenu(void);
+void UISubsystem_ShowMenu(const RayGE_UIMenu* menu);
+void UISubsystem_HideMenu(const RayGE_UIMenu* menu);
+void UISubsystem_HideAllMenus(void);
+bool UISubsystem_HasActiveMenus(void);
+bool UISubsystem_IsMenuActive(const RayGE_UIMenu* menu);
 
 void UISubsystem_ProcessInput(void);
+void UISubsystem_Poll(void);
 void UISubsystem_Draw(void);
