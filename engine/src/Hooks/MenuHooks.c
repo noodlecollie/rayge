@@ -8,6 +8,7 @@
 #include "UI/SceneDebugUI.h"
 #include "UI/ImGuiDemo.h"
 #include "UI/DeveloperConsole.h"
+#include "UI/ResourceViewer.h"
 #include "Debugging.h"
 #include "wzl_cutl/string.h"
 #include "utlist.h"
@@ -18,6 +19,7 @@ typedef struct StateItem
 	struct StateItem* next;
 	const CommandSubsystem_CommandHandle* showCmd;
 	const CommandSubsystem_CommandHandle* hideCmd;
+	const CommandSubsystem_CommandHandle* toggleCmd;
 	const RayGE_UIMenu* menu;
 } StateItem;
 
@@ -73,7 +75,16 @@ static void HandleCommand(const char* commandName, void* userData)
 	}
 	else
 	{
-		Logging_PrintLine(RAYGE_LOG_WARNING, "MenuHooks: Unsupported command name syntax \"%s\"", commandName);
+		Logging_PrintLine(RAYGE_LOG_DEBUG, "Toggle menu command: %s", commandName);
+
+		if ( UISubsystem_IsMenuActive(menu) )
+		{
+			UISubsystem_HideMenu(menu);
+		}
+		else
+		{
+			UISubsystem_ShowMenu(menu);
+		}
 	}
 }
 
@@ -83,15 +94,10 @@ static void HandleHook(RayGE_InputSource source, int id, const RayGE_InputBuffer
 
 	const StateItem* state = (const StateItem*)userData;
 
-	if ( state->menu && !UISubsystem_IsMenuActive(state->menu) )
+	if ( state->toggleCmd )
 	{
-		Logging_PrintLine(RAYGE_LOG_TRACE, "Triggering show menu for source %d key %d", source, id);
-		CommandSubsystem_InvokeCommand(state->showCmd);
-	}
-	else
-	{
-		Logging_PrintLine(RAYGE_LOG_TRACE, "Triggering hide menu for source %d key %d", source, id);
-		CommandSubsystem_InvokeCommand(state->hideCmd);
+		Logging_PrintLine(RAYGE_LOG_TRACE, "Toggling menu for source %d key %d", source, id);
+		CommandSubsystem_InvokeCommand(state->toggleCmd);
 	}
 }
 
@@ -114,33 +120,55 @@ static void RegisterMenuCommands(StateItem* state, const char* name, const RayGE
 	{
 		state->hideCmd = hideCmd;
 	}
+
+	const CommandSubsystem_CommandHandle* toggleCmd = CommandSubsystem_AddCommand(name, HandleCommand, (void*)menu);
+
+	if ( state )
+	{
+		state->toggleCmd = toggleCmd;
+	}
 }
 
-static void RegisterMenuWithModifiers(int key, unsigned int modifierFlags, const char* name, const RayGE_UIMenu* menu)
+static void RegisterMenu(int key, unsigned int modifierFlags, const char* name, const RayGE_UIMenu* menu)
 {
 	RAYGE_ENSURE(name && menu, "Expected a valid name and menu");
 
-	Logging_PrintLine(
-		RAYGE_LOG_TRACE,
-		"Registering menu hook for %s on key %d (modifier condition: 0x%08x)",
-		name,
-		key,
-		modifierFlags
-	);
+	if ( key != KEY_NULL )
+	{
+		Logging_PrintLine(
+			RAYGE_LOG_TRACE,
+			"Registering menu hook for %s on key %d (modifier condition: 0x%08x)",
+			name,
+			key,
+			modifierFlags
+		);
+	}
+	else
+	{
+		Logging_PrintLine(RAYGE_LOG_TRACE, "Registering menu %s", name);
+	}
 
 	StateItem* state = MEMPOOL_CALLOC_STRUCT(MEMPOOL_HOOKS, StateItem);
 	LL_PREPEND(g_State, state);
 
 	state->menu = menu;
+
+	// Register the relevant commands for this menu (show, hide, toggle).
+	// These can be invoked manually from the console if desired.
 	RegisterMenuCommands(state, name, menu);
 
-	const RayGE_InputHook hook = {
-		.triggerFlags = INPUT_TRIGGER_ACTIVE | INPUT_TRIGGER_OVERRIDE_UI_FOCUS,
-		.callback = HandleHook,
-		.userData = state
-	};
+	if ( key != KEY_NULL )
+	{
+		const RayGE_InputHook hook = {
+			.triggerFlags = INPUT_TRIGGER_ACTIVE | INPUT_TRIGGER_OVERRIDE_UI_FOCUS,
+			.callback = HandleHook,
+			.userData = state
+		};
 
-	InputHookSubsystem_AddHook(INPUT_SOURCE_KEYBOARD, key, modifierFlags, hook);
+		// Register the input hook for the menu. This will invoke the relevant
+		// command when the key is pressed.
+		InputHookSubsystem_AddHook(INPUT_SOURCE_KEYBOARD, key, modifierFlags, hook);
+	}
 
 	if ( state->menu->Init )
 	{
@@ -148,16 +176,18 @@ static void RegisterMenuWithModifiers(int key, unsigned int modifierFlags, const
 	}
 }
 
-static void RegisterMenu(int key, const char* name, const RayGE_UIMenu* menu)
+static void RegisterMenuCommandOnly(const char* name, const RayGE_UIMenu* menu)
 {
-	RegisterMenuWithModifiers(key, KEYMOD_REQUIRE_NONE, name, menu);
+	RegisterMenu(KEY_NULL, KEYMOD_NONE, name, menu);
 }
 
 static void RegisterMenus(void)
 {
-	RegisterMenu(KEY_GRAVE, "Engine.Menu.DeveloperConsole", &Menu_DeveloperConsole);
-	RegisterMenuWithModifiers(KEY_GRAVE, KEYMOD_CTRL, "Engine.Menu.Debug", &Menu_SceneDebugUI);
-	RegisterMenuWithModifiers(KEY_GRAVE, KEYMOD_CTRL | KEYMOD_ALT, "Engine.Menu.ImGuiDemo", &Menu_ImGuiDemo);
+	RegisterMenu(KEY_GRAVE, KEYMOD_REQUIRE_NONE, "Engine.Menu.DeveloperConsole", &Menu_DeveloperConsole);
+	RegisterMenu(KEY_GRAVE, KEYMOD_CTRL, "Engine.Menu.Debug", &Menu_SceneDebugUI);
+	RegisterMenu(KEY_GRAVE, KEYMOD_CTRL | KEYMOD_ALT, "Engine.Menu.ImGuiDemo", &Menu_ImGuiDemo);
+
+	RegisterMenuCommandOnly("Engine.Menu.ResourceViewer", &Menu_ResourceViewer);
 }
 
 void MenuHooks_Register(void)

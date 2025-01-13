@@ -63,7 +63,7 @@ uint64_t Resource_CreateKey(uint32_t index)
 
 RayGE_InternalResourceDomain Resource_GetInternalDomain(RayGE_ResourceHandle handle)
 {
-	if ( !(handle.domain & RESOURCEFLAG_INTERNAL_DOMAIN) )
+	if ( !Resource_HandleIsInternal(handle) )
 	{
 		return RESOURCE_DOMAIN_INVALID;
 	}
@@ -73,6 +73,11 @@ RayGE_InternalResourceDomain Resource_GetInternalDomain(RayGE_ResourceHandle han
 	return (decodedDomain > RESOURCE_DOMAIN_INVALID && decodedDomain < RESOURCE_DOMAIN__COUNT)
 		? (RayGE_InternalResourceDomain)decodedDomain
 		: RESOURCE_DOMAIN_INVALID;
+}
+
+bool Resource_HandleIsInternal(RayGE_ResourceHandle handle)
+{
+	return (handle.domain & RESOURCEFLAG_INTERNAL_DOMAIN) != 0;
 }
 
 bool Resource_HandleIsValidForInternalDomain(

@@ -4,6 +4,9 @@
 
 bool CommandParser_ParseAndExecute(const char* commandString)
 {
+	// TODO: Trim whitespace etc.
+	Logging_PrintLine(RAYGE_LOG_INFO, "%s", commandString);
+
 	// TODO: Tokenise string once we have support for arguments.
 	const CommandSubsystem_CommandHandle* handle = CommandSubsystem_FindCommand(commandString);
 

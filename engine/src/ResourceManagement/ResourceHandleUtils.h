@@ -21,6 +21,7 @@ RayGE_ResourceHandle Resource_CreateHandle(RayGE_InternalResourceDomain domain, 
 RayGE_ResourceHandle Resource_CreateInternalHandle(RayGE_InternalResourceDomain domain, uint32_t index, uint64_t key);
 uint64_t Resource_CreateKey(uint32_t index);
 RayGE_InternalResourceDomain Resource_GetInternalDomain(RayGE_ResourceHandle handle);
+bool Resource_HandleIsInternal(RayGE_ResourceHandle handle);
 
 bool Resource_HandleIsValidForInternalDomain(
 	RayGE_ResourceHandle handle,

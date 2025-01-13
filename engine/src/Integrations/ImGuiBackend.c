@@ -2,6 +2,7 @@
 #include "Integrations/ImGuiBackend.h"
 #include "Rendering/Renderer.h"
 #include "EngineSubsystems/RendererSubsystem.h"
+#include "Rendering/TextureResources.h"
 #include "cimgui.h"
 #include "cimgui_assert.h"
 #include "raylib.h"
@@ -30,6 +31,7 @@ typedef struct Data
 	int imGuiToRaylibCursorMap[ImGuiMouseCursor_COUNT];
 
 	Texture2D fontTexture;
+	RayGE_ResourceHandle fontResource;
 } Data;
 
 static Data g_Data;
@@ -63,15 +65,21 @@ static bool IsAnySuperKeyDown(void)
 
 static void SetFontTextureFromImage(Data* data, const Image* image)
 {
-	if ( data->fontTexture.id != 0 )
+	if ( !RAYGE_IS_NULL_RESOURCE_HANDLE(data->fontResource) )
 	{
-		UnloadTexture(data->fontTexture);
-		data->fontTexture.id = 0;
+		TextureResources_UnloadInternalTexture(data->fontResource);
+		data->fontResource = RAYGE_NULL_RESOURCE_HANDLE;
+		memset(&data->fontTexture, 0, sizeof(data->fontTexture));
 	}
 
 	if ( image )
 	{
-		data->fontTexture = LoadTextureFromImage(*image);
+		data->fontResource = TextureResources_LoadInternalTexture("imgui_font", *image);
+
+		TextureResources_Iterator iterator = TextureResources_CreateIterator(data->fontResource);
+		data->fontTexture = TextureResourcesIterator_GetTexture(iterator);
+
+		RAYGE_ENSURE(data->fontTexture.id != 0, "Failed to load ImGui font texture!");
 	}
 }
 

@@ -13,6 +13,12 @@
 #define TEXTURE_BATCH_SIZE 32
 #define NUM_TEXTURE_BATCHES (MAX_TEXTURES / TEXTURE_BATCH_SIZE)
 
+typedef struct StringBounds
+{
+	const char* begin;
+	const char* end;
+} StringBounds;
+
 typedef struct PathToResourceHandleHashItem
 {
 	UT_hash_handle hh;
@@ -41,13 +47,33 @@ typedef struct Data
 	size_t totalTextures;
 } Data;
 
-struct TextureResources_Iterator
-{
-	size_t batchIndex;
-	size_t entryIndex;
-};
-
 static Data g_Data;
+
+static StringBounds BoundString(const char* str)
+{
+	RAYGE_ASSERT_VALID(str);
+
+	StringBounds bounds = {NULL, NULL};
+	wzl_strtrimspace(str, &bounds.begin, &bounds.end);
+
+	return bounds;
+}
+
+static char* NewStringFromBounds(StringBounds bounds)
+{
+	RAYGE_ASSERT(bounds.begin && bounds.end && bounds.begin <= bounds.end, "String bounds were not valid");
+
+	const size_t size = (bounds.end - bounds.begin + 1) * sizeof(char);
+	char* out = MEMPOOL_MALLOC(MEMPOOL_RESOURCE_MANAGEMENT, size);
+
+	if ( size > 0 )
+	{
+		memcpy(out, bounds.begin, size - 1);
+	}
+
+	out[size - 1] = '\0';
+	return out;
+};
 
 static void DeleteBatch(TextureBatch* batch)
 {
@@ -173,7 +199,7 @@ static void ClearTextureEntry(Data* data, TextureEntry* entry)
 	memset(entry, 0, sizeof(*entry));
 }
 
-static RayGE_ResourceHandle AddTextureToBatch(Data* data, TextureEntry entryToAdd)
+static RayGE_ResourceHandle AddTextureToBatch(Data* data, TextureEntry entryToAdd, bool isInternal)
 {
 	size_t batchIndex = GetFirstAvailableBatchIndex(data);
 
@@ -198,10 +224,11 @@ static RayGE_ResourceHandle AddTextureToBatch(Data* data, TextureEntry entryToAd
 
 	UpdateBatchFlags(batch);
 
-	return Resource_CreateHandle(RESOURCE_DOMAIN_TEXTURE, (uint32_t)batchIndex, entryToAdd.key);
+	return isInternal ? Resource_CreateInternalHandle(RESOURCE_DOMAIN_TEXTURE, (uint32_t)batchIndex, entryToAdd.key)
+					  : Resource_CreateHandle(RESOURCE_DOMAIN_TEXTURE, (uint32_t)batchIndex, entryToAdd.key);
 }
 
-static RayGE_ResourceHandle AddTextureToResourceList(Data* data, const char* path, Texture2D texture)
+static RayGE_ResourceHandle AddTextureToResourceList(Data* data, char* path, Texture2D texture)
 {
 	RAYGE_ASSERT(data->totalTextures < MAX_TEXTURES, "Expected total textures to be < MAX_TEXTURES");
 
@@ -214,9 +241,9 @@ static RayGE_ResourceHandle AddTextureToResourceList(Data* data, const char* pat
 		.hashItem = item,
 	};
 
-	const RayGE_ResourceHandle handle = AddTextureToBatch(&g_Data, entry);
+	const RayGE_ResourceHandle handle = AddTextureToBatch(&g_Data, entry, path[0] == ':');
 
-	item->path = wzl_strdup(path);
+	item->path = path;
 	item->handle = handle;
 
 	HASH_ADD_STR(g_Data.pathToResourceHandle, path, item);
@@ -257,6 +284,14 @@ static TextureEntry* FindTextureEntryByHandle(Data* data, RayGE_ResourceHandle h
 	return NULL;
 }
 
+static TextureResources_Iterator CreateInvalidIterator(void)
+{
+	return (TextureResources_Iterator) {
+		.batchIndex = NUM_TEXTURE_BATCHES,
+		.entryIndex = TEXTURE_BATCH_SIZE,
+	};
+}
+
 static bool IteratorRefersToBatch(Data* data, const TextureResources_Iterator* iterator)
 {
 	return iterator && data->batches && iterator->batchIndex < NUM_TEXTURE_BATCHES &&
@@ -285,8 +320,8 @@ static bool IncrementIteratorToNextValidBatch(Data* data, TextureResources_Itera
 	{
 		++iterator->batchIndex;
 	}
-	while ( iterator->batchIndex < NUM_TEXTURE_BATCHES && (!data->batches[iterator->batchIndex] ||
-			!(data->batches[iterator->batchIndex]->isNotEmpty)) );
+	while ( iterator->batchIndex < NUM_TEXTURE_BATCHES &&
+			(!data->batches[iterator->batchIndex] || !(data->batches[iterator->batchIndex]->isNotEmpty)) );
 
 	return iterator->batchIndex < NUM_TEXTURE_BATCHES;
 }
@@ -302,7 +337,7 @@ static TextureEntry* GetEntryFromIterator(Data* data, TextureResources_Iterator*
 	return &batch->textures[iterator->entryIndex];
 };
 
-RayGE_ResourceHandle TextureResources_LoadTexture(const char* path)
+static RayGE_ResourceHandle LoadTextureFromPath(const char* path, const Image* sourceImage)
 {
 	if ( !path || !(*path) )
 	{
@@ -321,25 +356,56 @@ RayGE_ResourceHandle TextureResources_LoadTexture(const char* path)
 		return RAYGE_NULL_RESOURCE_HANDLE;
 	}
 
-	RayGE_ResourceHandle existingTexture = FindTextureHandleByPath(path);
+	char* trimmedPath = NewStringFromBounds(BoundString(path));
+	RayGE_ResourceHandle outHandle = RAYGE_NULL_RESOURCE_HANDLE;
 
-	if ( !RAYGE_IS_NULL_RESOURCE_HANDLE(existingTexture) )
+	do
 	{
-		return existingTexture;
+		// Only internal textures loaded from a provided image may be prefixed with ':'
+		if ( *trimmedPath == ':' && !sourceImage )
+		{
+			Logging_PrintLine(
+				RAYGE_LOG_ERROR,
+				"Cannot load texture %s: path prefix is reserved for internal textures",
+				trimmedPath
+			);
+
+			break;
+		}
+
+		RayGE_ResourceHandle existingTexture = FindTextureHandleByPath(trimmedPath);
+
+		if ( !RAYGE_IS_NULL_RESOURCE_HANDLE(existingTexture) )
+		{
+			// The texture already existed, so just return its existing handle.
+			outHandle = existingTexture;
+			break;
+		}
+
+		Texture2D texture = sourceImage ? LoadTextureFromImage(*sourceImage) : LoadTexture(trimmedPath);
+
+		if ( texture.id == 0 )
+		{
+			Logging_PrintLine(RAYGE_LOG_ERROR, "Failed to load texture %s", trimmedPath);
+			break;
+		}
+
+		// This will take ownership of the path, so we null it afterwards.
+		outHandle = AddTextureToResourceList(&g_Data, trimmedPath, texture);
+		trimmedPath = NULL;
+	}
+	while ( false );
+
+	if ( trimmedPath )
+	{
+		// Path was not consumed, so must be freed.
+		MEMPOOL_FREE(trimmedPath);
 	}
 
-	Texture2D texture = LoadTexture(path);
-
-	if ( texture.id == 0 )
-	{
-		Logging_PrintLine(RAYGE_LOG_ERROR, "Failed to load texture %s", path);
-		return RAYGE_NULL_RESOURCE_HANDLE;
-	}
-
-	return AddTextureToResourceList(&g_Data, path, texture);
+	return outHandle;
 }
 
-void TextureResources_UnloadTexture(RayGE_ResourceHandle handle)
+static void UnloadTextureFromHandle(RayGE_ResourceHandle handle)
 {
 	TextureBatch* batch = NULL;
 	TextureEntry* entry = FindTextureEntryByHandle(&g_Data, handle, &batch);
@@ -353,8 +419,58 @@ void TextureResources_UnloadTexture(RayGE_ResourceHandle handle)
 	batch->isFull = false;
 }
 
+RayGE_ResourceHandle TextureResources_LoadTexture(const char* path)
+{
+	return LoadTextureFromPath(path, NULL);
+}
+
+RayGE_ResourceHandle TextureResources_LoadInternalTexture(const char* name, Image sourceImage)
+{
+	RAYGE_ASSERT_VALID(name && *name);
+	RAYGE_ASSERT_VALID(sourceImage.data);
+
+	if ( !name || !(*name) || !sourceImage.data )
+	{
+		return RAYGE_NULL_RESOURCE_HANDLE;
+	}
+
+	char internalName[64];
+	int charsWritten = wzl_sprintf(internalName, sizeof(internalName), ":%s", name);
+
+	RAYGE_ENSURE(charsWritten > 0, "Failed to construct texture's internal name");
+	RAYGE_ENSURE((size_t)charsWritten < sizeof(internalName), "Texture's internal name was too long");
+
+	return LoadTextureFromPath(internalName, &sourceImage);
+}
+
+void TextureResources_UnloadTexture(RayGE_ResourceHandle handle)
+{
+	if ( Resource_HandleIsInternal(handle) )
+	{
+		RAYGE_ASSERT(false, "Cannot unload internal texture here");
+		Logging_PrintLine(RAYGE_LOG_ERROR, "Ignoring attempt to unload internal texture");
+		return;
+	}
+
+	UnloadTextureFromHandle(handle);
+}
+
+void TextureResources_UnloadInternalTexture(RayGE_ResourceHandle handle)
+{
+	if ( !Resource_HandleIsInternal(handle) )
+	{
+		RAYGE_ASSERT(false, "Cannot unload non-internal texture here");
+		Logging_PrintLine(RAYGE_LOG_ERROR, "Ignoring attempt to unload non-internal texture");
+		return;
+	}
+
+	UnloadTextureFromHandle(handle);
+}
+
 void TextureResources_UnloadAll(void)
 {
+	Logging_PrintLine(RAYGE_LOG_DEBUG, "Unloading all texture resources");
+
 	DeleteAllHashEntries(&g_Data);
 	DeleteAllBatches(&g_Data);
 }
@@ -364,25 +480,56 @@ size_t TextureResources_NumTextures(void)
 	return g_Data.totalTextures;
 }
 
-TextureResources_Iterator* TextureResources_CreateBeginIterator(void)
+TextureResources_Iterator TextureResources_CreateBeginIterator(void)
 {
 	if ( !g_Data.batches || g_Data.totalTextures < 1 )
 	{
-		return NULL;
+		return CreateInvalidIterator();
 	}
 
-	TextureResources_Iterator* iterator = MEMPOOL_CALLOC_STRUCT(MEMPOOL_RESOURCE_MANAGEMENT, TextureResources_Iterator);
+	TextureResources_Iterator iterator = {
+		.batchIndex = 0,
+		.entryIndex = 0,
+	};
+
+	if ( IteratorRefersToBatch(&g_Data, &iterator) )
+	{
+		TextureBatch* batch = g_Data.batches[iterator.batchIndex];
+
+		if ( iterator.entryIndex < RAYGE_ARRAY_SIZE(batch->textures) &&
+			 batch->textures[iterator.entryIndex].texture.id != 0 )
+		{
+			// No need to increment.
+			return iterator;
+		}
+	}
+
+	// Increment the iterator to the first element before we return it.
+	// If there is no first entry, it will just end up invalid.
+	TextureResources_IncrementIterator(&iterator);
 	return iterator;
 }
 
-void TextureResources_DestroyIterator(TextureResources_Iterator* iterator)
+TextureResources_Iterator TextureResources_CreateIterator(RayGE_ResourceHandle handle)
 {
-	if ( !iterator )
+	TextureBatch* batch = NULL;
+	TextureEntry* entry = FindTextureEntryByHandle(&g_Data, handle, &batch);
+
+	if ( !batch || !entry )
 	{
-		return;
+		return CreateInvalidIterator();
 	}
 
-	MEMPOOL_FREE(iterator);
+	return (TextureResources_Iterator) {
+		.batchIndex = handle.index,
+		.entryIndex = entry - batch->textures,
+	};
+}
+
+bool TextureResources_IsIteratorValid(TextureResources_Iterator iterator)
+{
+	TextureEntry* entry = GetEntryFromIterator(&g_Data, &iterator);
+	return entry && entry->texture.id != 0;
 }
 
 bool TextureResources_IncrementIterator(TextureResources_Iterator* iterator)
@@ -420,14 +567,14 @@ bool TextureResources_IncrementIterator(TextureResources_Iterator* iterator)
 	return false;
 }
 
-Texture2D TextureResourcesIterator_GetTexture(TextureResources_Iterator* iterator)
+Texture2D TextureResourcesIterator_GetTexture(TextureResources_Iterator iterator)
 {
-	TextureEntry* entry = GetEntryFromIterator(&g_Data, iterator);
+	TextureEntry* entry = GetEntryFromIterator(&g_Data, &iterator);
 	return entry ? entry->texture : (Texture2D) {0, 0, 0, 0, 0};
 }
 
-const char* TextureResourcesIterator_GetPath(TextureResources_Iterator* iterator)
+const char* TextureResourcesIterator_GetPath(TextureResources_Iterator iterator)
 {
-	TextureEntry* entry = GetEntryFromIterator(&g_Data, iterator);
+	TextureEntry* entry = GetEntryFromIterator(&g_Data, &iterator);
 	return entry ? entry->hashItem->path : NULL;
 }

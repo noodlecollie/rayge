@@ -111,6 +111,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/UI/DeveloperConsole.c
 	src/UI/ImGuiDemo.h
 	src/UI/ImGuiDemo.c
+	src/UI/ResourceViewer.h
+	src/UI/ResourceViewer.c
 	src/UI/SceneDebugUI.h
 	src/UI/SceneDebugUI.c
 	src/UTUtils/UTHash_Pooled.h
