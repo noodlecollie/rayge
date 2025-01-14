@@ -40,3 +40,4 @@ uint8_t* FilesystemSubsystem_LoadFileData(const char* path, size_t* size);
 void FilesystemSubsystem_UnloadFileData(uint8_t* data);
 
 bool FilesystemSubsystem_MakeAbsolute(const char* relPath, char* outBuffer, size_t outBufferSize);
+char* FilesystemSubsystem_MakeAbsoluteAlloc(const char* relPath);

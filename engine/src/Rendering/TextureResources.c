@@ -73,7 +73,7 @@ static char* NewStringFromBounds(StringBounds bounds)
 
 	out[size - 1] = '\0';
 	return out;
-};
+}
 
 static void DeleteBatch(TextureBatch* batch)
 {
@@ -335,7 +335,7 @@ static TextureEntry* GetEntryFromIterator(Data* data, TextureResources_Iterator*
 
 	TextureBatch* batch = data->batches[iterator->batchIndex];
 	return &batch->textures[iterator->entryIndex];
-};
+}
 
 static RayGE_ResourceHandle LoadTextureFromPath(const char* path, const Image* sourceImage)
 {
@@ -417,6 +417,7 @@ static void UnloadTextureFromHandle(RayGE_ResourceHandle handle)
 
 	ClearTextureEntry(&g_Data, entry);
 	batch->isFull = false;
+	--g_Data.totalTextures;
 }
 
 RayGE_ResourceHandle TextureResources_LoadTexture(const char* path)
@@ -506,8 +507,7 @@ TextureResources_Iterator TextureResources_CreateBeginIterator(void)
 
 	// Increment the iterator to the first element before we return it.
 	// If there is no first entry, it will just end up invalid.
-	TextureResources_IncrementIterator(&iterator);
-	return iterator;
+	return TextureResources_IncrementIterator(iterator);
 }
 
 TextureResources_Iterator TextureResources_CreateIterator(RayGE_ResourceHandle handle)
@@ -526,15 +526,9 @@ TextureResources_Iterator TextureResources_CreateIterator(RayGE_ResourceHandle h
 	};
 }
 
-bool TextureResources_IsIteratorValid(TextureResources_Iterator iterator)
+TextureResources_Iterator TextureResources_IncrementIterator(TextureResources_Iterator iterator)
 {
-	TextureEntry* entry = GetEntryFromIterator(&g_Data, &iterator);
-	return entry && entry->texture.id != 0;
-}
-
-bool TextureResources_IncrementIterator(TextureResources_Iterator* iterator)
-{
-	if ( !IteratorRefersToBatch(&g_Data, iterator) )
+	if ( !IteratorRefersToBatch(&g_Data, &iterator) )
 	{
 		false;
 	}
@@ -543,28 +537,34 @@ bool TextureResources_IncrementIterator(TextureResources_Iterator* iterator)
 
 	do
 	{
-		TextureBatch* batch = g_Data.batches[iterator->batchIndex];
+		TextureBatch* batch = g_Data.batches[iterator.batchIndex];
 
-		if ( IncrementIteratorToNextValidEntry(iterator, batch) )
+		if ( IncrementIteratorToNextValidEntry(&iterator, batch) )
 		{
-			return true;
+			return iterator;
 		}
 
-		nextBatchValid = IncrementIteratorToNextValidBatch(&g_Data, iterator);
+		nextBatchValid = IncrementIteratorToNextValidBatch(&g_Data, &iterator);
 
 		if ( nextBatchValid )
 		{
-			batch = g_Data.batches[iterator->batchIndex];
+			batch = g_Data.batches[iterator.batchIndex];
 
-			if ( batch->textures[iterator->entryIndex].texture.id != 0 )
+			if ( batch->textures[iterator.entryIndex].texture.id != 0 )
 			{
-				return true;
+				return iterator;
 			}
 		}
 	}
 	while ( nextBatchValid );
 
-	return false;
+	return CreateInvalidIterator();
+}
+
+bool TextureResourcesIterator_IsValid(TextureResources_Iterator iterator)
+{
+	TextureEntry* entry = GetEntryFromIterator(&g_Data, &iterator);
+	return entry && entry->texture.id != 0;
 }
 
 Texture2D TextureResourcesIterator_GetTexture(TextureResources_Iterator iterator)

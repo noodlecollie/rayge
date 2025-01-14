@@ -350,3 +350,8 @@ bool FilesystemSubsystem_MakeAbsolute(const char* relPath, char* outBuffer, size
 
 	return true;
 }
+
+char* FilesystemSubsystem_MakeAbsoluteAlloc(const char* relPath)
+{
+	return relPath ? RelativePathToAbsoluteNativePath(relPath) : NULL;
+}

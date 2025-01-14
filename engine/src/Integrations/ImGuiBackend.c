@@ -234,6 +234,7 @@ static void SetUpBackend(void)
 #endif
 
 	io->MousePos = (ImVec2) {0, 0};
+	io->IniFilename = NULL;
 
 	ImGuiPlatformIO* platformIO = igGetPlatformIO();
 	RAYGE_ASSERT_VALID(platformIO);

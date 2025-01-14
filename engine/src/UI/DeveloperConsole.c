@@ -22,6 +22,7 @@ typedef struct LogMessage
 typedef struct Data
 {
 	bool show;
+	bool justShown;
 	LogMessage* logMessageList;
 	size_t logMessageCount;
 	size_t lastLogMessageIndex;
@@ -205,12 +206,18 @@ static void ShutDown(void* userData)
 
 static void Show(void* userData)
 {
-	((Data*)userData)->show = true;
+	Data* data = (Data*)userData;
+
+	data->show = true;
+	data->justShown = true;
 }
 
 static void Hide(void* userData)
 {
-	((Data*)userData)->show = true;
+	Data* data = (Data*)userData;
+
+	data->show = false;
+	data->justShown = false;
 }
 
 static bool Poll(void* userData)
@@ -222,8 +229,13 @@ static bool Poll(void* userData)
 		return false;
 	}
 
-	igSetNextWindowPos((ImVec2) {5.0f, 5.0f}, ImGuiCond_FirstUseEver, (ImVec2) {0.0f, 0.0f});
-	igSetNextWindowSize((ImVec2) {500.0f, 500.0f}, ImGuiCond_FirstUseEver);
+	igSetNextWindowPos((ImVec2) {10.0f, 10.0f}, ImGuiCond_FirstUseEver, (ImVec2) {0.0f, 0.0f});
+
+	igSetNextWindowSize(
+		(ImVec2) {0.5f * igGetMainViewport()->WorkSize.x, 0.75f * igGetMainViewport()->WorkSize.y},
+		ImGuiCond_FirstUseEver
+	);
+
 	igSetNextWindowSizeConstraints((ImVec2) {300.0f, 300.0f}, (ImVec2) {FLT_MAX, FLT_MAX}, NULL, NULL);
 
 	if ( igBegin("Developer Console", &data->show, ImGuiWindowFlags_NoCollapse) )
@@ -265,7 +277,7 @@ static bool Poll(void* userData)
 		igSeparator();
 		igSpacing();
 
-		bool reclaimFocus = false;
+		bool reclaimFocus = data->justShown;
 		const ImGuiInputTextFlags inputFlags = ImGuiInputTextFlags_EnterReturnsTrue |
 			ImGuiInputTextFlags_EscapeClearsAll | ImGuiInputTextFlags_CallbackCompletion |
 			ImGuiInputTextFlags_CallbackHistory;
@@ -302,6 +314,7 @@ static bool Poll(void* userData)
 
 	igEnd();
 
+	data->justShown = false;
 	return data->show;
 }
 
