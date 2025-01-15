@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include "RayGE/ResourceHandle.h"
 #include "raylib.h"
 
