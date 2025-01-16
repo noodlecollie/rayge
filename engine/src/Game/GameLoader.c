@@ -93,6 +93,9 @@ void* GameLoader_LoadLibraryFromDirectory(const char* dirPath)
 		return NULL;
 	}
 
+	// Must set this here, before we call any game library functions.
+	FilesystemSubsystem_SetBaseRelPath(dirPath);
+
 	// TODO: Validation of game callbacks after this call.
 	apiFunc(&EngineAPI_ExchangeAPIsWithGame);
 

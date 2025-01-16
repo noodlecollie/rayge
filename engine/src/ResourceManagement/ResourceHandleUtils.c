@@ -10,7 +10,7 @@ static uint64_t MixKeyWithIndex(uint64_t key, uint32_t index)
 	return key ^ (0x1234BA55FACE5678 ^ (((uint64_t)(~index) << 32) | index));
 }
 
-RayGE_ResourceHandle Resource_CreateHandle(RayGE_InternalResourceDomain domain, uint32_t index, uint64_t key)
+RayGE_ResourceHandle Resource_CreateInternalHandle(RayGE_InternalResourceDomain domain, uint32_t index, uint64_t key)
 {
 	RAYGE_ASSERT(!((uint32_t)domain & ~RESOURCE_DOMAIN_ID_MASK), "Resource domain contained bits outside ID mask");
 
@@ -20,17 +20,10 @@ RayGE_ResourceHandle Resource_CreateHandle(RayGE_InternalResourceDomain domain, 
 	);
 
 	return (RayGE_ResourceHandle) {
-		.domain = (uint32_t)domain & RESOURCE_DOMAIN_ID_MASK,
+		.domain = ((uint32_t)domain & RESOURCE_DOMAIN_ID_MASK) | RESOURCEFLAG_INTERNAL_DOMAIN,
 		.index = index,
 		.key = key,
 	};
-}
-
-RayGE_ResourceHandle Resource_CreateInternalHandle(RayGE_InternalResourceDomain domain, uint32_t index, uint64_t key)
-{
-	RayGE_ResourceHandle handle = Resource_CreateHandle(domain, index, key);
-	handle.domain |= RESOURCEFLAG_INTERNAL_DOMAIN;
-	return handle;
 }
 
 uint64_t Resource_CreateKey(uint32_t index)
@@ -63,7 +56,7 @@ uint64_t Resource_CreateKey(uint32_t index)
 
 RayGE_InternalResourceDomain Resource_GetInternalDomain(RayGE_ResourceHandle handle)
 {
-	if ( !Resource_HandleIsInternal(handle) )
+	if ( !(handle.domain & RESOURCEFLAG_INTERNAL_DOMAIN) )
 	{
 		return RESOURCE_DOMAIN_INVALID;
 	}
@@ -73,11 +66,6 @@ RayGE_InternalResourceDomain Resource_GetInternalDomain(RayGE_ResourceHandle han
 	return (decodedDomain > RESOURCE_DOMAIN_INVALID && decodedDomain < RESOURCE_DOMAIN__COUNT)
 		? (RayGE_InternalResourceDomain)decodedDomain
 		: RESOURCE_DOMAIN_INVALID;
-}
-
-bool Resource_HandleIsInternal(RayGE_ResourceHandle handle)
-{
-	return (handle.domain & RESOURCEFLAG_INTERNAL_DOMAIN) != 0;
 }
 
 bool Resource_HandleIsValidForInternalDomain(

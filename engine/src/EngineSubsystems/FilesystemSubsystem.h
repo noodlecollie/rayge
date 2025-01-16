@@ -32,7 +32,9 @@ void FilesystemSubsystem_ShutDown(void);
 FilesystemSubsystem_PathList* FilesystemSubsystem_ListDirectory(const char* path);
 void FilesystemSubsystem_FreePathList(FilesystemSubsystem_PathList* list);
 
-// TODO: Function to set base path
+// Set the relative path from the application directory
+// under which future calls will operate.
+void FilesystemSubsystem_SetBaseRelPath(const char* path);
 
 bool FilesystemSubsystem_DirectoryExists(const char* path);
 

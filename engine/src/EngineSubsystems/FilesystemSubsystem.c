@@ -16,80 +16,74 @@
 #define PATH_SEP_CH '/'
 #endif
 
-static FilesystemSubsystem_LongPath g_NativeApplicationDirectory;
+static FilesystemSubsystem_LongPath g_NativeRootDirectory;
+static FilesystemSubsystem_Path g_BaseRelDirectory;
 
-// TODO: Replace this with wzl_strdup once we've set up the allocators properly
-static char* StrDup(const char* str)
+static void EnsureApplicationDirectory(bool forceRefresh)
 {
-	if ( !str )
-	{
-		return NULL;
-	}
-
-	const size_t size = strlen(str) + 1;
-	char* out = MEMPOOL_MALLOC(MEMPOOL_FILESYSTEM, size);
-
-	char* cursor = out;
-
-	while ( *str )
-	{
-		*(cursor++) = *(str++);
-	}
-
-	*cursor = '\0';
-
-	return out;
-}
-
-static void EnsureApplicationDirectory(void)
-{
-	if ( g_NativeApplicationDirectory[0] )
+	if ( g_NativeRootDirectory[0] && !forceRefresh )
 	{
 		return;
 	}
 
 	const char* appDir = GetApplicationDirectory();
-	RAYGE_ASSERT(appDir, "Could not retrieve application directory");
+	RAYGE_ENSURE(appDir && *appDir, "Could not retrieve application directory");
 
-	if ( !appDir )
+	size_t length = wzl_strcpy(g_NativeRootDirectory, sizeof(g_NativeRootDirectory), appDir);
+
+	if ( !g_BaseRelDirectory[0] )
 	{
+		if ( g_NativeRootDirectory[length - 1] == PATH_SEP_CH )
+		{
+			// Make sure this is not present - we will manage it manually.
+			g_NativeRootDirectory[length - 1] = '\0';
+		}
+
 		return;
 	}
 
-	wzl_strcpy(g_NativeApplicationDirectory, sizeof(g_NativeApplicationDirectory), appDir);
-	RAYGE_ASSERT(g_NativeApplicationDirectory[0], "Received invalid application directory");
-
-	if ( !g_NativeApplicationDirectory[0] )
+	if ( g_NativeRootDirectory[length - 1] != PATH_SEP_CH )
 	{
-		return;
+		RAYGE_ENSURE(
+			length < sizeof(g_NativeRootDirectory) - 1,
+			"Not enough space to concatenate application directory with base path"
+		);
+
+		g_NativeRootDirectory[length - 1] = PATH_SEP_CH;
+		++length;
 	}
 
-	const size_t length = strlen(g_NativeApplicationDirectory);
+	RAYGE_ENSURE(
+		length < sizeof(g_NativeRootDirectory) - 1,
+		"Not enough space to concatenate application directory with base path"
+	);
 
-	if ( g_NativeApplicationDirectory[length - 1] == PATH_SEP_CH )
+	length += wzl_strcpy(g_NativeRootDirectory + length, sizeof(g_NativeRootDirectory) - length, g_BaseRelDirectory);
+
+	if ( g_NativeRootDirectory[length - 1] == PATH_SEP_CH )
 	{
 		// Make sure this is not present - we will manage it manually.
-		g_NativeApplicationDirectory[length - 1] = '\0';
+		g_NativeRootDirectory[length - 1] = '\0';
 	}
 }
 
 // Caller takes ownership of the path.
 static char* MakeAbsolutePathFromApplicationDirectory(const char* relNativePath)
 {
-	EnsureApplicationDirectory();
+	EnsureApplicationDirectory(false);
 
 	if ( !relNativePath || !(*relNativePath) )
 	{
-		return StrDup(g_NativeApplicationDirectory);
+		return wzl_strdup(g_NativeRootDirectory);
 	}
 
 	char dummy;
-	size_t size = cwk_path_get_absolute(g_NativeApplicationDirectory, relNativePath, &dummy, sizeof(dummy)) + 1;
+	size_t size = cwk_path_get_absolute(g_NativeRootDirectory, relNativePath, &dummy, sizeof(dummy)) + 1;
 
 	RAYGE_ASSERT(size > 1, "Path concatenation produced empty path");
 
 	char* buffer = MEMPOOL_MALLOC(MEMPOOL_FILESYSTEM, size);
-	cwk_path_get_absolute(g_NativeApplicationDirectory, relNativePath, buffer, size);
+	cwk_path_get_absolute(g_NativeRootDirectory, relNativePath, buffer, size);
 
 	RAYGE_ASSERT(buffer[size - 1] == '\0', "Path length calculation was incorrect");
 
@@ -99,18 +93,18 @@ static char* MakeAbsolutePathFromApplicationDirectory(const char* relNativePath)
 // Caller takes ownership of the path
 static char* MakeRelativePathFromApplicationDirectory(const char* absNativePath)
 {
-	EnsureApplicationDirectory();
+	EnsureApplicationDirectory(false);
 
 	if ( !absNativePath || !(*absNativePath) )
 	{
-		return StrDup("");
+		return wzl_strdup("");
 	}
 
 	char dummy;
-	size_t size = cwk_path_get_relative(g_NativeApplicationDirectory, absNativePath, &dummy, sizeof(dummy)) + 1;
+	size_t size = cwk_path_get_relative(g_NativeRootDirectory, absNativePath, &dummy, sizeof(dummy)) + 1;
 
 	char* buffer = MEMPOOL_MALLOC(MEMPOOL_FILESYSTEM, size);
-	cwk_path_get_relative(g_NativeApplicationDirectory, absNativePath, buffer, size);
+	cwk_path_get_relative(g_NativeRootDirectory, absNativePath, buffer, size);
 
 	RAYGE_ASSERT(buffer[size - 1] == '\0', "Path length calculation was incorrect");
 
@@ -180,7 +174,7 @@ static void MakePathSafe(char* path)
 // Always returns a valid pointer.
 static char* PathSeparatorsToNative(const char* path)
 {
-	char* newPath = StrDup(path ? path : "");
+	char* newPath = wzl_strdup(path ? path : "");
 
 #if RAYGE_PLATFORM() == RAYGE_PLATFORM_WINDOWS
 	for ( char* cursor = newPath; *cursor; ++cursor )
@@ -197,7 +191,7 @@ static char* PathSeparatorsToNative(const char* path)
 
 static char* PathSeparatorsFromNative(const char* path)
 {
-	char* newPath = StrDup(path ? path : "");
+	char* newPath = wzl_strdup(path ? path : "");
 
 #if RAYGE_PLATFORM() == RAYGE_PLATFORM_WINDOWS
 	for ( char* cursor = newPath; *cursor; ++cursor )
@@ -294,6 +288,36 @@ void FilesystemSubsystem_FreePathList(FilesystemSubsystem_PathList* list)
 
 	MEMPOOL_FREE(list->entries);
 	MEMPOOL_FREE(list);
+}
+
+void FilesystemSubsystem_SetBaseRelPath(const char* path)
+{
+	if ( path && *path && PathBacktracksPastBaseDirectory(path) )
+	{
+		Logging_PrintLine(
+			RAYGE_LOG_WARNING,
+			"Cannot set filesystem base path to \"%s\" as this would leave engine filesystem subtree. Resetting to "
+			"blank base path."
+		);
+
+		path = "";
+	}
+
+	if ( path )
+	{
+		wzl_strcpy(g_BaseRelDirectory, sizeof(g_BaseRelDirectory), path);
+	}
+	else
+	{
+		g_BaseRelDirectory[0] = '\0';
+	}
+
+	Logging_PrintLine(RAYGE_LOG_DEBUG, "Setting filesystem base path: %s", g_BaseRelDirectory);
+
+	PathSeparatorsToNative(g_BaseRelDirectory);
+	EnsureApplicationDirectory(true);
+
+	RAYGE_ASSERT(DirectoryExists(g_NativeRootDirectory), "Specified root directory does not exist!");
 }
 
 bool FilesystemSubsystem_DirectoryExists(const char* path)

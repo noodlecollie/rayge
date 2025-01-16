@@ -1,6 +1,7 @@
 #include "Rendering/TextureResources.h"
 #include "Logging/Logging.h"
 #include "ResourceManagement/ResourceHandleUtils.h"
+#include "EngineSubsystems/FilesystemSubsystem.h"
 #include "Utils.h"
 #include "wzl_cutl/string.h"
 #include "raylib.h"
@@ -199,7 +200,7 @@ static void ClearTextureEntry(Data* data, TextureEntry* entry)
 	memset(entry, 0, sizeof(*entry));
 }
 
-static RayGE_ResourceHandle AddTextureToBatch(Data* data, TextureEntry entryToAdd, bool isInternal)
+static RayGE_ResourceHandle AddTextureToBatch(Data* data, TextureEntry entryToAdd)
 {
 	size_t batchIndex = GetFirstAvailableBatchIndex(data);
 
@@ -224,8 +225,7 @@ static RayGE_ResourceHandle AddTextureToBatch(Data* data, TextureEntry entryToAd
 
 	UpdateBatchFlags(batch);
 
-	return isInternal ? Resource_CreateInternalHandle(RESOURCE_DOMAIN_TEXTURE, (uint32_t)batchIndex, entryToAdd.key)
-					  : Resource_CreateHandle(RESOURCE_DOMAIN_TEXTURE, (uint32_t)batchIndex, entryToAdd.key);
+	return Resource_CreateInternalHandle(RESOURCE_DOMAIN_TEXTURE, (uint32_t)batchIndex, entryToAdd.key);
 }
 
 static RayGE_ResourceHandle AddTextureToResourceList(Data* data, char* path, Texture2D texture)
@@ -241,7 +241,7 @@ static RayGE_ResourceHandle AddTextureToResourceList(Data* data, char* path, Tex
 		.hashItem = item,
 	};
 
-	const RayGE_ResourceHandle handle = AddTextureToBatch(&g_Data, entry, path[0] == ':');
+	const RayGE_ResourceHandle handle = AddTextureToBatch(&g_Data, entry);
 
 	item->path = path;
 	item->handle = handle;
@@ -356,6 +356,7 @@ static RayGE_ResourceHandle LoadTextureFromPath(const char* path, const Image* s
 		return RAYGE_NULL_RESOURCE_HANDLE;
 	}
 
+	char* fullPath = NULL;
 	char* trimmedPath = NewStringFromBounds(BoundString(path));
 	RayGE_ResourceHandle outHandle = RAYGE_NULL_RESOURCE_HANDLE;
 
@@ -382,7 +383,20 @@ static RayGE_ResourceHandle LoadTextureFromPath(const char* path, const Image* s
 			break;
 		}
 
-		Texture2D texture = sourceImage ? LoadTextureFromImage(*sourceImage) : LoadTexture(trimmedPath);
+		Texture2D texture = {0, 0, 0, 0, 0};
+
+		if ( sourceImage )
+		{
+			Logging_PrintLine(RAYGE_LOG_TRACE, "Loading texture %s from image", trimmedPath);
+			texture = LoadTextureFromImage(*sourceImage);
+		}
+		else
+		{
+			fullPath = FilesystemSubsystem_MakeAbsoluteAlloc(trimmedPath);
+
+			Logging_PrintLine(RAYGE_LOG_TRACE, "Loading texture %s from file", fullPath);
+			texture = LoadTexture(fullPath);
+		}
 
 		if ( texture.id == 0 )
 		{
@@ -405,13 +419,42 @@ static RayGE_ResourceHandle LoadTextureFromPath(const char* path, const Image* s
 	return outHandle;
 }
 
-static void UnloadTextureFromHandle(RayGE_ResourceHandle handle)
+static void UnloadTextureFromHandle(RayGE_ResourceHandle handle, bool requestIsInternal)
 {
+	// Only bother running the extra check if the handle is not null.
+	// Null handles are just silently ignored.
+	if ( !RAYGE_IS_NULL_RESOURCE_HANDLE(handle) )
+	{
+		RAYGE_ASSERT_EXPECT(
+			Resource_GetInternalDomain(handle) == RESOURCE_DOMAIN_TEXTURE,
+			"Cannot unload texture from handle that does not refer to a texture!"
+		);
+	}
+
+	// Catches the null case too:
+	if ( Resource_GetInternalDomain(handle) != RESOURCE_DOMAIN_TEXTURE )
+	{
+		return;
+	}
+
 	TextureBatch* batch = NULL;
 	TextureEntry* entry = FindTextureEntryByHandle(&g_Data, handle, &batch);
 
 	if ( !entry )
 	{
+		return;
+	}
+
+	// Make sure the game lib is not trying to unload engine textures, or vice-versa.
+	if ( (entry->hashItem->path[0] == ':') != requestIsInternal )
+	{
+		Logging_PrintLine(RAYGE_LOG_ERROR,
+			"Ignoring request to unload %s texture %s from %s call",
+			requestIsInternal ? "non-internal" : "internal",
+			entry->hashItem->path[0],
+			requestIsInternal ? "an internal" : "a non-internal"
+		);
+
 		return;
 	}
 
@@ -446,26 +489,12 @@ RayGE_ResourceHandle TextureResources_LoadInternalTexture(const char* name, Imag
 
 void TextureResources_UnloadTexture(RayGE_ResourceHandle handle)
 {
-	if ( Resource_HandleIsInternal(handle) )
-	{
-		RAYGE_ASSERT(false, "Cannot unload internal texture here");
-		Logging_PrintLine(RAYGE_LOG_ERROR, "Ignoring attempt to unload internal texture");
-		return;
-	}
-
-	UnloadTextureFromHandle(handle);
+	UnloadTextureFromHandle(handle, false);
 }
 
 void TextureResources_UnloadInternalTexture(RayGE_ResourceHandle handle)
 {
-	if ( !Resource_HandleIsInternal(handle) )
-	{
-		RAYGE_ASSERT(false, "Cannot unload non-internal texture here");
-		Logging_PrintLine(RAYGE_LOG_ERROR, "Ignoring attempt to unload non-internal texture");
-		return;
-	}
-
-	UnloadTextureFromHandle(handle);
+	UnloadTextureFromHandle(handle, true);
 }
 
 void TextureResources_UnloadAll(void)

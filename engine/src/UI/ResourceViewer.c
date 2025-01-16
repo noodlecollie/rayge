@@ -25,6 +25,11 @@ static void Hide(void* userData)
 	memset(&data->selectedTexture, 0, sizeof(data->selectedTexture));
 }
 
+static void DrawTextureTableCell(const char* label, bool* clicked)
+{
+	*clicked = igSelectable_Bool(label, false, 0, (ImVec2) {0.0f, 0.0f}) || *clicked;
+}
+
 static bool Poll(void* userData)
 {
 	Data* data = (Data*)userData;
@@ -42,12 +47,13 @@ static bool Poll(void* userData)
 
 			if ( igBeginTable(
 					 "Testing",
-					 2,
+					 3,
 					 ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter,
 					 (ImVec2) {-1.0f * (region.x / 2.0f), 0.0f},
 					 0.0f
 				 ) )
 			{
+				igTableSetupColumn("ID", ImGuiTableColumnFlags_WidthFixed, 40.0f, 0);
 				igTableSetupColumn("Path", ImGuiTableColumnFlags_None, 0.0f, 0);
 				igTableSetupColumn("Dimensions", ImGuiTableColumnFlags_None, 0.0f, 0);
 				igTableSetupScrollFreeze(0, 1);
@@ -58,28 +64,29 @@ static bool Poll(void* userData)
 
 				while ( TextureResourcesIterator_IsValid(iterator) )
 				{
+					Texture2D texture = TextureResourcesIterator_GetTexture(iterator);
 					bool clicked = false;
 					igTableNextRow(0, 0.0f);
-					igTableNextColumn();
 
-					char path[FILESYSTEM_MAX_REL_PATH + 16];
-					wzl_sprintf(path, sizeof(path), "%s##%zu", TextureResourcesIterator_GetPath(iterator), index);
-
-					if ( igSelectable_Bool(path, false, 0, (ImVec2) {0.0f, 0.0f}) )
 					{
-						clicked = true;
+						igTableNextColumn();
+						char texID[32];
+						wzl_sprintf(texID, sizeof(texID), "%d##%zu", texture.id, index);
+						DrawTextureTableCell(texID, &clicked);
 					}
 
-					igTableNextColumn();
-
-					char dimensions[64];
-					Texture2D texture = TextureResourcesIterator_GetTexture(iterator);
-
-					wzl_sprintf(dimensions, sizeof(dimensions), "%dx%d##%zu", texture.width, texture.height, index);
-
-					if ( igSelectable_Bool(dimensions, false, 0, (ImVec2) {0.0f, 0.0f}) )
 					{
-						clicked = true;
+						igTableNextColumn();
+						char path[FILESYSTEM_MAX_REL_PATH + 16];
+						wzl_sprintf(path, sizeof(path), "%s##%zu", TextureResourcesIterator_GetPath(iterator), index);
+						DrawTextureTableCell(path, &clicked);
+					}
+
+					{
+						igTableNextColumn();
+						char dimensions[64];
+						wzl_sprintf(dimensions, sizeof(dimensions), "%dx%d##%zu", texture.width, texture.height, index);
+						DrawTextureTableCell(dimensions, &clicked);
 					}
 
 					if ( clicked )

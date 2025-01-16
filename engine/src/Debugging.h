@@ -94,7 +94,7 @@ static inline void RayGE_CheckInvariant(
 #define RAYGE_ASSERT_UNREACHABLE(...) RAYGE_FATAL_EX("<Encountered Unreachable Code>", __VA_ARGS__)
 // ENSURES in debug, EXPECTS in release
 #define RAYGE_ASSERT_EXPECT(expr, ...) RAYGE_ASSERT(expr, __VA_ARGS__)
-// Breaks in debut but does not log (useful if logging would be dangerous in the circumstances)
+// Breaks in debug but does not log (useful if logging would be dangerous in the circumstances)
 #define RAYGE_ASSERT_BREAK(expr) \
 	do \
 	{ \
