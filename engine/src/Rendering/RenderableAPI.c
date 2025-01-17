@@ -1,6 +1,6 @@
 #include "Rendering/RenderableAPI.h"
-#include "Rendering/RenderablePrimitives.h"
-#include "Rendering/TextureResources.h"
+#include "Resources/RenderablePrimitives.h"
+#include "Resources/TextureResources.h"
 
 RayGE_ResourceHandle RenderableAPI_GetPrimitiveHandle(RayGE_RenderablePrimitive primitive)
 {

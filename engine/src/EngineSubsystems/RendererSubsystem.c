@@ -3,7 +3,7 @@
 #include "MemPool/MemPoolManager.h"
 #include "BinaryResources/DMMono_Regular.h"
 #include "BinaryResources/OpenSans_Medium.h"
-#include "Rendering/TextureResources.h"
+#include "Resources/TextureResources.h"
 #include "Debugging.h"
 #include "raylib.h"
 

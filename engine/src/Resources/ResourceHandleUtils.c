@@ -1,4 +1,4 @@
-#include "ResourceManagement/ResourceHandleUtils.h"
+#include "Resources/ResourceHandleUtils.h"
 #include "Debugging.h"
 #include "raylib.h"
 
@@ -10,7 +10,7 @@ static uint64_t MixKeyWithIndex(uint64_t key, uint32_t index)
 	return key ^ (0x1234BA55FACE5678 ^ (((uint64_t)(~index) << 32) | index));
 }
 
-RayGE_ResourceHandle Resource_CreateInternalHandle(RayGE_InternalResourceDomain domain, uint32_t index, uint64_t key)
+RayGE_ResourceHandle Resource_CreateInternalHandle(InternalResourceDomain domain, uint32_t index, uint64_t key)
 {
 	RAYGE_ASSERT(!((uint32_t)domain & ~RESOURCE_DOMAIN_ID_MASK), "Resource domain contained bits outside ID mask");
 
@@ -54,7 +54,7 @@ uint64_t Resource_CreateKey(uint32_t index)
 	return outKey;
 }
 
-RayGE_InternalResourceDomain Resource_GetInternalDomain(RayGE_ResourceHandle handle)
+InternalResourceDomain Resource_GetInternalDomain(RayGE_ResourceHandle handle)
 {
 	if ( !(handle.domain & RESOURCEFLAG_INTERNAL_DOMAIN) )
 	{
@@ -64,17 +64,17 @@ RayGE_InternalResourceDomain Resource_GetInternalDomain(RayGE_ResourceHandle han
 	uint32_t decodedDomain = handle.domain & RESOURCE_DOMAIN_ID_MASK;
 
 	return (decodedDomain > RESOURCE_DOMAIN_INVALID && decodedDomain < RESOURCE_DOMAIN__COUNT)
-		? (RayGE_InternalResourceDomain)decodedDomain
+		? (InternalResourceDomain)decodedDomain
 		: RESOURCE_DOMAIN_INVALID;
 }
 
 bool Resource_HandleIsValidForInternalDomain(
 	RayGE_ResourceHandle handle,
-	RayGE_InternalResourceDomain domain,
+	InternalResourceDomain domain,
 	uint32_t maxResourceCount
 )
 {
-	RayGE_InternalResourceDomain decodedDomain = Resource_GetInternalDomain(handle);
+	InternalResourceDomain decodedDomain = Resource_GetInternalDomain(handle);
 
 	if ( decodedDomain == RESOURCE_DOMAIN_INVALID || decodedDomain != domain )
 	{

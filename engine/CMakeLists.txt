@@ -91,14 +91,15 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/MemPool/MemPoolManager.c
 	src/Rendering/RenderableAPI.h
 	src/Rendering/RenderableAPI.c
-	src/Rendering/RenderablePrimitives.h
-	src/Rendering/RenderablePrimitives.c
 	src/Rendering/Renderer.h
 	src/Rendering/Renderer.c
-	src/Rendering/TextureResources.h
-	src/Rendering/TextureResources.c
-	src/ResourceManagement/ResourceHandleUtils.h
-	src/ResourceManagement/ResourceHandleUtils.c
+	src/Resources/RenderablePrimitives.h
+	src/Resources/RenderablePrimitives.c
+	src/Resources/ResourceDomains.h
+	src/Resources/ResourceHandleUtils.h
+	src/Resources/ResourceHandleUtils.c
+	src/Resources/TextureResources.h
+	src/Resources/TextureResources.c
 	src/Scene/Component.h
 	src/Scene/Component.c
 	src/Scene/Entity.h

@@ -1,5 +1,5 @@
-#include "Rendering/RenderablePrimitives.h"
-#include "ResourceManagement/ResourceHandleUtils.h"
+#include "Resources/RenderablePrimitives.h"
+#include "Resources/ResourceHandleUtils.h"
 
 RayGE_ResourceHandle RenderablePrimitive_GetHandle(RayGE_RenderablePrimitive primitive)
 {

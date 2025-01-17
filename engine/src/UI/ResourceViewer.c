@@ -1,7 +1,7 @@
 #include "UI/ResourceViewer.h"
 #include "cimgui.h"
 #include "wzl_cutl/string.h"
-#include "Rendering/TextureResources.h"
+#include "Resources/TextureResources.h"
 #include "EngineSubsystems/FilesystemSubsystem.h"
 
 typedef struct Data

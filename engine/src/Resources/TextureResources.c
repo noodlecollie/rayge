@@ -1,6 +1,6 @@
-#include "Rendering/TextureResources.h"
+#include "Resources/TextureResources.h"
 #include "Logging/Logging.h"
-#include "ResourceManagement/ResourceHandleUtils.h"
+#include "Resources/ResourceHandleUtils.h"
 #include "EngineSubsystems/FilesystemSubsystem.h"
 #include "Utils.h"
 #include "wzl_cutl/string.h"

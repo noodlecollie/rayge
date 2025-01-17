@@ -2,7 +2,7 @@
 #include "Scene/Entity.h"
 #include "Scene/Component.h"
 #include "MemPool/MemPoolManager.h"
-#include "ResourceManagement/ResourceHandleUtils.h"
+#include "Resources/ResourceHandleUtils.h"
 #include "Debugging.h"
 #include "raylib.h"
 

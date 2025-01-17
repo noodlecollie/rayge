@@ -2,7 +2,7 @@
 #include "Integrations/ImGuiBackend.h"
 #include "Rendering/Renderer.h"
 #include "EngineSubsystems/RendererSubsystem.h"
-#include "Rendering/TextureResources.h"
+#include "Resources/TextureResources.h"
 #include "cimgui.h"
 #include "cimgui_assert.h"
 #include "raylib.h"
