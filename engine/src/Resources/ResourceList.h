@@ -47,4 +47,7 @@ ResourceListErrorCode
 ResourceList_CreateNewItem(ResourceList* list, RayGE_ResourceHandle* outHandle);
 void* ResourceList_GetItemData(const ResourceList* list, RayGE_ResourceHandle handle);
 
+ResourceListIterator ResourceList_GetIteratorToFirstItem(ResourceList* list);
 ResourceListIterator ResourceList_IncrementIterator(ResourceListIterator iterator);
+bool ResourceList_IteratorIsValid(ResourceListIterator iterator);
+void* ResourceList_GetItemDataFromIterator(ResourceListIterator iterator);

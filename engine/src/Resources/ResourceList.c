@@ -410,6 +410,28 @@ void* ResourceList_GetItemData(const ResourceList* list, RayGE_ResourceHandle ha
 	return GetItemData(header);
 }
 
+ResourceListIterator ResourceList_GetIteratorToFirstItem(ResourceList* list)
+{
+	RAYGE_ASSERT_VALID(list);
+
+	if ( !list )
+	{
+		return CreateInvalidIterator(NULL);
+	}
+
+	ResourceListIterator iterator = {
+		.list = list,
+		.globalIndex = 0,
+	};
+
+	if ( !ResourceList_IteratorIsValid(iterator) )
+	{
+		iterator = ResourceList_IncrementIterator(iterator);
+	}
+
+	return iterator;
+}
+
 ResourceListIterator ResourceList_IncrementIterator(ResourceListIterator iterator)
 {
 	if ( !IteratorIsInRangeOfList(&iterator) )
@@ -446,4 +468,26 @@ ResourceListIterator ResourceList_IncrementIterator(ResourceListIterator iterato
 	}
 
 	return CreateInvalidIterator(iterator.list);
+}
+
+bool ResourceList_IteratorIsValid(ResourceListIterator iterator)
+{
+	if ( !IteratorIsInRangeOfList(&iterator) )
+	{
+		return false;
+	}
+
+	ResourceItemHeader* header = GetHeaderFromGlobalIndex(iterator.list, iterator.globalIndex, NULL);
+	return header && header->occupied;
+}
+
+void* ResourceList_GetItemDataFromIterator(ResourceListIterator iterator)
+{
+	if ( !IteratorIsInRangeOfList(&iterator) )
+	{
+		return false;
+	}
+
+	ResourceItemHeader* header = GetHeaderFromGlobalIndex(iterator.list, iterator.globalIndex, NULL);
+	return (header && header->occupied) ? GetItemData(header) : NULL;
 }
