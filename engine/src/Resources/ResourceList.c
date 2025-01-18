@@ -42,6 +42,11 @@ static ResourceItemHeader* GetHeader(const ResourceList* list, ResourceBucket* b
 								 (index * (sizeof(ResourceItemHeader) + list->atts.itemSizeInBytes)));
 }
 
+static ResourceItemHeader* GetFirstHeader(ResourceBucket* bucket)
+{
+	return (ResourceItemHeader*)bucket->items;
+}
+
 static ResourceItemHeader* GetNextHeader(const ResourceList* list, ResourceItemHeader* header)
 {
 	return (ResourceItemHeader*)((uint8_t*)header + sizeof(ResourceItemHeader) + list->atts.itemSizeInBytes);
@@ -227,6 +232,121 @@ ResourceList* ResourceList_Create(ResourceListAttributes attributes)
 	return CreateResourceList(&attributes);
 }
 
+static ResourceListIterator CreateInvalidIterator(ResourceList* list)
+{
+	return (ResourceListIterator) {
+		.list = list,
+		.globalIndex = list ? list->atts.maxCapacity : 0,
+	};
+}
+
+static bool IteratorIsInRangeOfList(const ResourceListIterator* iterator)
+{
+	return iterator && iterator->list && iterator->globalIndex < iterator->list->atts.maxCapacity;
+}
+
+// Assumes iterator index is in range.
+static bool IncrementIteratorToNextValidItem(ResourceListIterator* iterator)
+{
+	ResourceItemHeader* header = GetHeaderFromGlobalIndex(iterator->list, iterator->globalIndex, NULL);
+	RAYGE_ASSERT_VALID(header);
+
+	if ( !header )
+	{
+		return false;
+	}
+
+	uint32_t itemIndex = iterator->globalIndex % iterator->list->atts.itemsPerBucket;
+
+	while ( true )
+	{
+		// For checking overflow later.
+		const uint32_t lastGlobalIndex = iterator->globalIndex;
+
+		// Move on by one item.
+		++iterator->globalIndex;
+		++itemIndex;
+		header = GetNextHeader(iterator->list, header);
+
+		if ( lastGlobalIndex > iterator->globalIndex || itemIndex >= iterator->list->atts.itemsPerBucket )
+		{
+			// Ran out of items.
+			break;
+		}
+
+		if ( header->occupied )
+		{
+			// This item is valid.
+			return true;
+		}
+	}
+
+	return false;
+}
+
+// Assumes iterator index is in range.
+static bool IncrementIteratorToNextValidBucket(ResourceListIterator* iterator, ResourceBucket** outBucket)
+{
+	if ( outBucket )
+	{
+		*outBucket = NULL;
+	}
+
+	ResourceBucket* bucket = NULL;
+	GetHeaderFromGlobalIndex(iterator->list, iterator->globalIndex, &bucket);
+	RAYGE_ASSERT_VALID(bucket);
+
+	if ( !bucket )
+	{
+		return false;
+	}
+
+	// Reset to the first index in the bucket, since we're about to move on
+	// and want to land at the beginning of the next bucket.
+	const uint32_t itemsPerBucket = iterator->list->atts.itemsPerBucket;
+	iterator->globalIndex = (iterator->globalIndex / itemsPerBucket) * itemsPerBucket;
+
+	// Sanity:
+	RAYGE_ASSERT(
+		iterator->list->buckets[iterator->globalIndex / itemsPerBucket] == bucket,
+		"Unexpected change in bucket after modifying iterator global index!"
+	);
+
+	uint32_t bucketIndex = iterator->globalIndex / itemsPerBucket;
+
+	while ( true )
+	{
+		// For checking overflow later.
+		const uint32_t lastGlobalIndex = iterator->globalIndex;
+
+		// Move on by one bucket.
+		iterator->globalIndex += itemsPerBucket;
+		++bucketIndex;
+
+		if ( lastGlobalIndex < iterator->globalIndex || bucketIndex >= iterator->list->numBuckets )
+		{
+			// Ran out of buckets.
+			break;
+		}
+
+		bucket = iterator->list->buckets[bucketIndex];
+
+		if ( bucket && bucket->isNotEmpty )
+		{
+			// This bucket is valid.
+
+			if ( outBucket )
+			{
+				*outBucket = bucket;
+			}
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void ResourceList_Destroy(ResourceList* list)
 {
 	RAYGE_ASSERT_VALID(list);
@@ -239,8 +359,7 @@ void ResourceList_Destroy(ResourceList* list)
 	FreeResourceList(list);
 }
 
-ResourceListErrorCode
-ResourceList_AddItem(ResourceList* list, RayGE_ResourceHandle* outHandle)
+ResourceListErrorCode ResourceList_AddItem(ResourceList* list, RayGE_ResourceHandle* outHandle)
 {
 	RAYGE_ASSERT_VALID(outHandle);
 
@@ -289,4 +408,42 @@ void* ResourceList_GetItemData(const ResourceList* list, RayGE_ResourceHandle ha
 	}
 
 	return GetItemData(header);
+}
+
+ResourceListIterator ResourceList_IncrementIterator(ResourceListIterator iterator)
+{
+	if ( !IteratorIsInRangeOfList(&iterator) )
+	{
+		return CreateInvalidIterator(iterator.list);
+	}
+
+	while ( true )
+	{
+		if ( IncrementIteratorToNextValidItem(&iterator) )
+		{
+			// We found another item in the same bucket, so we're fine.
+			return iterator;
+		}
+
+		// If we get here, we ran out of items in the bucket, so move to the next bucket.
+		ResourceBucket* bucket = NULL;
+
+		if ( !IncrementIteratorToNextValidBucket(&iterator, &bucket) )
+		{
+			// No more buckets, so we're at the end of the list.
+			break;
+		}
+
+		RAYGE_ASSERT_VALID(bucket);
+
+		// Check that the first items in the bucket is valid.
+		// If it is, we can stop. If not, we go around the loop again,
+		// which will find the next valid item.
+		if ( GetFirstHeader(bucket)->occupied )
+		{
+			return iterator;
+		}
+	}
+
+	return CreateInvalidIterator(iterator.list);
 }

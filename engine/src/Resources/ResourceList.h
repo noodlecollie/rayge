@@ -27,6 +27,12 @@ typedef struct ResourceListAttributes
 	void (*DeinitItem)(void* item);
 } ResourceListAttributes;
 
+typedef struct ResourceListIterator
+{
+	ResourceList* list;
+	uint32_t globalIndex;
+} ResourceListIterator;
+
 typedef enum ResourceListErrorCode
 {
 	RESOURCELIST_ERROR_NONE = 0,
@@ -40,3 +46,5 @@ void ResourceList_Destroy(ResourceList* list);
 ResourceListErrorCode
 ResourceList_CreateNewItem(ResourceList* list, RayGE_ResourceHandle* outHandle);
 void* ResourceList_GetItemData(const ResourceList* list, RayGE_ResourceHandle handle);
+
+ResourceListIterator ResourceList_IncrementIterator(ResourceListIterator iterator);
