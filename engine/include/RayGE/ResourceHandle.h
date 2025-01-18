@@ -5,8 +5,16 @@
 
 typedef struct RayGE_ResourceHandle
 {
+	// Domain (or general type) of the resource being referred to.
 	uint32_t domain;
+
+	// Unique index of this resource.
 	uint32_t index;
+
+	// Specific key for this resource. Used to verify that
+	// this resource is the one we want, and the handle is
+	// not an old one from a previous resource that used
+	// to live at the same index.
 	uint64_t key;
 } RayGE_ResourceHandle;
 

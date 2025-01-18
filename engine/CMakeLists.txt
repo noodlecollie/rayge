@@ -98,6 +98,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Resources/ResourceDomains.h
 	src/Resources/ResourceHandleUtils.h
 	src/Resources/ResourceHandleUtils.c
+	src/Resources/ResourceList.h
+	src/Resources/ResourceList.c
 	src/Resources/TextureResources.h
 	src/Resources/TextureResources.c
 	src/Scene/Component.h
