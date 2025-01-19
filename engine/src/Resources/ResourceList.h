@@ -43,8 +43,13 @@ typedef enum ResourceListErrorCode
 ResourceList* ResourceList_Create(ResourceListAttributes attributes);
 void ResourceList_Destroy(ResourceList* list);
 
+// If a path is provided, and a resource with this path has already been
+// added, the existing resource will be returned.
+// When an item is successfully created, its data starts out zeroed,
+// so there is no need for the caller to do this.
 ResourceListErrorCode
-ResourceList_CreateNewItem(ResourceList* list, RayGE_ResourceHandle* outHandle);
+ResourceList_CreateNewItem(ResourceList* list, const char* path, RayGE_ResourceHandle* outHandle);
+
 void* ResourceList_GetItemData(const ResourceList* list, RayGE_ResourceHandle handle);
 
 ResourceListIterator ResourceList_GetIteratorToFirstItem(ResourceList* list);

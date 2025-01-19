@@ -4,10 +4,21 @@
 #include "Resources/ResourceHandleUtils.h"
 #include "Debugging.h"
 
+#define UTHASH_POOLED_MEMPOOL MEMPOOL_RESOURCE_MANAGEMENT
+#include "UTUtils/UTHash_Pooled.h"
+
+typedef struct PathToResourceHandleHashItem
+{
+	UT_hash_handle hh;
+	char* path;
+	RayGE_ResourceHandle handle;
+} PathToResourceHandleHashItem;
+
 typedef struct ResourceItemHeader
 {
 	bool occupied;
 	uint64_t key;
+	PathToResourceHandleHashItem* hashItem;
 } ResourceItemHeader;
 
 typedef struct ResourceBucket
@@ -29,6 +40,7 @@ struct ResourceList
 	size_t numBuckets;
 
 	size_t totalResources;
+	PathToResourceHandleHashItem* pathToResourceHandle;
 };
 
 static void* GetItemData(ResourceItemHeader* header)
@@ -173,7 +185,7 @@ static ResourceItemHeader* GetFirstAvailableHeader(ResourceList* list, ResourceB
 	return NULL;
 }
 
-static RayGE_ResourceHandle CreateItemInFirstFreeListSlot(ResourceList* list)
+static RayGE_ResourceHandle CreateItemInFirstFreeListSlot(ResourceList* list, const char* path)
 {
 	size_t bucketIndex = 0;
 	ResourceBucket* bucket = GetFirstAvailableBucket(list, &bucketIndex);
@@ -181,55 +193,49 @@ static RayGE_ResourceHandle CreateItemInFirstFreeListSlot(ResourceList* list)
 	size_t itemIndex = 0;
 	ResourceItemHeader* header = GetFirstAvailableHeader(list, bucket, &itemIndex);
 
+	PathToResourceHandleHashItem* hashItem = MEMPOOL_CALLOC_STRUCT(MEMPOOL_RESOURCE_MANAGEMENT, PathToResourceHandleHashItem);
+	HASH_ADD_STR(list->pathToResourceHandle, path, hashItem);
+
 	const uint32_t globalIndex = ((uint32_t)bucketIndex * list->atts.itemsPerBucket) + (uint32_t)itemIndex;
 
-	header->key = Resource_CreateKey(globalIndex);
 	header->occupied = true;
+	header->key = Resource_CreateKey(globalIndex);
+	header->hashItem = hashItem;
+
+	hashItem->path = wzl_strdup(path);
+	hashItem->handle = Resource_CreateInternalHandle(list->atts.domain, globalIndex, header->key);
+
+	void* itemData = GetItemData(header);
+	memset(itemData, 0, list->atts.itemSizeInBytes);
 
 	++list->totalResources;
-	return Resource_CreateInternalHandle(list->atts.domain, globalIndex, header->key);
+	return hashItem->handle;
 }
 
-ResourceList* ResourceList_Create(ResourceListAttributes attributes)
+static void DeleteHashEntry(ResourceList* list, PathToResourceHandleHashItem* item)
 {
-	RAYGE_ASSERT(
-		attributes.domain > RESOURCE_DOMAIN_INVALID && attributes.domain < RESOURCE_DOMAIN__COUNT,
-		"Domain must be valid"
-	);
+	HASH_DEL(list->pathToResourceHandle, item);
+	MEMPOOL_FREE(item->path);
+	MEMPOOL_FREE(item);
+}
 
-	RAYGE_ASSERT(attributes.maxCapacity > 0, "Capacity must be greater than zero");
-	RAYGE_ASSERT(attributes.itemsPerBucket > 0, "Items per bucket must be greater than zero");
+static void DeleteAllHashEntries(ResourceList* list)
+{
+	PathToResourceHandleHashItem* item = NULL;
+	PathToResourceHandleHashItem* temp = NULL;
 
-	if ( attributes.domain == RESOURCE_DOMAIN_INVALID || attributes.domain >= RESOURCE_DOMAIN__COUNT ||
-		 attributes.maxCapacity < 1 || attributes.itemsPerBucket < 1 )
+	HASH_ITER(hh, list->pathToResourceHandle, item, temp)
 	{
-		return NULL;
+		DeleteHashEntry(list, item);
 	}
+}
 
-	uint32_t remainder = attributes.maxCapacity % attributes.itemsPerBucket;
+static RayGE_ResourceHandle FindResourceHandleByPath(ResourceList* list, const char* path)
+{
+	PathToResourceHandleHashItem* item = NULL;
+	HASH_FIND_STR(list->pathToResourceHandle, path, item);
 
-	if ( remainder > 0 )
-	{
-		Logging_PrintLine(
-			RAYGE_LOG_WARNING,
-			"ResourceList_Create: Items per bucket (%zu) did not neatly divide capacity (%zu), leaving a remainder of "
-			"%zu. New capacity of list will be %zu items.",
-			attributes.itemsPerBucket,
-			attributes.maxCapacity,
-			remainder,
-			attributes.maxCapacity - remainder
-		);
-
-		attributes.maxCapacity -= remainder;
-
-		if ( attributes.maxCapacity < 1 )
-		{
-			RAYGE_ASSERT(false, "Removing remainder created an empty list");
-			return NULL;
-		}
-	}
-
-	return CreateResourceList(&attributes);
+	return item ? item->handle : RAYGE_NULL_RESOURCE_HANDLE;
 }
 
 static ResourceListIterator CreateInvalidIterator(ResourceList* list)
@@ -347,6 +353,48 @@ static bool IncrementIteratorToNextValidBucket(ResourceListIterator* iterator, R
 	return false;
 }
 
+ResourceList* ResourceList_Create(ResourceListAttributes attributes)
+{
+	RAYGE_ASSERT(
+		attributes.domain > RESOURCE_DOMAIN_INVALID && attributes.domain < RESOURCE_DOMAIN__COUNT,
+		"Domain must be valid"
+	);
+
+	RAYGE_ASSERT(attributes.maxCapacity > 0, "Capacity must be greater than zero");
+	RAYGE_ASSERT(attributes.itemsPerBucket > 0, "Items per bucket must be greater than zero");
+
+	if ( attributes.domain == RESOURCE_DOMAIN_INVALID || attributes.domain >= RESOURCE_DOMAIN__COUNT ||
+		 attributes.maxCapacity < 1 || attributes.itemsPerBucket < 1 )
+	{
+		return NULL;
+	}
+
+	uint32_t remainder = attributes.maxCapacity % attributes.itemsPerBucket;
+
+	if ( remainder > 0 )
+	{
+		Logging_PrintLine(
+			RAYGE_LOG_WARNING,
+			"ResourceList_Create: Items per bucket (%zu) did not neatly divide capacity (%zu), leaving a remainder of "
+			"%zu. New capacity of list will be %zu items.",
+			attributes.itemsPerBucket,
+			attributes.maxCapacity,
+			remainder,
+			attributes.maxCapacity - remainder
+		);
+
+		attributes.maxCapacity -= remainder;
+
+		if ( attributes.maxCapacity < 1 )
+		{
+			RAYGE_ASSERT(false, "Removing remainder created an empty list");
+			return NULL;
+		}
+	}
+
+	return CreateResourceList(&attributes);
+}
+
 void ResourceList_Destroy(ResourceList* list)
 {
 	RAYGE_ASSERT_VALID(list);
@@ -356,10 +404,11 @@ void ResourceList_Destroy(ResourceList* list)
 		return;
 	}
 
+	DeleteAllHashEntries(list);
 	FreeResourceList(list);
 }
 
-ResourceListErrorCode ResourceList_AddItem(ResourceList* list, RayGE_ResourceHandle* outHandle)
+ResourceListErrorCode ResourceList_AddItem(ResourceList* list, const char* path, RayGE_ResourceHandle* outHandle)
 {
 	RAYGE_ASSERT_VALID(outHandle);
 
@@ -382,7 +431,18 @@ ResourceListErrorCode ResourceList_AddItem(ResourceList* list, RayGE_ResourceHan
 		return RESOURCELIST_ERROR_NO_FREE_SPACE;
 	}
 
-	*outHandle = CreateItemInFirstFreeListSlot(list);
+	if ( path )
+	{
+		RayGE_ResourceHandle handle = FindResourceHandleByPath(list, path);
+
+		if ( !RAYGE_IS_NULL_RESOURCE_HANDLE(handle) )
+		{
+			*outHandle = handle;
+			return RESOURCELIST_ERROR_NONE;
+		}
+	}
+
+	*outHandle = CreateItemInFirstFreeListSlot(list, path);
 	return RESOURCELIST_ERROR_NONE;
 }
 
