@@ -3,8 +3,17 @@
 #include "Logging/Logging.h"
 #include "MemPool/MemPoolManager.h"
 #include "Identity/Identity.h"
+#include "Testing/Testing.h"
 #include "Debugging.h"
 #include "cargs.h"
+
+#if RAYGE_DEBUG()
+#define MEMPOOL_DEBUG_DEFAULT true
+#define MEMPOOL_DEBUG_DEFAULT_STR "true"
+#else
+#define MEMPOOL_DEBUG_DEFAULT false
+#define MEMPOOL_DEBUG_DEFAULT_STR "false"
+#endif
 
 static RayGE_LaunchState g_LaunchState;
 static const struct cag_option LaunchOptionDefs[] = {
@@ -21,6 +30,22 @@ static const struct cag_option LaunchOptionDefs[] = {
 		.description = "Displays version string and exits.",
 	},
 	{
+		.identifier = 'm',
+		.access_letters = NULL,
+		.access_name = "debug-mempool",
+		.description =
+			"Enables debugging of memory pool allocations (default for this build: " MEMPOOL_DEBUG_DEFAULT_STR
+			"). This may affect performance.",
+	},
+#if RAYGE_BUILD_TESTING()
+	{
+		.identifier = 't',
+		.access_letters = "t",
+		.access_name = "run-tests",
+		.description = "If set, runs tests on launch, prints their results, and exits.",
+	},
+#endif
+	{
 		.identifier = 'd',
 		.access_letters = NULL,
 		.access_name = "dev",
@@ -28,24 +53,13 @@ static const struct cag_option LaunchOptionDefs[] = {
 		.description =
 			"Sets the developer level (defaults to 0). Higher levels make more debugging features available.",
 	},
-	{
-		.identifier = 'm',
-		.access_letters = NULL,
-		.access_name = "debug-mempool",
-		.description = "Enables debugging of memory pool allocations. This may affect performance",
-	}
 };
 
 static void SetDefaults(RayGE_LaunchState* state)
 {
 	state->defaultLogLevel = RAYGE_LOG_INFO;
 	state->enableBackendDebugLogs = false;
-
-#if RAYGE_DEBUG()
-	state->enableMemPoolDebugging = true;
-#else
-	state->enableMemPoolDebugging = false;
-#endif
+	state->enableMemPoolDebugging = MEMPOOL_DEBUG_DEFAULT;
 }
 
 bool LaunchParams_Parse(const RayGE_LaunchParams* params)
@@ -122,6 +136,14 @@ bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 				g_LaunchState.enableMemPoolDebugging = true;
 				break;
 			}
+
+#if RAYGE_BUILD_TESTING()
+			case 't':
+			{
+				g_LaunchState.runTestsAndExit = true;
+				break;
+			}
+#endif
 
 			case '?':
 			default:

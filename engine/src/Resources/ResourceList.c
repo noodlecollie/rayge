@@ -43,6 +43,11 @@ struct ResourceList
 	PathToResourceHandleHashItem* pathToResourceHandle;
 };
 
+static size_t GetFullItemSize(const ResourceList* list)
+{
+	return sizeof(ResourceItemHeader) + list->atts.itemSizeInBytes;
+}
+
 static void* GetItemData(ResourceItemHeader* header)
 {
 	return (void*)((uint8_t*)header + sizeof(ResourceItemHeader));
@@ -50,8 +55,7 @@ static void* GetItemData(ResourceItemHeader* header)
 
 static ResourceItemHeader* GetHeader(const ResourceList* list, ResourceBucket* bucket, size_t index)
 {
-	return (ResourceItemHeader*)((uint8_t*)bucket->items +
-								 (index * (sizeof(ResourceItemHeader) + list->atts.itemSizeInBytes)));
+	return (ResourceItemHeader*)((uint8_t*)bucket->items + (index * GetFullItemSize(list)));
 }
 
 static ResourceItemHeader* GetFirstHeader(ResourceBucket* bucket)
@@ -61,7 +65,30 @@ static ResourceItemHeader* GetFirstHeader(ResourceBucket* bucket)
 
 static ResourceItemHeader* GetNextHeader(const ResourceList* list, ResourceItemHeader* header)
 {
-	return (ResourceItemHeader*)((uint8_t*)header + sizeof(ResourceItemHeader) + list->atts.itemSizeInBytes);
+	return (ResourceItemHeader*)((uint8_t*)header + GetFullItemSize(list));
+}
+
+static void DeleteHashEntry(ResourceList* list, PathToResourceHandleHashItem* item)
+{
+	if ( !item )
+	{
+		return;
+	}
+
+	HASH_DEL(list->pathToResourceHandle, item);
+	MEMPOOL_FREE(item->path);
+	MEMPOOL_FREE(item);
+}
+
+static void DeleteAllHashEntries(ResourceList* list)
+{
+	PathToResourceHandleHashItem* item = NULL;
+	PathToResourceHandleHashItem* temp = NULL;
+
+	HASH_ITER(hh, list->pathToResourceHandle, item, temp)
+	{
+		DeleteHashEntry(list, item);
+	}
 }
 
 static void DeinitItemData(ResourceList* list, ResourceItemHeader* header)
@@ -74,20 +101,43 @@ static void DeinitItemData(ResourceList* list, ResourceItemHeader* header)
 
 static void FreeBucket(ResourceList* list, ResourceBucket* bucket)
 {
-	ResourceItemHeader* header = (ResourceItemHeader*)bucket->items;
-
-	for ( size_t index = 0; index < bucket->numItems; ++index )
+	if ( bucket->isNotEmpty )
 	{
-		DeinitItemData(list, header);
-		header = GetNextHeader(list, header);
+		ResourceItemHeader* header = (ResourceItemHeader*)bucket->items;
+
+		for ( size_t index = 0; index < bucket->numItems; ++index )
+		{
+			DeinitItemData(list, header);
+			header = GetNextHeader(list, header);
+		}
 	}
 
 	MEMPOOL_FREE(bucket->items);
 	MEMPOOL_FREE(bucket);
 }
 
+static void DestroyBucketIfEmpty(ResourceList* list, ResourceBucket* bucket)
+{
+	if ( bucket->isNotEmpty )
+	{
+		return;
+	}
+
+	for ( size_t index = 0; index < list->numBuckets; ++index )
+	{
+		if ( list->buckets[index] == bucket )
+		{
+			FreeBucket(list, bucket);
+			list->buckets[index] = NULL;
+			break;
+		}
+	}
+}
+
 static void FreeResourceList(ResourceList* list)
 {
+	DeleteAllHashEntries(list);
+
 	for ( size_t index = 0; index < list->numBuckets; ++index )
 	{
 		if ( list->buckets[index] )
@@ -102,6 +152,11 @@ static void FreeResourceList(ResourceList* list)
 static ResourceItemHeader*
 GetHeaderFromGlobalIndex(const ResourceList* list, uint32_t globalIndex, ResourceBucket** outBucket)
 {
+	if ( outBucket )
+	{
+		*outBucket = NULL;
+	}
+
 	if ( globalIndex >= list->atts.maxCapacity )
 	{
 		return NULL;
@@ -136,13 +191,21 @@ static ResourceList* CreateResourceList(const ResourceListAttributes* attributes
 	return list;
 }
 
+static ResourceBucket* CreateBucket(ResourceList* list)
+{
+	ResourceBucket* bucket = MEMPOOL_CALLOC_STRUCT(MEMPOOL_RESOURCE_MANAGEMENT, ResourceBucket);
+	bucket->numItems = list->atts.itemsPerBucket;
+	bucket->items = MEMPOOL_CALLOC(MEMPOOL_RESOURCE_MANAGEMENT, bucket->numItems, GetFullItemSize(list));
+	return bucket;
+}
+
 static ResourceBucket* GetFirstAvailableBucket(ResourceList* list, size_t* outIndex)
 {
 	for ( size_t index = 0; index < list->numBuckets; ++index )
 	{
 		if ( !list->buckets[index] )
 		{
-			list->buckets[index] = MEMPOOL_CALLOC_STRUCT(MEMPOOL_RESOURCE_MANAGEMENT, ResourceBucket);
+			list->buckets[index] = CreateBucket(list);
 		}
 
 		if ( !list->buckets[index]->isFull )
@@ -185,6 +248,63 @@ static ResourceItemHeader* GetFirstAvailableHeader(ResourceList* list, ResourceB
 	return NULL;
 }
 
+static ResourceItemHeader*
+GetHeaderFromHandle(ResourceList* list, RayGE_ResourceHandle handle, ResourceBucket** outBucket)
+{
+	if ( outBucket )
+	{
+		*outBucket = NULL;
+	}
+
+	if ( !Resource_HandleIsValidForInternalDomain(handle, list->atts.domain, list->atts.maxCapacity) )
+	{
+		return NULL;
+	}
+
+	ResourceBucket* bucket = NULL;
+	ResourceItemHeader* header = GetHeaderFromGlobalIndex((ResourceList*)list, handle.index, &bucket);
+
+	if ( !header || !header->occupied || header->key != handle.key )
+	{
+		return NULL;
+	}
+
+	if ( outBucket )
+	{
+		*outBucket = bucket;
+	}
+
+	return header;
+}
+
+static void UpdateBucketFlags(ResourceList* list, ResourceBucket* bucket)
+{
+	bucket->isFull = true;
+	bucket->isNotEmpty = false;
+
+	ResourceItemHeader* header = GetFirstHeader(bucket);
+
+	for ( size_t index = 0; index < bucket->numItems; ++index )
+	{
+		if ( !header->occupied )
+		{
+			bucket->isFull = false;
+		}
+		else
+		{
+			bucket->isNotEmpty = true;
+		}
+
+		if ( !bucket->isFull && bucket->isNotEmpty )
+		{
+			// We can quit now - there will be no more changes to any flags.
+			return;
+		}
+
+		header = GetNextHeader(list, header);
+	}
+}
+
 static RayGE_ResourceHandle CreateItemInFirstFreeListSlot(ResourceList* list, const char* path)
 {
 	size_t bucketIndex = 0;
@@ -193,45 +313,49 @@ static RayGE_ResourceHandle CreateItemInFirstFreeListSlot(ResourceList* list, co
 	size_t itemIndex = 0;
 	ResourceItemHeader* header = GetFirstAvailableHeader(list, bucket, &itemIndex);
 
-	PathToResourceHandleHashItem* hashItem = MEMPOOL_CALLOC_STRUCT(MEMPOOL_RESOURCE_MANAGEMENT, PathToResourceHandleHashItem);
-	HASH_ADD_STR(list->pathToResourceHandle, path, hashItem);
+	PathToResourceHandleHashItem* hashItem =
+		path ? MEMPOOL_CALLOC_STRUCT(MEMPOOL_RESOURCE_MANAGEMENT, PathToResourceHandleHashItem) : NULL;
 
 	const uint32_t globalIndex = ((uint32_t)bucketIndex * list->atts.itemsPerBucket) + (uint32_t)itemIndex;
+	const uint64_t key = Resource_CreateKey(globalIndex);
+	RayGE_ResourceHandle handle = Resource_CreateInternalHandle(list->atts.domain, globalIndex, key);
 
 	header->occupied = true;
-	header->key = Resource_CreateKey(globalIndex);
+	header->key = key;
 	header->hashItem = hashItem;
 
-	hashItem->path = wzl_strdup(path);
-	hashItem->handle = Resource_CreateInternalHandle(list->atts.domain, globalIndex, header->key);
+	if ( hashItem )
+	{
+		hashItem->path = wzl_strdup(path);
+		hashItem->handle = handle;
+
+		HASH_ADD_STR(list->pathToResourceHandle, path, hashItem);
+	}
 
 	void* itemData = GetItemData(header);
 	memset(itemData, 0, list->atts.itemSizeInBytes);
 
+	UpdateBucketFlags(list, bucket);
+
 	++list->totalResources;
-	return hashItem->handle;
+	return handle;
 }
 
-static void DeleteHashEntry(ResourceList* list, PathToResourceHandleHashItem* item)
+static void DestroyItem(ResourceList* list, ResourceItemHeader* header)
 {
-	HASH_DEL(list->pathToResourceHandle, item);
-	MEMPOOL_FREE(item->path);
-	MEMPOOL_FREE(item);
-}
+	DeleteHashEntry(list, header->hashItem);
+	DeinitItemData(list, header);
 
-static void DeleteAllHashEntries(ResourceList* list)
-{
-	PathToResourceHandleHashItem* item = NULL;
-	PathToResourceHandleHashItem* temp = NULL;
+	header->key = 0;
+	header->occupied = false;
 
-	HASH_ITER(hh, list->pathToResourceHandle, item, temp)
-	{
-		DeleteHashEntry(list, item);
-	}
+	--list->totalResources;
 }
 
 static RayGE_ResourceHandle FindResourceHandleByPath(ResourceList* list, const char* path)
 {
+	RAYGE_ASSERT_VALID(path);
+
 	PathToResourceHandleHashItem* item = NULL;
 	HASH_FIND_STR(list->pathToResourceHandle, path, item);
 
@@ -362,9 +486,15 @@ ResourceList* ResourceList_Create(ResourceListAttributes attributes)
 
 	RAYGE_ASSERT(attributes.maxCapacity > 0, "Capacity must be greater than zero");
 	RAYGE_ASSERT(attributes.itemsPerBucket > 0, "Items per bucket must be greater than zero");
+	RAYGE_ASSERT(
+		attributes.itemsPerBucket <= attributes.maxCapacity,
+		"Capacity must not be smaller than items per bucket"
+	);
+	RAYGE_ASSERT(attributes.itemSizeInBytes > 0, "Item size must be greater than zero");
 
 	if ( attributes.domain == RESOURCE_DOMAIN_INVALID || attributes.domain >= RESOURCE_DOMAIN__COUNT ||
-		 attributes.maxCapacity < 1 || attributes.itemsPerBucket < 1 )
+		 attributes.maxCapacity < 1 || attributes.itemsPerBucket < 1 ||
+		 attributes.itemsPerBucket > attributes.maxCapacity || attributes.itemSizeInBytes < 1 )
 	{
 		return NULL;
 	}
@@ -404,11 +534,16 @@ void ResourceList_Destroy(ResourceList* list)
 		return;
 	}
 
-	DeleteAllHashEntries(list);
 	FreeResourceList(list);
 }
 
-ResourceListErrorCode ResourceList_AddItem(ResourceList* list, const char* path, RayGE_ResourceHandle* outHandle)
+size_t ResourceList_ItemCount(const ResourceList* list)
+{
+	RAYGE_ASSERT_VALID(list);
+	return list ? list->totalResources : 0;
+}
+
+ResourceListErrorCode ResourceList_CreateNewItem(ResourceList* list, const char* path, RayGE_ResourceHandle* outHandle)
 {
 	RAYGE_ASSERT_VALID(outHandle);
 
@@ -446,7 +581,29 @@ ResourceListErrorCode ResourceList_AddItem(ResourceList* list, const char* path,
 	return RESOURCELIST_ERROR_NONE;
 }
 
-void* ResourceList_GetItemData(const ResourceList* list, RayGE_ResourceHandle handle)
+void ResourceList_DestroyItem(ResourceList* list, RayGE_ResourceHandle handle)
+{
+	RAYGE_ASSERT_VALID(list);
+
+	if ( !list )
+	{
+		return;
+	}
+
+	ResourceBucket* bucket = NULL;
+	ResourceItemHeader* header = GetHeaderFromHandle(list, handle, &bucket);
+
+	if ( !header )
+	{
+		return;
+	}
+
+	DestroyItem(list, header);
+	UpdateBucketFlags(list, bucket);
+	DestroyBucketIfEmpty(list, bucket);
+}
+
+void* ResourceList_GetItemData(ResourceList* list, RayGE_ResourceHandle handle)
 {
 	RAYGE_ASSERT_VALID(list);
 
@@ -455,19 +612,21 @@ void* ResourceList_GetItemData(const ResourceList* list, RayGE_ResourceHandle ha
 		return NULL;
 	}
 
-	if ( !Resource_HandleIsValidForInternalDomain(handle, list->atts.domain, list->atts.maxCapacity) )
+	ResourceItemHeader* header = GetHeaderFromHandle(list, handle, NULL);
+	return header ? GetItemData(header) : NULL;
+}
+
+const char* ResourceList_GetItemPath(ResourceList* list, RayGE_ResourceHandle handle)
+{
+	RAYGE_ASSERT_VALID(list);
+
+	if ( !list )
 	{
 		return NULL;
 	}
 
-	ResourceItemHeader* header = GetHeaderFromGlobalIndex((ResourceList*)list, handle.index, NULL);
-
-	if ( !header || !header->occupied || header->key != handle.key )
-	{
-		return NULL;
-	}
-
-	return GetItemData(header);
+	ResourceItemHeader* header = GetHeaderFromHandle(list, handle, NULL);
+	return header->hashItem ? header->hashItem->path : NULL;
 }
 
 ResourceListIterator ResourceList_GetIteratorToFirstItem(ResourceList* list)
@@ -551,3 +710,141 @@ void* ResourceList_GetItemDataFromIterator(ResourceListIterator iterator)
 	ResourceItemHeader* header = GetHeaderFromGlobalIndex(iterator.list, iterator.globalIndex, NULL);
 	return (header && header->occupied) ? GetItemData(header) : NULL;
 }
+
+#if RAYGE_BUILD_TESTING()
+static void TestInvalidArguments(void)
+{
+	ResourceListAttributes atts;
+
+	// Invalid domain
+	atts = (ResourceListAttributes) {
+		.domain = RESOURCE_DOMAIN_INVALID,
+		.itemSizeInBytes = 4,
+		.itemsPerBucket = 4,
+		.maxCapacity = 8,
+	};
+
+	// Zero item size
+	atts = (ResourceListAttributes) {
+		.domain = RESOURCE_DOMAIN_ENTITY,
+		.itemSizeInBytes = 0,
+		.itemsPerBucket = 4,
+		.maxCapacity = 8,
+	};
+
+	TESTING_CHECK(!ResourceList_Create(atts));
+
+	// Zero capacity
+	atts = (ResourceListAttributes) {
+		.domain = RESOURCE_DOMAIN_ENTITY,
+		.itemSizeInBytes = 4,
+		.itemsPerBucket = 4,
+		.maxCapacity = 0,
+	};
+
+	TESTING_CHECK(!ResourceList_Create(atts));
+
+	// Zero items per bucket
+	atts = (ResourceListAttributes) {
+		.domain = RESOURCE_DOMAIN_ENTITY,
+		.itemSizeInBytes = 4,
+		.itemsPerBucket = 0,
+		.maxCapacity = 8,
+	};
+
+	TESTING_CHECK(!ResourceList_Create(atts));
+
+	// Zero capacity because items per bucket exceeded it
+	atts = (ResourceListAttributes) {
+		.domain = RESOURCE_DOMAIN_ENTITY,
+		.itemSizeInBytes = 4,
+		.itemsPerBucket = 9,
+		.maxCapacity = 8,
+	};
+
+	TESTING_CHECK(!ResourceList_Create(atts));
+}
+
+void TestAddingAndRemovingElements(void)
+{
+	ResourceListAttributes atts = (ResourceListAttributes) {
+		.domain = RESOURCE_DOMAIN_ENTITY,
+		.itemSizeInBytes = sizeof(int),
+		.itemsPerBucket = 4,
+		.maxCapacity = 8,
+	};
+
+	ResourceList* list = ResourceList_Create(atts);
+
+	if ( !TESTING_CHECK(list) )
+	{
+		return;
+	}
+
+	{
+		RayGE_ResourceHandle handle = RAYGE_NULL_RESOURCE_HANDLE;
+		ResourceListErrorCode itemCreateResult = RESOURCELIST_ERROR_INVALID_ARGUMENT;
+		void* data = NULL;
+		int dataValue = 0;
+
+		itemCreateResult = ResourceList_CreateNewItem(list, NULL, &handle);
+		data = ResourceList_GetItemData(list, handle);
+
+		if ( data )
+		{
+			*((int*)data) = 1234;
+
+			void* secondData = ResourceList_GetItemData(list, handle);
+			dataValue = *((int*)secondData);
+		}
+
+		if ( itemCreateResult == RESOURCELIST_ERROR_NONE )
+		{
+			ResourceList_DestroyItem(list, handle);
+		}
+
+		TESTING_CHECK(!RAYGE_IS_NULL_RESOURCE_HANDLE(handle));
+		TESTING_CHECK(itemCreateResult == RESOURCELIST_ERROR_NONE);
+		TESTING_CHECK(data);
+		TESTING_CHECK(dataValue == 1234);
+	}
+
+	// Do the same again, but with a path this time.
+	{
+		RayGE_ResourceHandle handle = RAYGE_NULL_RESOURCE_HANDLE;
+		ResourceListErrorCode itemCreateResult = RESOURCELIST_ERROR_INVALID_ARGUMENT;
+		void* data = NULL;
+		int dataValue = 0;
+		const char* path = NULL;
+
+		itemCreateResult = ResourceList_CreateNewItem(list, "my/item", &handle);
+		data = ResourceList_GetItemData(list, handle);
+
+		if ( data )
+		{
+			*((int*)data) = 5678;
+
+			void* secondData = ResourceList_GetItemData(list, handle);
+			dataValue = *((int*)secondData);
+		}
+
+		path = ResourceList_GetItemPath(list, handle);
+
+		// No cleanup this time - it should happen in ResourceList_Destroy().
+
+		TESTING_CHECK(!RAYGE_IS_NULL_RESOURCE_HANDLE(handle));
+		TESTING_CHECK(itemCreateResult == RESOURCELIST_ERROR_NONE);
+		TESTING_CHECK(data);
+		TESTING_CHECK(dataValue == 5678);
+		TESTING_CHECK(wzl_strequals(path, "my/item"));
+	}
+
+	ResourceList_Destroy(list);
+}
+
+void ResourceList_RunTests(void)
+{
+	TestInvalidArguments();
+	TestAddingAndRemovingElements();
+}
+#endif

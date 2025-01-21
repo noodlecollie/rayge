@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include "Testing/Testing.h"
 
 typedef enum MemPool_Category
 {
@@ -17,6 +18,11 @@ typedef enum MemPool_Category
 	MEMPOOL_WZL_CUTL,
 	MEMPOOL_LOGGING,
 	MEMPOOL_RESOURCE_MANAGEMENT,
+
+#if RAYGE_BUILD_TESTING()
+	// Special pool for test manager usage
+	MEMPOOL_TESTMANAGER,
+#endif
 
 	MEMPOOL__COUNT
 } MemPool_Category;

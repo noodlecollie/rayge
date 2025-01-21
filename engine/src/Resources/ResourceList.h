@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "RayGE/ResourceHandle.h"
 #include "Resources/ResourceDomains.h"
+#include "Testing/Testing.h"
 
 typedef struct ResourceList ResourceList;
 
@@ -42,6 +43,7 @@ typedef enum ResourceListErrorCode
 
 ResourceList* ResourceList_Create(ResourceListAttributes attributes);
 void ResourceList_Destroy(ResourceList* list);
+size_t ResourceList_ItemCount(const ResourceList* list);
 
 // If a path is provided, and a resource with this path has already been
 // added, the existing resource will be returned.
@@ -50,9 +52,15 @@ void ResourceList_Destroy(ResourceList* list);
 ResourceListErrorCode
 ResourceList_CreateNewItem(ResourceList* list, const char* path, RayGE_ResourceHandle* outHandle);
 
-void* ResourceList_GetItemData(const ResourceList* list, RayGE_ResourceHandle handle);
+void ResourceList_DestroyItem(ResourceList* list, RayGE_ResourceHandle handle);
+void* ResourceList_GetItemData(ResourceList* list, RayGE_ResourceHandle handle);
+const char* ResourceList_GetItemPath(ResourceList* list, RayGE_ResourceHandle handle);
 
 ResourceListIterator ResourceList_GetIteratorToFirstItem(ResourceList* list);
 ResourceListIterator ResourceList_IncrementIterator(ResourceListIterator iterator);
 bool ResourceList_IteratorIsValid(ResourceListIterator iterator);
 void* ResourceList_GetItemDataFromIterator(ResourceListIterator iterator);
+
+#if RAYGE_BUILD_TESTING()
+void ResourceList_RunTests(void);
+#endif

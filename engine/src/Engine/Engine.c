@@ -14,7 +14,7 @@
 #include "Engine/EngineAPI.h"
 #include "Scene/Scene.h"
 #include "Scene/Entity.h"
-#include "Testing.h"
+#include "Testing/Testing.h"
 #include "Identity/Identity.h"
 #include "Debugging.h"
 #include "wzl_cutl/memory.h"
@@ -87,6 +87,25 @@ static void VerifyAllEngineAPIFunctionPointersAreValid(void)
 	}
 }
 
+static void BasicInit(void)
+{
+	// Ensure the memory delegates are set up before we do anything else.
+	wzl_set_memory_delegates((wzl_memory_delegates) {
+		.malloc_func = WzlMalloc,
+		.free_func = WzlFree,
+		.calloc_func = WzlCalloc,
+		.realloc_func = WzlRealloc,
+	});
+
+	Logging_Init();
+	Logging_PrintLine(RAYGE_LOG_INFO, "%s", Identity_GetBuildDescription());
+
+	VerifyAllEngineAPIFunctionPointersAreValid();
+
+	MemPoolManager_Init();
+	EngineSubsystemManager_InitAll();
+}
+
 static void RunFrameInput(void)
 {
 	InputSubsystem_NewFrame();
@@ -117,23 +136,9 @@ void Engine_StartUp(void)
 		return;
 	}
 
-	// Ensure the memory delegates are set up before we do anything else.
-	wzl_set_memory_delegates((wzl_memory_delegates) {
-		.malloc_func = WzlMalloc,
-		.free_func = WzlFree,
-		.calloc_func = WzlCalloc,
-		.realloc_func = WzlRealloc,
-	});
+	BasicInit();
 
-	Logging_Init();
-	Logging_PrintLine(RAYGE_LOG_INFO, "%s", Identity_GetBuildDescription());
-
-	VerifyAllEngineAPIFunctionPointersAreValid();
-
-	MemPoolManager_Init();
-	EngineSubsystemManager_InitAll();
 	HookManager_RegisterAll();
-
 	g_Initialised = true;
 
 	Logging_PrintLine(RAYGE_LOG_INFO, "RayGE engine initialised.");
@@ -176,3 +181,24 @@ void Engine_RunToCompletion(void)
 
 	INVOKE_CALLBACK(g_GameLibCallbacks.scene.SceneEnd);
 }
+
+#if RAYGE_BUILD_TESTING()
+int32_t Engine_RunTestsOnly(void)
+{
+	if ( g_Initialised )
+	{
+		// This should not happen!
+		return 1;
+	}
+
+	BasicInit();
+	g_Initialised = true;
+
+	Logging_PrintLine(RAYGE_LOG_INFO, "Running engine tests and subsequently shutting down");
+	const bool testSuccess = Testing_RunAllTests();
+	Testing_PrintResultsToLog();
+
+	Engine_ShutDown();
+	return testSuccess ? 0 : 1;
+}
+#endif()

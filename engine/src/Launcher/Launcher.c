@@ -4,6 +4,7 @@
 #include "Game/GameLoader.h"
 #include "Engine/EngineAPI.h"
 #include "Engine/Engine.h"
+#include "Testing/Testing.h"
 
 #define DEFAULT_GAME_DIR "games/defaultgame"
 
@@ -57,6 +58,13 @@ RAYGE_ENGINE_PUBLIC(int32_t) RayGE_Launcher_Run(const RayGE_LaunchParams* params
 		// We don't need to go any further than parsing the params.
 		return RAYGE_LAUNCHER_EXIT_LOAD_ABORTED;
 	}
+
+#if RAYGE_BUILD_TESTING()
+	if ( LaunchParams_GetLaunchState()->runTestsAndExit )
+	{
+		return Engine_RunTestsOnly();
+	}
+#endif()
 
 	Engine_StartUp();
 	int32_t returnCode = LoadAndRunGame(params);

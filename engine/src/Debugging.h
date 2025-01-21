@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include "Logging/Logging.h"
+#include "Testing/Testing.h"
 #include "wzl_cutl/string.h"
 
 #ifndef NDEBUG
@@ -12,10 +13,24 @@
 #define RAYGE_DEBUG() 0
 #endif
 
+typedef enum InvariantFailureType
+{
+	// Non-fatal, prints an error.
+	INVARIANT_FAILURE_EXPECT,
+
+	// Fatal, but may be side-stepped eg. for
+	// running tests that trigger known failure conditions.
+	// Should only be triggered in debug builds.
+	INVARIANT_FAILURE_ASSERT,
+
+	// Always fatal.
+	INVARIANT_FAILURE_ENSURE,
+} InvariantFailureType;
+
 void RayGE_DebugBreak(void);
 
 static inline void RayGE_CheckInvariant(
-	bool isFatal,
+	InvariantFailureType type,
 	bool expression,
 	const char* expressionStr,
 	const char* file,
@@ -41,46 +56,80 @@ static inline void RayGE_CheckInvariant(
 		va_end(args);
 	}
 
-	Logging_PrintLine(
-		isFatal ? RAYGE_LOG_FATAL : RAYGE_LOG_WARNING,
-		"\n"
-		"**** ASSERTION FAILED ****\n"
-		"  File: %s:%d\n"
-		"  Function: %s\n"
-		"  Expression: %s"
-		"%s%s",
-		file ? file : "unknown-file",
-		line,
-		function ? function : "unknown-function",
-		expressionStr ? expressionStr : "unknown-expression",
-		descBuffer[0] ? "\n  " : "",
-		descBuffer[0] ? descBuffer : ""
-	);
+	if ( type == INVARIANT_FAILURE_EXPECT )
+	{
+		// Since these may be used to trace error conditions in release builds,
+		// don't make them too verbose.
+		if ( descBuffer )
+		{
+			Logging_PrintLine(RAYGE_LOG_ERROR, "%s:%d: %s", file ? file : "unknown-file", line, descBuffer);
+		}
+		else
+		{
+			Logging_PrintLine(
+				RAYGE_LOG_ERROR,
+				"%s:%d: Invariant \"%s\" was violated",
+				file ? file : "unknown-file",
+				line,
+				expressionStr
+			);
+		}
+	}
+	else
+	{
+		if ( !(type == INVARIANT_FAILURE_ASSERT && Testing_TestRunning()) )
+		{
+			Logging_PrintLine(
+				RAYGE_LOG_FATAL,
+				"\n"
+				"**** %s ****\n"
+				"  File: %s:%d\n"
+				"  Function: %s\n"
+				"  Expression: %s"
+				"%s%s",
+				type == INVARIANT_FAILURE_ASSERT ? "ASSERTION FAILED" : "FATAL ERROR",
+				file ? file : "unknown-file",
+				line,
+				function ? function : "unknown-function",
+				expressionStr ? expressionStr : "unknown-expression",
+				descBuffer[0] ? "\n  " : "",
+				descBuffer[0] ? descBuffer : ""
+			);
+		}
+	}
 }
 
-#define RAYGE_CHECK_INVARIANT(isFatal, expr, ...) \
+#define RAYGE_CHECK_INVARIANT(type, expr, ...) \
 	do \
 	{ \
-		bool exprResult = !!(expr); \
+		const bool exprResult = !!(expr); \
 		if ( !exprResult ) \
 		{ \
-			RayGE_CheckInvariant((isFatal), exprResult, (#expr), __FILE__, __LINE__, __func__, __VA_ARGS__); \
+			RayGE_CheckInvariant((type), exprResult, (#expr), __FILE__, __LINE__, __func__, __VA_ARGS__); \
 		} \
 	} \
 	while ( false )
 
 // ENSURE macros are fatal if the condition fails.
-#define RAYGE_ENSURE(expr, ...) RAYGE_CHECK_INVARIANT(true, expr, __VA_ARGS__)
-#define RAYGE_ENSURE_VALID(expr) RAYGE_CHECK_INVARIANT(true, expr, "Required state was not valid")
+#define RAYGE_ENSURE(expr, ...) RAYGE_CHECK_INVARIANT(INVARIANT_FAILURE_ENSURE, expr, __VA_ARGS__)
+#define RAYGE_ENSURE_VALID(expr) RAYGE_CHECK_INVARIANT(INVARIANT_FAILURE_ENSURE, expr, "Required state was not valid")
 
 // EXPECT macros are non-fatal and print an error.
-#define RAYGE_EXPECT(expr, ...) RAYGE_CHECK_INVARIANT(false, expr, __VA_ARGS__)
+#define RAYGE_EXPECT(expr, ...) RAYGE_CHECK_INVARIANT(INVARIANT_FAILURE_EXPECT, expr, __VA_ARGS__)
 
 // FATAL macros always halt execution if they are hit.
-#define RAYGE_FATAL_EX(condition, ...) \
+#define RAYGE_FATAL_EX(conditionStr, ...) \
 	do \
 	{ \
-		RayGE_CheckInvariant(true, false, condition, __FILE__, __LINE__, __func__, __VA_ARGS__); \
+		RayGE_CheckInvariant( \
+			INVARIANT_FAILURE_ENSURE, \
+			false, \
+			conditionStr, \
+			__FILE__, \
+			__LINE__, \
+			__func__, \
+			__VA_ARGS__ \
+		); \
 	} \
 	while ( false )
 
@@ -88,12 +137,15 @@ static inline void RayGE_CheckInvariant(
 
 // Only active in debug builds:
 #if RAYGE_DEBUG()
-// ENSURES in debug, does nothing in release
-#define RAYGE_ASSERT(expr, ...) RAYGE_ENSURE(expr, __VA_ARGS__)
-#define RAYGE_ASSERT_VALID(expr) RAYGE_ENSURE_VALID(expr)
+
+// ASSERTS in debug, does nothing in release
+#define RAYGE_ASSERT(expr, ...) RAYGE_CHECK_INVARIANT(INVARIANT_FAILURE_ASSERT, expr, __VA_ARGS__)
+#define RAYGE_ASSERT_VALID(expr) RAYGE_CHECK_INVARIANT(INVARIANT_FAILURE_ASSERT, expr, "Required state was not valid")
 #define RAYGE_ASSERT_UNREACHABLE(...) RAYGE_FATAL_EX("<Encountered Unreachable Code>", __VA_ARGS__)
-// ENSURES in debug, EXPECTS in release
+
+// ASSERTS in debug, EXPECTS in release
 #define RAYGE_ASSERT_EXPECT(expr, ...) RAYGE_ASSERT(expr, __VA_ARGS__)
+
 // Breaks in debug but does not log (useful if logging would be dangerous in the circumstances)
 #define RAYGE_ASSERT_BREAK(expr) \
 	do \

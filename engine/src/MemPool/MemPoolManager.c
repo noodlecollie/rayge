@@ -308,6 +308,11 @@ static void InitData(ManagerData* data)
 	}
 
 	data->debuggingEnabled = LaunchParams_GetLaunchState()->enableMemPoolDebugging;
+
+	if ( data->debuggingEnabled )
+	{
+		Logging_PrintLine(RAYGE_LOG_WARNING, "Mempool debugging is enabled. This may affect performance.");
+	}
 }
 
 static void FreeData(ManagerData* data)

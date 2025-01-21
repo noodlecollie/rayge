@@ -9,6 +9,7 @@ typedef struct RayGE_LaunchState
 	RayGE_Log_Level defaultLogLevel;
 	bool enableBackendDebugLogs;
 	bool enableMemPoolDebugging;
+	bool runTestsAndExit;
 } RayGE_LaunchState;
 
 bool LaunchParams_Parse(const RayGE_LaunchParams* params);

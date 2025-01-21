@@ -122,8 +122,11 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Conversions.h
 	src/Debugging.h
 	src/Debugging.c
-	src/Testing.h
 	src/Utils.h
+
+	# Testing
+	src/Testing/Testing.h
+	$<$<BOOL:BUILD_TESTING>:src/Testing/Testing.c>
 )
 
 target_sources(${TARGETNAME_ENGINE}
