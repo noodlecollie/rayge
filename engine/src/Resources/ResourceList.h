@@ -30,7 +30,7 @@ typedef struct ResourceListAttributes
 
 typedef struct ResourceListIterator
 {
-	ResourceList* list;
+	const ResourceList* list;
 	uint32_t globalIndex;
 } ResourceListIterator;
 
@@ -53,10 +53,10 @@ ResourceListErrorCode
 ResourceList_CreateNewItem(ResourceList* list, const char* path, RayGE_ResourceHandle* outHandle);
 
 void ResourceList_DestroyItem(ResourceList* list, RayGE_ResourceHandle handle);
-void* ResourceList_GetItemData(ResourceList* list, RayGE_ResourceHandle handle);
-const char* ResourceList_GetItemPath(ResourceList* list, RayGE_ResourceHandle handle);
+void* ResourceList_GetItemData(const ResourceList* list, RayGE_ResourceHandle handle);
+const char* ResourceList_GetItemPath(const ResourceList* list, RayGE_ResourceHandle handle);
 
-ResourceListIterator ResourceList_GetIteratorToFirstItem(ResourceList* list);
+ResourceListIterator ResourceList_GetIteratorToFirstItem(const ResourceList* list);
 ResourceListIterator ResourceList_IncrementIterator(ResourceListIterator iterator);
 bool ResourceList_IteratorIsValid(ResourceListIterator iterator);
 void* ResourceList_GetItemDataFromIterator(ResourceListIterator iterator);

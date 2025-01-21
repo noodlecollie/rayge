@@ -249,7 +249,7 @@ static ResourceItemHeader* GetFirstAvailableHeader(ResourceList* list, ResourceB
 }
 
 static ResourceItemHeader*
-GetHeaderFromHandle(ResourceList* list, RayGE_ResourceHandle handle, ResourceBucket** outBucket)
+GetHeaderFromHandle(const ResourceList* list, RayGE_ResourceHandle handle, ResourceBucket** outBucket)
 {
 	if ( outBucket )
 	{
@@ -262,7 +262,7 @@ GetHeaderFromHandle(ResourceList* list, RayGE_ResourceHandle handle, ResourceBuc
 	}
 
 	ResourceBucket* bucket = NULL;
-	ResourceItemHeader* header = GetHeaderFromGlobalIndex((ResourceList*)list, handle.index, &bucket);
+	ResourceItemHeader* header = GetHeaderFromGlobalIndex(list, handle.index, &bucket);
 
 	if ( !header || !header->occupied || header->key != handle.key )
 	{
@@ -362,7 +362,7 @@ static RayGE_ResourceHandle FindResourceHandleByPath(ResourceList* list, const c
 	return item ? item->handle : RAYGE_NULL_RESOURCE_HANDLE;
 }
 
-static ResourceListIterator CreateInvalidIterator(ResourceList* list)
+static ResourceListIterator CreateInvalidIterator(const ResourceList* list)
 {
 	return (ResourceListIterator) {
 		.list = list,
@@ -603,7 +603,7 @@ void ResourceList_DestroyItem(ResourceList* list, RayGE_ResourceHandle handle)
 	DestroyBucketIfEmpty(list, bucket);
 }
 
-void* ResourceList_GetItemData(ResourceList* list, RayGE_ResourceHandle handle)
+void* ResourceList_GetItemData(const ResourceList* list, RayGE_ResourceHandle handle)
 {
 	RAYGE_ASSERT_VALID(list);
 
@@ -616,7 +616,7 @@ void* ResourceList_GetItemData(ResourceList* list, RayGE_ResourceHandle handle)
 	return header ? GetItemData(header) : NULL;
 }
 
-const char* ResourceList_GetItemPath(ResourceList* list, RayGE_ResourceHandle handle)
+const char* ResourceList_GetItemPath(const ResourceList* list, RayGE_ResourceHandle handle)
 {
 	RAYGE_ASSERT_VALID(list);
 
@@ -629,7 +629,7 @@ const char* ResourceList_GetItemPath(ResourceList* list, RayGE_ResourceHandle ha
 	return header->hashItem ? header->hashItem->path : NULL;
 }
 
-ResourceListIterator ResourceList_GetIteratorToFirstItem(ResourceList* list)
+ResourceListIterator ResourceList_GetIteratorToFirstItem(const ResourceList* list)
 {
 	RAYGE_ASSERT_VALID(list);
 
