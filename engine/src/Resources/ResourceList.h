@@ -60,6 +60,7 @@ ResourceListIterator ResourceList_GetIteratorToFirstItem(const ResourceList* lis
 ResourceListIterator ResourceList_IncrementIterator(ResourceListIterator iterator);
 bool ResourceList_IteratorIsValid(ResourceListIterator iterator);
 void* ResourceList_GetItemDataFromIterator(ResourceListIterator iterator);
+const char* ResourceList_GetItemPathFromIterator(ResourceListIterator iterator);
 
 #if RAYGE_BUILD_TESTING()
 void ResourceList_RunTests(void);

@@ -704,11 +704,22 @@ void* ResourceList_GetItemDataFromIterator(ResourceListIterator iterator)
 {
 	if ( !IteratorIsInRangeOfList(&iterator) )
 	{
-		return false;
+		return NULL;
 	}
 
 	ResourceItemHeader* header = GetHeaderFromGlobalIndex(iterator.list, iterator.globalIndex, NULL);
 	return (header && header->occupied) ? GetItemData(header) : NULL;
+}
+
+const char* ResourceList_GetItemPathFromIterator(ResourceListIterator iterator)
+{
+	if ( !IteratorIsInRangeOfList(&iterator) )
+	{
+		return NULL;
+	}
+
+	ResourceItemHeader* header = GetHeaderFromGlobalIndex(iterator.list, iterator.globalIndex, NULL);
+	return (header && header->occupied && header->hashItem) ? header->hashItem->path : NULL;
 }
 
 #if RAYGE_BUILD_TESTING()
