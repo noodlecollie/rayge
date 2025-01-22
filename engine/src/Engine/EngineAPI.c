@@ -3,7 +3,7 @@
 #include "Engine/EngineAPI.h"
 #include "Logging/Logging.h"
 #include "Scene/SceneAPI.h"
-#include "Rendering/RenderableAPI.h"
+#include "Resources/ResourcesAPI.h"
 
 const RayGE_Engine_API_Current g_EngineAPI = {
 	// Logging
@@ -22,11 +22,11 @@ const RayGE_Engine_API_Current g_EngineAPI = {
 		SceneAPI_GetRenderableComponent,
 	},
 
-	// Renderable
+	// Resources
 	{
-		RenderableAPI_GetPrimitiveHandle,
-		RenderableAPI_LoadTexture,
-		RenderableAPI_UnloadTexture,
+		ResourcesAPI_GetPrimitiveHandle,
+		ResourcesAPI_LoadTexture,
+		ResourcesAPI_UnloadTexture,
 	}
 };
 

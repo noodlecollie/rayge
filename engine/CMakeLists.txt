@@ -89,8 +89,6 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Logging/Logging.c
 	src/MemPool/MemPoolManager.h
 	src/MemPool/MemPoolManager.c
-	src/Rendering/RenderableAPI.h
-	src/Rendering/RenderableAPI.c
 	src/Rendering/Renderer.h
 	src/Rendering/Renderer.c
 	src/Resources/RenderablePrimitives.h
@@ -100,6 +98,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Resources/ResourceHandleUtils.c
 	src/Resources/ResourceList.h
 	src/Resources/ResourceList.c
+	src/Resources/ResourcesAPI.h
+	src/Resources/ResourcesAPI.c
 	src/Resources/TextureResources.h
 	src/Resources/TextureResources.c
 	src/Scene/Component.h
@@ -138,7 +138,7 @@ target_sources(${TARGETNAME_ENGINE}
 	include/RayGE/APIs/Engine.h
 	include/RayGE/APIs/Game.h
 	include/RayGE/APIs/Logging.h
-	include/RayGE/APIs/Renderable.h
+	include/RayGE/APIs/Resources.h
 	include/RayGE/APIs/Scene.h
 	include/RayGE/Angles.h
 	include/RayGE/Color.h

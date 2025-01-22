@@ -47,7 +47,7 @@ static void Scene_Begin(void)
 	spatial->angles.pitch = 0.0f;
 
 	RayGE_Component_Renderable* renderable = g_EngineAPI->scene.AddRenderableComponent(g_SubjectEntity);
-	renderable->handle = g_EngineAPI->renderable.GetPrimitiveHandle(RAYGE_RENDERABLE_PRIM_AACUBE);
+	renderable->handle = g_EngineAPI->resources.GetPrimitiveHandle(RAYGE_RENDERABLE_PRIM_AACUBE);
 	renderable->scale = 3.0f;
 	renderable->color = (RayGE_Color) {255, 0, 10, 255};
 

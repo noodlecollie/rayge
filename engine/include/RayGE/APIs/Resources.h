@@ -1,5 +1,5 @@
-// File: Renderable.h
-// Interface for accessing renderable items.
+// File: Resources.h
+// Interface for loading and unloading resources for use in a game.
 
 #pragma once
 
@@ -14,9 +14,9 @@ typedef enum RayGE_RenderablePrimitive
 	RAYGE_RENDERABLE_PRIM__COUNT
 } RayGE_RenderablePrimitive;
 
-typedef struct RayGE_Renderable_API
+typedef struct RayGE_Resources_API
 {
 	RayGE_ResourceHandle (*GetPrimitiveHandle)(RayGE_RenderablePrimitive primitive);
 	RayGE_ResourceHandle (*LoadTexture)(const char* path);
 	void (*UnloadTexture)(RayGE_ResourceHandle handle);
-} RayGE_Renderable_API;
+} RayGE_Resources_API;
