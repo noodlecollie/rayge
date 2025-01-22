@@ -2,17 +2,14 @@
 #include "Logging/Logging.h"
 #include "Resources/ResourceHandleUtils.h"
 #include "EngineSubsystems/FilesystemSubsystem.h"
+#include "MemPool/MemPoolManager.h"
 #include "Utils.h"
 #include "wzl_cutl/string.h"
 #include "raylib.h"
 
-#define UTHASH_POOLED_MEMPOOL MEMPOOL_RESOURCE_MANAGEMENT
-#include "UTUtils/UTHash_Pooled.h"
-
 // These must be powers of two to divide nicely
 #define MAX_TEXTURES 2048
 #define TEXTURE_BATCH_SIZE 32
-#define NUM_TEXTURE_BATCHES (MAX_TEXTURES / TEXTURE_BATCH_SIZE)
 
 typedef struct StringBounds
 {
@@ -20,35 +17,44 @@ typedef struct StringBounds
 	const char* end;
 } StringBounds;
 
-typedef struct PathToResourceHandleHashItem
-{
-	UT_hash_handle hh;
-	char* path;
-	RayGE_ResourceHandle handle;
-} PathToResourceHandleHashItem;
-
-typedef struct TextureEntry
+typedef struct TextureItem
 {
 	Texture2D texture;
-	uint64_t key;
-	PathToResourceHandleHashItem* hashItem;
-} TextureEntry;
+} TextureItem;
 
-typedef struct TextureBatch
+static ResourceList* g_ResourceList = NULL;
+
+static void DeinitItem(void* item)
 {
-	TextureEntry textures[TEXTURE_BATCH_SIZE];
-	bool isNotEmpty;
-	bool isFull;
-} TextureBatch;
+	TextureItem* texItem = (TextureItem*)item;
 
-typedef struct Data
+	if ( texItem->texture.id != 0 )
+	{
+		UnloadTexture(texItem->texture);
+		texItem->texture.id = 0;
+	}
+}
+
+static void EnsureResourceList(void)
 {
-	PathToResourceHandleHashItem* pathToResourceHandle;
-	TextureBatch** batches;
-	size_t totalTextures;
-} Data;
+	if ( g_ResourceList )
+	{
+		return;
+	}
 
-static Data g_Data;
+	ResourceListAttributes atts;
+	memset(&atts, 0, sizeof(atts));
+
+	atts.domain = RESOURCE_DOMAIN_TEXTURE;
+	atts.maxCapacity = MAX_TEXTURES;
+	atts.itemsPerBucket = TEXTURE_BATCH_SIZE;
+	atts.itemSizeInBytes = sizeof(TextureItem);
+	atts.DeinitItem = &DeinitItem;
+
+	g_ResourceList = ResourceList_Create(atts);
+
+	RAYGE_ENSURE(g_ResourceList, "Failed to create texture resource list!");
+}
 
 static StringBounds BoundString(const char* str)
 {
@@ -76,281 +82,22 @@ static char* NewStringFromBounds(StringBounds bounds)
 	return out;
 }
 
-static void DeleteBatch(TextureBatch* batch)
-{
-	if ( !batch )
-	{
-		return;
-	}
-
-	for ( size_t index = 0; index < RAYGE_ARRAY_SIZE(batch->textures); ++index )
-	{
-		TextureEntry* texture = &batch->textures[index];
-
-		if ( texture->texture.id != 0 )
-		{
-			UnloadTexture(texture->texture);
-		}
-	}
-
-	MEMPOOL_FREE(batch);
-}
-
-static void DeleteAllBatches(Data* data)
-{
-	if ( !data->batches )
-	{
-		return;
-	}
-
-	for ( size_t index = 0; index < NUM_TEXTURE_BATCHES; ++index )
-	{
-		DeleteBatch(data->batches[index]);
-	}
-
-	MEMPOOL_FREE(data->batches);
-	data->batches = NULL;
-	data->totalTextures = 0;
-}
-
-static void DeleteHashEntry(Data* data, PathToResourceHandleHashItem* item)
-{
-	HASH_DEL(data->pathToResourceHandle, item);
-	MEMPOOL_FREE(item->path);
-	MEMPOOL_FREE(item);
-}
-
-static void DeleteAllHashEntries(Data* data)
-{
-	PathToResourceHandleHashItem* item = NULL;
-	PathToResourceHandleHashItem* temp = NULL;
-
-	HASH_ITER(hh, data->pathToResourceHandle, item, temp)
-	{
-		DeleteHashEntry(data, item);
-	}
-}
-
-static RayGE_ResourceHandle FindTextureHandleByPath(const char* path)
-{
-	PathToResourceHandleHashItem* item = NULL;
-	HASH_FIND_STR(g_Data.pathToResourceHandle, path, item);
-
-	return item ? item->handle : RAYGE_NULL_RESOURCE_HANDLE;
-}
-
-static size_t GetFirstAvailableBatchIndex(Data* data)
-{
-	if ( !data->batches )
-	{
-		data->batches =
-			(TextureBatch**)MEMPOOL_CALLOC(MEMPOOL_RESOURCE_MANAGEMENT, NUM_TEXTURE_BATCHES, sizeof(TextureBatch*));
-	}
-
-	for ( size_t index = 0; index < NUM_TEXTURE_BATCHES; ++index )
-	{
-		if ( !data->batches[index] )
-		{
-			data->batches[index] = MEMPOOL_CALLOC_STRUCT(MEMPOOL_RESOURCE_MANAGEMENT, TextureBatch);
-		}
-
-		if ( !data->batches[index]->isFull )
-		{
-			return index;
-		}
-	}
-
-	return SIZE_MAX;
-}
-
-static void UpdateBatchFlags(TextureBatch* batch)
-{
-	batch->isFull = true;
-	batch->isNotEmpty = false;
-
-	for ( size_t index = 0; index < RAYGE_ARRAY_SIZE(batch->textures); ++index )
-	{
-		if ( batch->textures->texture.id == 0 )
-		{
-			batch->isFull = false;
-		}
-		else
-		{
-			batch->isNotEmpty = true;
-		}
-
-		if ( !batch->isFull && batch->isNotEmpty )
-		{
-			// We can quit now - there will be no more changes to any flags.
-			return;
-		}
-	}
-}
-
-static void ClearTextureEntry(Data* data, TextureEntry* entry)
-{
-	if ( !entry )
-	{
-		return;
-	}
-
-	UnloadTexture(entry->texture);
-	DeleteHashEntry(data, entry->hashItem);
-
-	memset(entry, 0, sizeof(*entry));
-}
-
-static RayGE_ResourceHandle AddTextureToBatch(Data* data, TextureEntry entryToAdd)
-{
-	size_t batchIndex = GetFirstAvailableBatchIndex(data);
-
-	// We shouldn't have been called if this was going to happen:
-	RAYGE_ENSURE(batchIndex < NUM_TEXTURE_BATCHES, "Overflowed max textures! This should never happen!");
-
-	TextureBatch* batch = data->batches[batchIndex];
-
-	size_t index = 0;
-	for ( ; index < RAYGE_ARRAY_SIZE(batch->textures); ++index )
-	{
-		TextureEntry* entry = &batch->textures[index];
-
-		if ( entry->texture.id == 0 )
-		{
-			*entry = entryToAdd;
-			break;
-		}
-	}
-
-	RAYGE_ENSURE(index < RAYGE_ARRAY_SIZE(batch->textures), "Overflowed texture batch! This should never happen!");
-
-	UpdateBatchFlags(batch);
-
-	return Resource_CreateInternalHandle(RESOURCE_DOMAIN_TEXTURE, (uint32_t)batchIndex, entryToAdd.key);
-}
-
-static RayGE_ResourceHandle AddTextureToResourceList(Data* data, char* path, Texture2D texture)
-{
-	RAYGE_ASSERT(data->totalTextures < MAX_TEXTURES, "Expected total textures to be < MAX_TEXTURES");
-
-	PathToResourceHandleHashItem* item =
-		MEMPOOL_CALLOC_STRUCT(MEMPOOL_RESOURCE_MANAGEMENT, PathToResourceHandleHashItem);
-
-	const TextureEntry entry = {
-		.texture = texture,
-		.key = Resource_CreateKey((uint32_t)data->totalTextures),
-		.hashItem = item,
-	};
-
-	const RayGE_ResourceHandle handle = AddTextureToBatch(&g_Data, entry);
-
-	item->path = path;
-	item->handle = handle;
-
-	HASH_ADD_STR(g_Data.pathToResourceHandle, path, item);
-
-	++data->totalTextures;
-	return handle;
-}
-
-static TextureEntry* FindTextureEntryByHandle(Data* data, RayGE_ResourceHandle handle, TextureBatch** outBatch)
-{
-	if ( handle.index >= NUM_TEXTURE_BATCHES )
-	{
-		return NULL;
-	}
-
-	TextureBatch* batch = data->batches[handle.index];
-
-	if ( !batch )
-	{
-		return NULL;
-	}
-
-	for ( size_t index = 0; index < RAYGE_ARRAY_SIZE(batch->textures); ++index )
-	{
-		TextureEntry* entry = &batch->textures[index];
-
-		if ( entry->texture.id != 0 && entry->key == handle.key )
-		{
-			if ( outBatch )
-			{
-				*outBatch = batch;
-			}
-
-			return entry;
-		}
-	}
-
-	return NULL;
-}
-
-static TextureResources_Iterator CreateInvalidIterator(void)
-{
-	return (TextureResources_Iterator) {
-		.batchIndex = NUM_TEXTURE_BATCHES,
-		.entryIndex = TEXTURE_BATCH_SIZE,
-	};
-}
-
-static bool IteratorRefersToBatch(Data* data, const TextureResources_Iterator* iterator)
-{
-	return iterator && data->batches && iterator->batchIndex < NUM_TEXTURE_BATCHES &&
-		data->batches[iterator->batchIndex];
-}
-
-static bool IncrementIteratorToNextValidEntry(TextureResources_Iterator* iterator, const TextureBatch* batch)
-{
-	do
-	{
-		++iterator->entryIndex;
-	}
-	while ( iterator->entryIndex < RAYGE_ARRAY_SIZE(batch->textures) &&
-			batch->textures[iterator->entryIndex].texture.id == 0 );
-
-	return iterator->entryIndex < RAYGE_ARRAY_SIZE(batch->textures);
-}
-
-static bool IncrementIteratorToNextValidBatch(Data* data, TextureResources_Iterator* iterator)
-{
-	RAYGE_ASSERT_VALID(data && data->batches);
-
-	iterator->entryIndex = 0;
-
-	do
-	{
-		++iterator->batchIndex;
-	}
-	while ( iterator->batchIndex < NUM_TEXTURE_BATCHES &&
-			(!data->batches[iterator->batchIndex] || !(data->batches[iterator->batchIndex]->isNotEmpty)) );
-
-	return iterator->batchIndex < NUM_TEXTURE_BATCHES;
-}
-
-static TextureEntry* GetEntryFromIterator(Data* data, TextureResources_Iterator* iterator)
-{
-	if ( !IteratorRefersToBatch(data, iterator) || iterator->entryIndex >= TEXTURE_BATCH_SIZE )
-	{
-		return NULL;
-	}
-
-	TextureBatch* batch = data->batches[iterator->batchIndex];
-	return &batch->textures[iterator->entryIndex];
-}
-
 static RayGE_ResourceHandle LoadTextureFromPath(const char* path, const Image* sourceImage)
 {
+	EnsureResourceList();
+
 	if ( !path || !(*path) )
 	{
 		return RAYGE_NULL_RESOURCE_HANDLE;
 	}
 
-	if ( g_Data.totalTextures >= MAX_TEXTURES )
+	if ( ResourceList_ItemCount(g_ResourceList) >= MAX_TEXTURES )
 	{
 		Logging_PrintLine(
 			RAYGE_LOG_ERROR,
-			"Cannot load texture %s: reached maximum of %zu textures",
+			"Cannot load texture %s: reached maximum of %d textures",
 			path,
-			g_Data.totalTextures
+			MAX_TEXTURES
 		);
 
 		return RAYGE_NULL_RESOURCE_HANDLE;
@@ -367,52 +114,79 @@ static RayGE_ResourceHandle LoadTextureFromPath(const char* path, const Image* s
 		{
 			Logging_PrintLine(
 				RAYGE_LOG_ERROR,
-				"Cannot load texture %s: path prefix is reserved for internal textures",
+				"Cannot load texture %s: path prefix ':' is reserved for internal textures",
 				trimmedPath
 			);
 
 			break;
 		}
 
-		RayGE_ResourceHandle existingTexture = FindTextureHandleByPath(trimmedPath);
+		ResourceListErrorCode result = ResourceList_CreateNewItem(g_ResourceList, trimmedPath, &outHandle);
 
-		if ( !RAYGE_IS_NULL_RESOURCE_HANDLE(existingTexture) )
+		if ( result == RESOURCELIST_ERROR_PATH_ALREADY_EXISTED )
 		{
-			// The texture already existed, so just return its existing handle.
-			outHandle = existingTexture;
+			// Handle will refer to item that existed,
+			// so we can just return it.
 			break;
 		}
 
-		Texture2D texture = {0, 0, 0, 0, 0};
+		if ( result != RESOURCELIST_ERROR_NONE )
+		{
+			if ( result == RESOURCELIST_ERROR_NO_FREE_SPACE )
+			{
+				Logging_PrintLine(
+					RAYGE_LOG_ERROR,
+					"Cannot load texture %s: reached maximum of %d textures",
+					trimmedPath,
+					MAX_TEXTURES
+				);
+			}
+			else
+			{
+				Logging_PrintLine(
+					RAYGE_LOG_ERROR,
+					"Failed to load texture %s: could not create resource list item (error code: %d)",
+					trimmedPath,
+					result
+				);
+			}
+
+			break;
+		}
+
+		TextureItem* item = (TextureItem*)ResourceList_GetItemData(g_ResourceList, outHandle);
+		RAYGE_ASSERT_VALID(item);
 
 		if ( sourceImage )
 		{
 			Logging_PrintLine(RAYGE_LOG_TRACE, "Loading texture %s from image", trimmedPath);
-			texture = LoadTextureFromImage(*sourceImage);
+			item->texture = LoadTextureFromImage(*sourceImage);
 		}
 		else
 		{
 			fullPath = FilesystemSubsystem_MakeAbsoluteAlloc(trimmedPath);
 
 			Logging_PrintLine(RAYGE_LOG_TRACE, "Loading texture %s from file", fullPath);
-			texture = LoadTexture(fullPath);
+			item->texture = LoadTexture(fullPath);
 		}
 
-		if ( texture.id == 0 )
+		if ( item->texture.id == 0 )
 		{
 			Logging_PrintLine(RAYGE_LOG_ERROR, "Failed to load texture %s", trimmedPath);
+			ResourceList_DestroyItem(g_ResourceList, outHandle);
+			outHandle = RAYGE_NULL_RESOURCE_HANDLE;
 			break;
 		}
-
-		// This will take ownership of the path, so we null it afterwards.
-		outHandle = AddTextureToResourceList(&g_Data, trimmedPath, texture);
-		trimmedPath = NULL;
 	}
 	while ( false );
 
+	if ( fullPath )
+	{
+		MEMPOOL_FREE(fullPath);
+	}
+
 	if ( trimmedPath )
 	{
-		// Path was not consumed, so must be freed.
 		MEMPOOL_FREE(trimmedPath);
 	}
 
@@ -421,6 +195,8 @@ static RayGE_ResourceHandle LoadTextureFromPath(const char* path, const Image* s
 
 static void UnloadTextureFromHandle(RayGE_ResourceHandle handle, bool requestIsInternal)
 {
+	EnsureResourceList();
+
 	// Only bother running the extra check if the handle is not null.
 	// Null handles are just silently ignored.
 	if ( !RAYGE_IS_NULL_RESOURCE_HANDLE(handle) )
@@ -437,30 +213,28 @@ static void UnloadTextureFromHandle(RayGE_ResourceHandle handle, bool requestIsI
 		return;
 	}
 
-	TextureBatch* batch = NULL;
-	TextureEntry* entry = FindTextureEntryByHandle(&g_Data, handle, &batch);
+	const char* path = ResourceList_GetItemPath(g_ResourceList, handle);
 
-	if ( !entry )
+	if ( path && (path[0] == ':') != requestIsInternal )
 	{
-		return;
-	}
-
-	// Make sure the game lib is not trying to unload engine textures, or vice-versa.
-	if ( (entry->hashItem->path[0] == ':') != requestIsInternal )
-	{
-		Logging_PrintLine(RAYGE_LOG_ERROR,
+		Logging_PrintLine(
+			RAYGE_LOG_ERROR,
 			"Ignoring request to unload %s texture %s from %s call",
 			requestIsInternal ? "non-internal" : "internal",
-			entry->hashItem->path[0],
+			path,
 			requestIsInternal ? "an internal" : "a non-internal"
 		);
 
 		return;
 	}
 
-	ClearTextureEntry(&g_Data, entry);
-	batch->isFull = false;
-	--g_Data.totalTextures;
+	if ( !ResourceList_DestroyItem(g_ResourceList, handle) )
+	{
+		Logging_PrintLine(
+			RAYGE_LOG_WARNING,
+			"Could not unload texture: provided handle did not refer to a loaded texture"
+		);
+	}
 }
 
 RayGE_ResourceHandle TextureResources_LoadTexture(const char* path)
@@ -501,109 +275,35 @@ void TextureResources_UnloadAll(void)
 {
 	Logging_PrintLine(RAYGE_LOG_DEBUG, "Unloading all texture resources");
 
-	DeleteAllHashEntries(&g_Data);
-	DeleteAllBatches(&g_Data);
+	if ( g_ResourceList )
+	{
+		ResourceList_Destroy(g_ResourceList);
+		g_ResourceList = NULL;
+	}
 }
 
 size_t TextureResources_NumTextures(void)
 {
-	return g_Data.totalTextures;
+	EnsureResourceList();
+	return ResourceList_ItemCount(g_ResourceList);
 }
 
-TextureResources_Iterator TextureResources_CreateBeginIterator(void)
+const ResourceList* TestureResources_GetResourceList(void)
 {
-	if ( !g_Data.batches || g_Data.totalTextures < 1 )
-	{
-		return CreateInvalidIterator();
-	}
-
-	TextureResources_Iterator iterator = {
-		.batchIndex = 0,
-		.entryIndex = 0,
-	};
-
-	if ( IteratorRefersToBatch(&g_Data, &iterator) )
-	{
-		TextureBatch* batch = g_Data.batches[iterator.batchIndex];
-
-		if ( iterator.entryIndex < RAYGE_ARRAY_SIZE(batch->textures) &&
-			 batch->textures[iterator.entryIndex].texture.id != 0 )
-		{
-			// No need to increment.
-			return iterator;
-		}
-	}
-
-	// Increment the iterator to the first element before we return it.
-	// If there is no first entry, it will just end up invalid.
-	return TextureResources_IncrementIterator(iterator);
+	EnsureResourceList();
+	return g_ResourceList;
 }
 
-TextureResources_Iterator TextureResources_CreateIterator(RayGE_ResourceHandle handle)
+Texture2D TextureResources_GetTexture(ResourceListIterator iterator)
 {
-	TextureBatch* batch = NULL;
-	TextureEntry* entry = FindTextureEntryByHandle(&g_Data, handle, &batch);
+	EnsureResourceList();
 
-	if ( !batch || !entry )
-	{
-		return CreateInvalidIterator();
-	}
-
-	return (TextureResources_Iterator) {
-		.batchIndex = handle.index,
-		.entryIndex = entry - batch->textures,
-	};
+	TextureItem* item = (TextureItem*)ResourceList_GetItemDataFromIterator(iterator);
+	return item ? item->texture : (Texture2D) {0, 0, 0, 0, 0};
 }
 
-TextureResources_Iterator TextureResources_IncrementIterator(TextureResources_Iterator iterator)
+const char* TextureResources_GetPath(ResourceListIterator iterator)
 {
-	if ( !IteratorRefersToBatch(&g_Data, &iterator) )
-	{
-		false;
-	}
-
-	bool nextBatchValid = false;
-
-	do
-	{
-		TextureBatch* batch = g_Data.batches[iterator.batchIndex];
-
-		if ( IncrementIteratorToNextValidEntry(&iterator, batch) )
-		{
-			return iterator;
-		}
-
-		nextBatchValid = IncrementIteratorToNextValidBatch(&g_Data, &iterator);
-
-		if ( nextBatchValid )
-		{
-			batch = g_Data.batches[iterator.batchIndex];
-
-			if ( batch->textures[iterator.entryIndex].texture.id != 0 )
-			{
-				return iterator;
-			}
-		}
-	}
-	while ( nextBatchValid );
-
-	return CreateInvalidIterator();
-}
-
-bool TextureResourcesIterator_IsValid(TextureResources_Iterator iterator)
-{
-	TextureEntry* entry = GetEntryFromIterator(&g_Data, &iterator);
-	return entry && entry->texture.id != 0;
-}
-
-Texture2D TextureResourcesIterator_GetTexture(TextureResources_Iterator iterator)
-{
-	TextureEntry* entry = GetEntryFromIterator(&g_Data, &iterator);
-	return entry ? entry->texture : (Texture2D) {0, 0, 0, 0, 0};
-}
-
-const char* TextureResourcesIterator_GetPath(TextureResources_Iterator iterator)
-{
-	TextureEntry* entry = GetEntryFromIterator(&g_Data, &iterator);
-	return entry ? entry->hashItem->path : NULL;
+	EnsureResourceList();
+	return ResourceList_GetItemPathFromIterator(iterator);
 }

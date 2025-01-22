@@ -375,7 +375,6 @@ static bool IteratorIsInRangeOfList(const ResourceListIterator* iterator)
 	return iterator && iterator->list && iterator->globalIndex < iterator->list->atts.maxCapacity;
 }
 
-// Assumes iterator index is in range.
 static bool IncrementIteratorToNextValidItem(ResourceListIterator* iterator)
 {
 	ResourceItemHeader* header = GetHeaderFromGlobalIndex(iterator->list, iterator->globalIndex, NULL);
@@ -414,7 +413,6 @@ static bool IncrementIteratorToNextValidItem(ResourceListIterator* iterator)
 	return false;
 }
 
-// Assumes iterator index is in range.
 static bool IncrementIteratorToNextValidBucket(ResourceListIterator* iterator, ResourceBucket** outBucket)
 {
 	if ( outBucket )
@@ -424,7 +422,6 @@ static bool IncrementIteratorToNextValidBucket(ResourceListIterator* iterator, R
 
 	ResourceBucket* bucket = NULL;
 	GetHeaderFromGlobalIndex(iterator->list, iterator->globalIndex, &bucket);
-	RAYGE_ASSERT_VALID(bucket);
 
 	if ( !bucket )
 	{
@@ -573,7 +570,7 @@ ResourceListErrorCode ResourceList_CreateNewItem(ResourceList* list, const char*
 		if ( !RAYGE_IS_NULL_RESOURCE_HANDLE(handle) )
 		{
 			*outHandle = handle;
-			return RESOURCELIST_ERROR_NONE;
+			return RESOURCELIST_ERROR_PATH_ALREADY_EXISTED;
 		}
 	}
 
@@ -581,13 +578,13 @@ ResourceListErrorCode ResourceList_CreateNewItem(ResourceList* list, const char*
 	return RESOURCELIST_ERROR_NONE;
 }
 
-void ResourceList_DestroyItem(ResourceList* list, RayGE_ResourceHandle handle)
+bool ResourceList_DestroyItem(ResourceList* list, RayGE_ResourceHandle handle)
 {
 	RAYGE_ASSERT_VALID(list);
 
 	if ( !list )
 	{
-		return;
+		return false;
 	}
 
 	ResourceBucket* bucket = NULL;
@@ -595,12 +592,13 @@ void ResourceList_DestroyItem(ResourceList* list, RayGE_ResourceHandle handle)
 
 	if ( !header )
 	{
-		return;
+		return false;
 	}
 
 	DestroyItem(list, header);
 	UpdateBucketFlags(list, bucket);
 	DestroyBucketIfEmpty(list, bucket);
+	return true;
 }
 
 void* ResourceList_GetItemData(const ResourceList* list, RayGE_ResourceHandle handle)
@@ -649,6 +647,22 @@ ResourceListIterator ResourceList_GetIteratorToFirstItem(const ResourceList* lis
 	}
 
 	return iterator;
+}
+
+ResourceListIterator ResourceList_GetIteratorFromHandle(const ResourceList* list, RayGE_ResourceHandle handle)
+{
+	ResourceItemHeader* header = GetHeaderFromHandle(list, handle, NULL);
+
+	if ( !header )
+	{
+		return CreateInvalidIterator(list);
+	}
+
+	return (ResourceListIterator)
+	{
+		.list = list,
+		.globalIndex = handle.index,
+	};
 }
 
 ResourceListIterator ResourceList_IncrementIterator(ResourceListIterator iterator)

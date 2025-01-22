@@ -59,12 +59,13 @@ static bool Poll(void* userData)
 				igTableSetupScrollFreeze(0, 1);
 				igTableHeadersRow();
 
-				TextureResources_Iterator iterator = TextureResources_CreateBeginIterator();
+				const ResourceList* textureResourceList = TestureResources_GetResourceList();
+				ResourceListIterator iterator = ResourceList_GetIteratorToFirstItem(textureResourceList);
 				size_t index = 0;
 
-				while ( TextureResourcesIterator_IsValid(iterator) )
+				while ( ResourceList_IteratorIsValid(iterator) )
 				{
-					Texture2D texture = TextureResourcesIterator_GetTexture(iterator);
+					Texture2D texture = TextureResources_GetTexture(iterator);
 					bool clicked = false;
 					igTableNextRow(0, 0.0f);
 
@@ -78,7 +79,7 @@ static bool Poll(void* userData)
 					{
 						igTableNextColumn();
 						char path[FILESYSTEM_MAX_REL_PATH + 16];
-						wzl_sprintf(path, sizeof(path), "%s##%zu", TextureResourcesIterator_GetPath(iterator), index);
+						wzl_sprintf(path, sizeof(path), "%s##%zu", TextureResources_GetPath(iterator), index);
 						DrawTextureTableCell(path, &clicked);
 					}
 
@@ -94,7 +95,7 @@ static bool Poll(void* userData)
 						data->selectedTexture = texture;
 					}
 
-					iterator = TextureResources_IncrementIterator(iterator);
+					iterator = ResourceList_IncrementIterator(iterator);
 					++index;
 				}
 			}

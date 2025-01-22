@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "RayGE/ResourceHandle.h"
 #include "Resources/ResourceDomains.h"
 #include "Testing/Testing.h"
@@ -39,6 +40,7 @@ typedef enum ResourceListErrorCode
 	RESOURCELIST_ERROR_NONE = 0,
 	RESOURCELIST_ERROR_INVALID_ARGUMENT,
 	RESOURCELIST_ERROR_NO_FREE_SPACE,
+	RESOURCELIST_ERROR_PATH_ALREADY_EXISTED,
 } ResourceListErrorCode;
 
 ResourceList* ResourceList_Create(ResourceListAttributes attributes);
@@ -52,11 +54,12 @@ size_t ResourceList_ItemCount(const ResourceList* list);
 ResourceListErrorCode
 ResourceList_CreateNewItem(ResourceList* list, const char* path, RayGE_ResourceHandle* outHandle);
 
-void ResourceList_DestroyItem(ResourceList* list, RayGE_ResourceHandle handle);
+bool ResourceList_DestroyItem(ResourceList* list, RayGE_ResourceHandle handle);
 void* ResourceList_GetItemData(const ResourceList* list, RayGE_ResourceHandle handle);
 const char* ResourceList_GetItemPath(const ResourceList* list, RayGE_ResourceHandle handle);
 
 ResourceListIterator ResourceList_GetIteratorToFirstItem(const ResourceList* list);
+ResourceListIterator ResourceList_GetIteratorFromHandle(const ResourceList* list, RayGE_ResourceHandle handle);
 ResourceListIterator ResourceList_IncrementIterator(ResourceListIterator iterator);
 bool ResourceList_IteratorIsValid(ResourceListIterator iterator);
 void* ResourceList_GetItemDataFromIterator(ResourceListIterator iterator);

@@ -76,8 +76,9 @@ static void SetFontTextureFromImage(Data* data, const Image* image)
 	{
 		data->fontResource = TextureResources_LoadInternalTexture("imgui_font", *image);
 
-		TextureResources_Iterator iterator = TextureResources_CreateIterator(data->fontResource);
-		data->fontTexture = TextureResourcesIterator_GetTexture(iterator);
+		const ResourceList* textureResourceList = TestureResources_GetResourceList();
+		ResourceListIterator iterator = ResourceList_GetIteratorFromHandle(textureResourceList, data->fontResource);
+		data->fontTexture = TextureResources_GetTexture(iterator);
 
 		RAYGE_ENSURE(data->fontTexture.id != 0, "Failed to load ImGui font texture!");
 	}
