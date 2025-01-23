@@ -6,6 +6,16 @@
 #include "wzl_cutl/libloader.h"
 #include "wzl_cutl/string.h"
 
+#ifdef RAYGE_ENABLE_LEAK_CHECK
+#ifdef _MSC_VER
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#else
+#error Leak checking is not currently implemented for non-MSVC compilation.
+#endif  // _MSC_VER
+#endif  // RAYGE_ENABLE_LEAK_CHECK
+
 #ifndef NDEBUG
 // Debug
 #define FIRST_ENGINE_PREFERENCE LIB_PREFIX LIBNAME_ENGINE_DEBUG LIB_EXTENSION
@@ -18,8 +28,7 @@
 #define OPTION_SWAP_ENGINE_PREF "--prefer-debug-engine"
 #endif
 
-static const char* g_EngineLibPaths[2] =
-{
+static const char* g_EngineLibPaths[2] = {
 	FIRST_ENGINE_PREFERENCE,
 	SECOND_ENGINE_PREFERENCE,
 };
@@ -56,6 +65,11 @@ static void* LoadEngineLibrary(void)
 
 int main(int argc, char** argv)
 {
+#ifdef RAYGE_ENABLE_LEAK_CHECK
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	printf("*** Memory leak checking is enabled. This may impact performance. ***\n");
+#endif
+
 	if ( argc < 1 )
 	{
 		return RAYGE_LAUNCHER_EXIT_UNKNOWN_ERROR;
@@ -118,6 +132,13 @@ int main(int argc, char** argv)
 	free(newParams);
 
 	wzl_unload_library(engineLibrary);
+
+#ifdef RAYGE_ENABLE_LEAK_CHECK
+	printf("*** Beginning memory leak dump (no news = good news) ***\n");
+	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+	_CrtDumpMemoryLeaks();
+	printf("*** Memory leak dump complete ***\n");
+#endif
 
 	return result;
 }

@@ -45,6 +45,12 @@ static inline void RayGE_CheckInvariant(
 		return;
 	}
 
+#if RAYGE_BUILD_TESTING()
+	const bool shouldActOnAssertionFailure = !Testing_TestRunning();
+#else
+	const bool shouldActOnAssertionFailure = true;
+#endif
+
 	char descBuffer[256];
 	descBuffer[0] = '\0';
 
@@ -77,7 +83,7 @@ static inline void RayGE_CheckInvariant(
 	}
 	else
 	{
-		if ( !(type == INVARIANT_FAILURE_ASSERT && Testing_TestRunning()) )
+		if ( type != INVARIANT_FAILURE_ASSERT || shouldActOnAssertionFailure )
 		{
 			Logging_PrintLine(
 				RAYGE_LOG_FATAL,

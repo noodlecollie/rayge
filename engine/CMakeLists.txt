@@ -136,7 +136,7 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 
 	# Testing
 	src/Testing/Testing.h
-	$<$<BOOL:BUILD_TESTING>:src/Testing/Testing.c>
+	$<$<BOOL:${BUILD_TESTING}>:src/Testing/Testing.c>
 )
 
 target_sources(${TARGETNAME_ENGINE}
@@ -179,7 +179,8 @@ target_link_libraries(${TARGETNAME_ENGINE}
 target_compile_definitions(${TARGETNAME_ENGINE}
 	PRIVATE
 	RAYGE_PRODUCER
-	$<$<BOOL:BUILD_TESTING>:RAYGE_BUILD_TESTING_FLAG>
+	$<$<BOOL:${BUILD_TESTING}>:RAYGE_BUILD_TESTING_FLAG>
+	$<$<BOOL:${RAYGE_ENABLE_LEAK_CHECK}>:RAYGE_ENABLE_LEAK_CHECK>
 
 	# This is required to be defined on the consumer
 	# of cimgui ONLY. If it's defined on cimgui itself,

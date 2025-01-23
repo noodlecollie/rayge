@@ -8,3 +8,8 @@ target_link_libraries(${TARGETNAME_LAUNCHER}
 	raylib
 	wzl-cutl
 )
+
+target_compile_definitions(${TARGETNAME_LAUNCHER}
+	PRIVATE
+	$<$<BOOL:${RAYGE_ENABLE_LEAK_CHECK}>:RAYGE_ENABLE_LEAK_CHECK>
+)
