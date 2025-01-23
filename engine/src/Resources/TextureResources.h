@@ -5,6 +5,9 @@
 #include "Resources/ResourceList.h"
 #include "raylib.h"
 
+void TextureResources_Init(void);
+void TextureResources_ShutDown(void);
+
 RayGE_ResourceHandle TextureResources_LoadTexture(const char* path);
 RayGE_ResourceHandle TextureResources_LoadInternalTexture(const char* name, Image sourceImage);
 
@@ -14,7 +17,6 @@ RayGE_ResourceHandle TextureResources_LoadInternalTexture(const char* name, Imag
 void TextureResources_UnloadTexture(RayGE_ResourceHandle handle);
 void TextureResources_UnloadInternalTexture(RayGE_ResourceHandle handle);
 
-void TextureResources_UnloadAll(void);
 size_t TextureResources_NumTextures(void);
 
 const ResourceList* TestureResources_GetResourceList(void);

@@ -59,6 +59,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/EngineSubsystems/EngineSubsystemManager.c
 	src/EngineSubsystems/RendererSubsystem.h
 	src/EngineSubsystems/RendererSubsystem.c
+	src/EngineSubsystems/ResourceSubsystem.h
+	src/EngineSubsystems/ResourceSubsystem.c
 	src/EngineSubsystems/SceneSubsystem.h
 	src/EngineSubsystems/SceneSubsystem.c
 	src/EngineSubsystems/UISubsystem.h
@@ -89,8 +91,12 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Logging/Logging.c
 	src/MemPool/MemPoolManager.h
 	src/MemPool/MemPoolManager.c
+	src/PixelWorld/PixelWorld.h
+	src/PixelWorld/PixelWorld.c
 	src/Rendering/Renderer.h
 	src/Rendering/Renderer.c
+	src/Resources/PixelWorldResources.h
+	src/Resources/PixelWorldResources.c
 	src/Resources/RenderablePrimitives.h
 	src/Resources/RenderablePrimitives.c
 	src/Resources/ResourceDomains.h
@@ -118,11 +124,11 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/UI/ResourceViewer.c
 	src/UI/SceneDebugUI.h
 	src/UI/SceneDebugUI.c
+	src/Utils/Utils.h
 	src/UTUtils/UTHash_Pooled.h
 	src/Conversions.h
 	src/Debugging.h
 	src/Debugging.c
-	src/Utils.h
 
 	# Testing
 	src/Testing/Testing.h

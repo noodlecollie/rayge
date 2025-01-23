@@ -3,7 +3,7 @@
 #include "Resources/ResourceHandleUtils.h"
 #include "EngineSubsystems/FilesystemSubsystem.h"
 #include "MemPool/MemPoolManager.h"
-#include "Utils.h"
+#include "Utils/Utils.h"
 #include "wzl_cutl/string.h"
 #include "raylib.h"
 
@@ -35,27 +35,6 @@ static void DeinitItem(void* item)
 	}
 }
 
-static void EnsureResourceList(void)
-{
-	if ( g_ResourceList )
-	{
-		return;
-	}
-
-	ResourceListAttributes atts;
-	memset(&atts, 0, sizeof(atts));
-
-	atts.domain = RESOURCE_DOMAIN_TEXTURE;
-	atts.maxCapacity = MAX_TEXTURES;
-	atts.itemsPerBucket = TEXTURE_BATCH_SIZE;
-	atts.itemSizeInBytes = sizeof(TextureItem);
-	atts.DeinitItem = &DeinitItem;
-
-	g_ResourceList = ResourceList_Create(atts);
-
-	RAYGE_ENSURE(g_ResourceList, "Failed to create texture resource list!");
-}
-
 static StringBounds BoundString(const char* str)
 {
 	RAYGE_ASSERT_VALID(str);
@@ -84,7 +63,7 @@ static char* NewStringFromBounds(StringBounds bounds)
 
 static RayGE_ResourceHandle LoadTextureFromPath(const char* path, const Image* sourceImage)
 {
-	EnsureResourceList();
+	RAYGE_ASSERT_VALID(g_ResourceList);
 
 	if ( !path || !(*path) )
 	{
@@ -195,7 +174,7 @@ static RayGE_ResourceHandle LoadTextureFromPath(const char* path, const Image* s
 
 static void UnloadTextureFromHandle(RayGE_ResourceHandle handle, bool requestIsInternal)
 {
-	EnsureResourceList();
+	RAYGE_ASSERT_VALID(g_ResourceList);
 
 	// Only bother running the extra check if the handle is not null.
 	// Null handles are just silently ignored.
@@ -235,6 +214,38 @@ static void UnloadTextureFromHandle(RayGE_ResourceHandle handle, bool requestIsI
 			"Could not unload texture: provided handle did not refer to a loaded texture"
 		);
 	}
+}
+
+void TextureResources_Init(void)
+{
+	if ( g_ResourceList )
+	{
+		return;
+	}
+
+	ResourceListAttributes atts;
+	memset(&atts, 0, sizeof(atts));
+
+	atts.domain = RESOURCE_DOMAIN_TEXTURE;
+	atts.maxCapacity = MAX_TEXTURES;
+	atts.itemsPerBucket = TEXTURE_BATCH_SIZE;
+	atts.itemSizeInBytes = sizeof(TextureItem);
+	atts.DeinitItem = &DeinitItem;
+
+	g_ResourceList = ResourceList_Create(atts);
+
+	RAYGE_ENSURE(g_ResourceList, "Failed to create texture resource list!");
+}
+
+void TextureResources_ShutDown(void)
+{
+	if ( !g_ResourceList )
+	{
+		return;
+	}
+
+	ResourceList_Destroy(g_ResourceList);
+	g_ResourceList = NULL;
 }
 
 RayGE_ResourceHandle TextureResources_LoadTexture(const char* path)
@@ -284,19 +295,19 @@ void TextureResources_UnloadAll(void)
 
 size_t TextureResources_NumTextures(void)
 {
-	EnsureResourceList();
+	RAYGE_ASSERT_VALID(g_ResourceList);
 	return ResourceList_ItemCount(g_ResourceList);
 }
 
 const ResourceList* TestureResources_GetResourceList(void)
 {
-	EnsureResourceList();
+	RAYGE_ASSERT_VALID(g_ResourceList);
 	return g_ResourceList;
 }
 
 Texture2D TextureResources_GetTexture(ResourceListIterator iterator)
 {
-	EnsureResourceList();
+	RAYGE_ASSERT_VALID(g_ResourceList);
 
 	TextureItem* item = (TextureItem*)ResourceList_GetItemDataFromIterator(iterator);
 	return item ? item->texture : (Texture2D) {0, 0, 0, 0, 0};
@@ -304,6 +315,6 @@ Texture2D TextureResources_GetTexture(ResourceListIterator iterator)
 
 const char* TextureResources_GetPath(ResourceListIterator iterator)
 {
-	EnsureResourceList();
+	RAYGE_ASSERT_VALID(g_ResourceList);
 	return ResourceList_GetItemPathFromIterator(iterator);
 }

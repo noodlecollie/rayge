@@ -3,7 +3,7 @@
 #include "BehaviouralSubsystems/BSysManager.h"
 #include "BehaviouralSubsystems/SpatialBSys.h"
 #include "BehaviouralSubsystems/RenderableBSys.h"
-#include "Utils.h"
+#include "Utils/Utils.h"
 #include "Debugging.h"
 
 static const BSys_Definition* g_Subsystems[] =

@@ -6,7 +6,7 @@
 #include "EngineSubsystems/FilesystemSubsystem.h"
 #include "Logging/Logging.h"
 #include "wzl_cutl/string.h"
-#include "Utils.h"
+#include "Utils/Utils.h"
 
 #if RAYGE_PLATFORM() == RAYGE_PLATFORM_LINUX
 #define GAME_JSON_KEY_PLATFORM_NAME "linux"

@@ -62,7 +62,7 @@ void* Component_CastImpl(
 		{
 			RAYGE_ENSURE(
 				header,
-				"Invocation from %s:%d: Provided component pointer was null.",
+				"Component cast @ %s:%d: Provided component pointer was null.",
 				file,
 				line,
 				header->type,
@@ -77,7 +77,7 @@ void* Component_CastImpl(
 	{
 		RAYGE_ENSURE(
 			header->type == toType,
-			"Invocation from %s:%d: Component type %d did not match expected type %d",
+			"Component cast @ %s:%d: Component type %d did not match expected type %d",
 			file,
 			line,
 			header->type,

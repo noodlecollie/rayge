@@ -7,8 +7,9 @@
 #include "EngineSubsystems/CommandSubsystem.h"
 #include "EngineSubsystems/InputHookSubsystem.h"
 #include "EngineSubsystems/SceneSubsystem.h"
+#include "EngineSubsystems/ResourceSubsystem.h"
 #include "BehaviouralSubsystems/BSysManager.h"
-#include "Utils.h"
+#include "Utils/Utils.h"
 
 typedef struct SubsystemInitAndShutdown
 {
@@ -16,9 +17,11 @@ typedef struct SubsystemInitAndShutdown
 	void (*ShutDown)(void);
 } SubsystemInitAndShutdown;
 
+// Initialised in order, shut down in reverse order
 static const SubsystemInitAndShutdown g_Subsystems[] = {
 	{FilesystemSubsystem_Init, FilesystemSubsystem_ShutDown},
 	{RendererSubsystem_Init, RendererSubsystem_ShutDown},
+	{ResourceSubsystem_Init, ResourceSubsystem_ShutDown},
 	{SceneSubsystem_Init, SceneSubsystem_ShutDown},
 	{InputSubsystem_Init, InputSubsystem_ShutDown},
 	{InputHookSubsystem_Init, InputHookSubsystem_ShutDown},

@@ -8,7 +8,7 @@
 #include "Launcher/LaunchParams.h"
 #include "Logging/Logging.h"
 #include "Debugging.h"
-#include "Utils.h"
+#include "Utils/Utils.h"
 
 // Disable some seemingly buggy GCC warnings for this file,
 // since we will be doing some wacky things with pointers.
