@@ -540,6 +540,12 @@ size_t ResourceList_ItemCount(const ResourceList* list)
 	return list ? list->totalResources : 0;
 }
 
+size_t ResourceList_Capacity(const ResourceList* list)
+{
+	RAYGE_ASSERT_VALID(list);
+	return list ? list->atts.maxCapacity : 0;
+}
+
 ResourceListErrorCode ResourceList_CreateNewItem(ResourceList* list, const char* path, RayGE_ResourceHandle* outHandle)
 {
 	RAYGE_ASSERT_VALID(outHandle);

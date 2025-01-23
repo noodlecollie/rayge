@@ -27,7 +27,11 @@ if(RAYGE_INSTALL_SANITY_TEST)
 		ARCHIVE DESTINATION ${INSTALL_DEST_SANITY_TEST}/games/defaultgame
 	)
 
-	install(FILES game.json
+	install(
+		FILES
+		game.json
+		pixelworld.json
+		pixelworld.png
 		DESTINATION ${INSTALL_DEST_SANITY_TEST}/games/defaultgame
 	)
 endif()

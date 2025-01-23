@@ -104,6 +104,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Resources/ResourceHandleUtils.c
 	src/Resources/ResourceList.h
 	src/Resources/ResourceList.c
+	src/Resources/ResourceListUtils.h
+	src/Resources/ResourceListUtils.c
 	src/Resources/ResourcesAPI.h
 	src/Resources/ResourcesAPI.c
 	src/Resources/TextureResources.h
@@ -124,6 +126,8 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/UI/ResourceViewer.c
 	src/UI/SceneDebugUI.h
 	src/UI/SceneDebugUI.c
+	src/Utils/StringUtils.h
+	src/Utils/StringUtils.c
 	src/Utils/Utils.h
 	src/UTUtils/UTHash_Pooled.h
 	src/Conversions.h

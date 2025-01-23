@@ -19,4 +19,6 @@ typedef struct RayGE_Resources_API
 	RayGE_ResourceHandle (*GetPrimitiveHandle)(RayGE_RenderablePrimitive primitive);
 	RayGE_ResourceHandle (*LoadTexture)(const char* path);
 	void (*UnloadTexture)(RayGE_ResourceHandle handle);
+	RayGE_ResourceHandle (*LoadPixelWorld)(const char* path);
+	void (*UnloadPixelWorld)(RayGE_ResourceHandle handle);
 } RayGE_Resources_API;

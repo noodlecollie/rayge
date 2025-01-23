@@ -2,6 +2,8 @@
 #include "Resources/ResourceList.h"
 #include "Resources/ResourceDomains.h"
 #include "PixelWorld/PixelWorld.h"
+#include "Resources/ResourceListUtils.h"
+#include "Utils/StringUtils.h"
 #include "Debugging.h"
 
 #define MAX_PIXEL_WORLDS 64
@@ -23,6 +25,15 @@ static void DeinitItem(void* item)
 		PixelWorld_Destroy(pItem->world);
 		pItem->world = NULL;
 	}
+}
+
+static bool CreateItemCallback(const char* relPath, void* itemData, void* userData)
+{
+	(void)userData;
+
+	PixelWorldItem* item = (PixelWorldItem*)itemData;
+	item->world = PixelWorld_Create(relPath);
+	return item->world != NULL;
 }
 
 void PixelWorldResources_Init(void)
@@ -55,4 +66,28 @@ void PixelWorldResources_ShutDown(void)
 
 	ResourceList_Destroy(g_ResourceList);
 	g_ResourceList = NULL;
+}
+
+RayGE_ResourceHandle PixelWorldResources_LoadPixelWorld(const char* path)
+{
+	RAYGE_ASSERT_VALID(g_ResourceList);
+
+	if ( !g_ResourceList )
+	{
+		return RAYGE_NULL_RESOURCE_HANDLE;
+	}
+
+	return ResourceListUtils_CreateNewItem("pixel world", g_ResourceList, path, CreateItemCallback, NULL);
+}
+
+void PixelWorldResources_UnloadPixelWorld(RayGE_ResourceHandle handle)
+{
+	RAYGE_ASSERT_VALID(g_ResourceList);
+
+	if ( !g_ResourceList )
+	{
+		return;
+	}
+
+	ResourceList_DestroyItem(g_ResourceList, handle);
 }

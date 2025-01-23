@@ -46,6 +46,7 @@ typedef enum ResourceListErrorCode
 ResourceList* ResourceList_Create(ResourceListAttributes attributes);
 void ResourceList_Destroy(ResourceList* list);
 size_t ResourceList_ItemCount(const ResourceList* list);
+size_t ResourceList_Capacity(const ResourceList* list);
 
 // If a path is provided, and a resource with this path has already been
 // added, the existing resource will be returned.

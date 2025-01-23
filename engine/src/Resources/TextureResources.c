@@ -3,19 +3,15 @@
 #include "Resources/ResourceHandleUtils.h"
 #include "EngineSubsystems/FilesystemSubsystem.h"
 #include "MemPool/MemPoolManager.h"
+#include "Resources/ResourceListUtils.h"
 #include "Utils/Utils.h"
+#include "Utils/StringUtils.h"
 #include "wzl_cutl/string.h"
 #include "raylib.h"
 
 // These must be powers of two to divide nicely
 #define MAX_TEXTURES 2048
 #define TEXTURE_BATCH_SIZE 32
-
-typedef struct StringBounds
-{
-	const char* begin;
-	const char* end;
-} StringBounds;
 
 typedef struct TextureItem
 {
@@ -35,120 +31,22 @@ static void DeinitItem(void* item)
 	}
 }
 
-static StringBounds BoundString(const char* str)
+static bool CreateItemCallback(const char* relPath, void* itemData, void* userData)
 {
-	RAYGE_ASSERT_VALID(str);
-
-	StringBounds bounds = {NULL, NULL};
-	wzl_strtrimspace(str, &bounds.begin, &bounds.end);
-
-	return bounds;
-}
-
-static char* NewStringFromBounds(StringBounds bounds)
-{
-	RAYGE_ASSERT(bounds.begin && bounds.end && bounds.begin <= bounds.end, "String bounds were not valid");
-
-	const size_t size = (bounds.end - bounds.begin + 1) * sizeof(char);
-	char* out = MEMPOOL_MALLOC(MEMPOOL_RESOURCE_MANAGEMENT, size);
-
-	if ( size > 0 )
-	{
-		memcpy(out, bounds.begin, size - 1);
-	}
-
-	out[size - 1] = '\0';
-	return out;
-}
-
-// If source image is provided and data is valid, it is used as the image for the texture.
-// If source image is provided but empty, the texture is loaded off disk and the image
-// is updated to hold the data.
-// If source image is not provided, the texture is loaded off disk and the image data
-// is not kept on the CPU afterwards.
-static RayGE_ResourceHandle LoadTextureFromPath(const char* path, Image* sourceImage, bool isInternal)
-{
-	RAYGE_ASSERT_VALID(g_ResourceList);
-
-	if ( !path || !(*path) )
-	{
-		return RAYGE_NULL_RESOURCE_HANDLE;
-	}
-
-	if ( ResourceList_ItemCount(g_ResourceList) >= MAX_TEXTURES )
-	{
-		Logging_PrintLine(
-			RAYGE_LOG_ERROR,
-			"Cannot load texture %s: reached maximum of %d textures",
-			path,
-			MAX_TEXTURES
-		);
-
-		return RAYGE_NULL_RESOURCE_HANDLE;
-	}
-
+	TextureItem* item = (TextureItem*)itemData;
+	Image* sourceImage = (Image*)userData;
 	char* fullPath = NULL;
-	char* trimmedPath = NewStringFromBounds(BoundString(path));
-	RayGE_ResourceHandle outHandle = RAYGE_NULL_RESOURCE_HANDLE;
 
 	do
 	{
-		// Only internal textures loaded from a provided image may be prefixed with ':'
-		if ( *trimmedPath == ':' && !isInternal )
-		{
-			Logging_PrintLine(
-				RAYGE_LOG_ERROR,
-				"Cannot load texture %s: path prefix ':' is reserved for internal textures",
-				trimmedPath
-			);
-
-			break;
-		}
-
-		ResourceListErrorCode result = ResourceList_CreateNewItem(g_ResourceList, trimmedPath, &outHandle);
-
-		if ( result == RESOURCELIST_ERROR_PATH_ALREADY_EXISTED )
-		{
-			// Handle will refer to item that existed,
-			// so we can just return it.
-			break;
-		}
-
-		if ( result != RESOURCELIST_ERROR_NONE )
-		{
-			if ( result == RESOURCELIST_ERROR_NO_FREE_SPACE )
-			{
-				Logging_PrintLine(
-					RAYGE_LOG_ERROR,
-					"Cannot load texture %s: reached maximum of %d textures",
-					trimmedPath,
-					MAX_TEXTURES
-				);
-			}
-			else
-			{
-				Logging_PrintLine(
-					RAYGE_LOG_ERROR,
-					"Failed to load texture %s: could not create resource list item (error code: %d)",
-					trimmedPath,
-					result
-				);
-			}
-
-			break;
-		}
-
-		TextureItem* item = (TextureItem*)ResourceList_GetItemData(g_ResourceList, outHandle);
-		RAYGE_ASSERT_VALID(item);
-
 		if ( sourceImage && sourceImage->data )
 		{
-			Logging_PrintLine(RAYGE_LOG_TRACE, "Loading texture %s from image", trimmedPath);
+			Logging_PrintLine(RAYGE_LOG_TRACE, "Loading texture %s from image", relPath);
 			item->texture = LoadTextureFromImage(*sourceImage);
 		}
 		else
 		{
-			fullPath = FilesystemSubsystem_MakeAbsoluteAlloc(trimmedPath);
+			fullPath = FilesystemSubsystem_MakeAbsoluteAlloc(relPath);
 
 			if ( sourceImage )
 			{
@@ -168,14 +66,6 @@ static RayGE_ResourceHandle LoadTextureFromPath(const char* path, Image* sourceI
 				item->texture = LoadTexture(fullPath);
 			}
 		}
-
-		if ( item->texture.id == 0 )
-		{
-			Logging_PrintLine(RAYGE_LOG_ERROR, "Failed to load texture %s", trimmedPath);
-			ResourceList_DestroyItem(g_ResourceList, outHandle);
-			outHandle = RAYGE_NULL_RESOURCE_HANDLE;
-			break;
-		}
 	}
 	while ( false );
 
@@ -184,12 +74,39 @@ static RayGE_ResourceHandle LoadTextureFromPath(const char* path, Image* sourceI
 		MEMPOOL_FREE(fullPath);
 	}
 
-	if ( trimmedPath )
+	return item->texture.id != 0;
+}
+
+// If source image is provided and data is valid, it is used as the image for the texture.
+// If source image is provided but empty, the texture is loaded off disk and the image
+// is updated to hold the data.
+// If source image is not provided, the texture is loaded off disk and the image data
+// is not kept on the CPU afterwards.
+static RayGE_ResourceHandle LoadTextureFromPath(const char* path, Image* sourceImage, bool isInternal)
+{
+	RAYGE_ASSERT_VALID(g_ResourceList);
+	RAYGE_ASSERT(path && *path, "Expected a valid path");
+
+	if ( !g_ResourceList || !path || !(*path) )
 	{
-		MEMPOOL_FREE(trimmedPath);
+		return RAYGE_NULL_RESOURCE_HANDLE;
 	}
 
-	return outHandle;
+	StringBounds bounds = StringUtils_GetStringTrimBounds(path);
+
+	if ( *bounds.begin == ':' && !isInternal )
+	{
+		Logging_PrintLine(
+			RAYGE_LOG_ERROR,
+			"Cannot load texture %s: path prefix ':' is reserved for internal textures",
+			path
+		);
+
+		return RAYGE_NULL_RESOURCE_HANDLE;
+	}
+
+	return ResourceListUtils_CreateNewItem("texture", g_ResourceList, path, CreateItemCallback, sourceImage);
+
 }
 
 static void UnloadTextureFromHandle(RayGE_ResourceHandle handle, bool requestIsInternal)

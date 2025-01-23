@@ -1,5 +1,7 @@
 #include "JSON/JSONUtils.h"
 #include "Logging/Logging.h"
+#include "EngineSubsystems/FilesystemSubsystem.h"
+#include "MemPool/MemPoolManager.h"
 
 static cJSON* GetItem(
 	const char* context,
@@ -53,4 +55,31 @@ cJSON* JSONUtils_ExpectObjectItem(const char* context, cJSON* parent, const char
 cJSON* JSONUtils_ExpectStringItem(const char* context, cJSON* parent, const char* key)
 {
 	return GetItem(context, parent, key, "string", &cJSON_IsString);
+}
+
+cJSON* JSONUtils_LoadFromFile(const char* relPath)
+{
+	char* fullPath = FilesystemSubsystem_MakeAbsoluteAlloc(relPath);
+
+	size_t length = 0;
+	uint8_t* fileData = FilesystemSubsystem_LoadFileData(fullPath, &length);
+
+	cJSON* json = cJSON_ParseWithLength((const char*)fileData, length);
+
+	if ( fileData )
+	{
+		MEMPOOL_FREE(fileData);
+	}
+
+	if ( fullPath )
+	{
+		MEMPOOL_FREE(fullPath);
+	}
+
+	if ( !json )
+	{
+		Logging_PrintLine(RAYGE_LOG_ERROR, "Failed to load JSON from %s", relPath);
+	}
+
+	return json;
 }
