@@ -61,7 +61,12 @@ static char* NewStringFromBounds(StringBounds bounds)
 	return out;
 }
 
-static RayGE_ResourceHandle LoadTextureFromPath(const char* path, const Image* sourceImage)
+// If source image is provided and data is valid, it is used as the image for the texture.
+// If source image is provided but empty, the texture is loaded off disk and the image
+// is updated to hold the data.
+// If source image is not provided, the texture is loaded off disk and the image data
+// is not kept on the CPU afterwards.
+static RayGE_ResourceHandle LoadTextureFromPath(const char* path, Image* sourceImage, bool isInternal)
 {
 	RAYGE_ASSERT_VALID(g_ResourceList);
 
@@ -89,7 +94,7 @@ static RayGE_ResourceHandle LoadTextureFromPath(const char* path, const Image* s
 	do
 	{
 		// Only internal textures loaded from a provided image may be prefixed with ':'
-		if ( *trimmedPath == ':' && !sourceImage )
+		if ( *trimmedPath == ':' && !isInternal )
 		{
 			Logging_PrintLine(
 				RAYGE_LOG_ERROR,
@@ -136,7 +141,7 @@ static RayGE_ResourceHandle LoadTextureFromPath(const char* path, const Image* s
 		TextureItem* item = (TextureItem*)ResourceList_GetItemData(g_ResourceList, outHandle);
 		RAYGE_ASSERT_VALID(item);
 
-		if ( sourceImage )
+		if ( sourceImage && sourceImage->data )
 		{
 			Logging_PrintLine(RAYGE_LOG_TRACE, "Loading texture %s from image", trimmedPath);
 			item->texture = LoadTextureFromImage(*sourceImage);
@@ -145,8 +150,23 @@ static RayGE_ResourceHandle LoadTextureFromPath(const char* path, const Image* s
 		{
 			fullPath = FilesystemSubsystem_MakeAbsoluteAlloc(trimmedPath);
 
-			Logging_PrintLine(RAYGE_LOG_TRACE, "Loading texture %s from file", fullPath);
-			item->texture = LoadTexture(fullPath);
+			if ( sourceImage )
+			{
+				Logging_PrintLine(RAYGE_LOG_TRACE, "Loading texture %s from file and retaining source image", fullPath);
+				*sourceImage = LoadImage(fullPath);
+
+				if ( !sourceImage->data )
+				{
+					break;
+				}
+
+				item->texture = LoadTextureFromImage(*sourceImage);
+			}
+			else
+			{
+				Logging_PrintLine(RAYGE_LOG_TRACE, "Loading texture %s from file", fullPath);
+				item->texture = LoadTexture(fullPath);
+			}
 		}
 
 		if ( item->texture.id == 0 )
@@ -250,7 +270,20 @@ void TextureResources_ShutDown(void)
 
 RayGE_ResourceHandle TextureResources_LoadTexture(const char* path)
 {
-	return LoadTextureFromPath(path, NULL);
+	return LoadTextureFromPath(path, NULL, false);
+}
+
+RayGE_ResourceHandle TextureResources_LoadTextureAndRetainImage(const char* path, Image* outImage)
+{
+	RAYGE_ASSERT(outImage && !outImage->data, "Output image is not valid");
+
+	if ( !outImage )
+	{
+		return RAYGE_NULL_RESOURCE_HANDLE;
+	}
+
+	memset(outImage, 0, sizeof(*outImage));
+	return LoadTextureFromPath(path, outImage, false);
 }
 
 RayGE_ResourceHandle TextureResources_LoadInternalTexture(const char* name, Image sourceImage)
@@ -269,7 +302,7 @@ RayGE_ResourceHandle TextureResources_LoadInternalTexture(const char* name, Imag
 	RAYGE_ENSURE(charsWritten > 0, "Failed to construct texture's internal name");
 	RAYGE_ENSURE((size_t)charsWritten < sizeof(internalName), "Texture's internal name was too long");
 
-	return LoadTextureFromPath(internalName, &sourceImage);
+	return LoadTextureFromPath(internalName, &sourceImage, true);
 }
 
 void TextureResources_UnloadTexture(RayGE_ResourceHandle handle)

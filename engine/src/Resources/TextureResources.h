@@ -9,6 +9,7 @@ void TextureResources_Init(void);
 void TextureResources_ShutDown(void);
 
 RayGE_ResourceHandle TextureResources_LoadTexture(const char* path);
+RayGE_ResourceHandle TextureResources_LoadTextureAndRetainImage(const char* path, Image* outImage);
 RayGE_ResourceHandle TextureResources_LoadInternalTexture(const char* name, Image sourceImage);
 
 // These two functions essentially do the same thing, but one of them is designed
