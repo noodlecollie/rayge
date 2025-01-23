@@ -27,6 +27,8 @@ const RayGE_Engine_API_Current g_EngineAPI = {
 		ResourcesAPI_GetPrimitiveHandle,
 		ResourcesAPI_LoadTexture,
 		ResourcesAPI_UnloadTexture,
+		ResourcesAPI_LoadPixelWorld,
+		ResourcesAPI_UnloadPixelWorld,
 	}
 };
 

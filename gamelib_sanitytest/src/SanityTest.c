@@ -24,6 +24,7 @@ static const RayGE_GameLib_Callbacks_V1 g_Callbacks = {
 
 static RayGE_ResourceHandle g_SubjectEntity = RAYGE_INIT_NULL_RESOURCE_HANDLE;
 static RayGE_ResourceHandle g_CameraEntity = RAYGE_INIT_NULL_RESOURCE_HANDLE;
+static RayGE_ResourceHandle g_PixelWorld = RAYGE_INIT_NULL_RESOURCE_HANDLE;
 
 static void Game_StartUp(void)
 {
@@ -62,6 +63,8 @@ static void Scene_Begin(void)
 
 	RayGE_Component_Camera* camera = g_EngineAPI->scene.AddCameraComponent(g_CameraEntity);
 	camera->fieldOfView = 80.0f;
+
+	g_PixelWorld = g_EngineAPI->resources.LoadPixelWorld("pixelworld.json");
 }
 
 static void Scene_End(void)

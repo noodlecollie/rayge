@@ -72,7 +72,20 @@ static char* MakeAbsolutePathFromApplicationDirectory(const char* relNativePath)
 {
 	EnsureApplicationDirectory(false);
 
-	if ( !relNativePath || !(*relNativePath) )
+	if ( !relNativePath )
+	{
+		return wzl_strdup(g_NativeRootDirectory);
+	}
+
+	// If the path begins with a separator, treat it as being rooted at our current
+	// root directory. This essentially means we need to just skip past any leading
+	// separators and then compute the actual absolute path.
+	while ( *relNativePath && *relNativePath == PATH_SEP_CH )
+	{
+		++relNativePath;
+	}
+
+	if ( !(*relNativePath) )
 	{
 		return wzl_strdup(g_NativeRootDirectory);
 	}

@@ -68,7 +68,7 @@ cJSON* JSONUtils_LoadFromFile(const char* relPath)
 
 	if ( fileData )
 	{
-		MEMPOOL_FREE(fileData);
+		FilesystemSubsystem_UnloadFileData(fileData);
 	}
 
 	if ( fullPath )

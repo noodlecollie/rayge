@@ -24,7 +24,7 @@ static bool LoadBaseTexture(const char* context, const char* basePath, cJSON* js
 	}
 
 	FilesystemSubsystem_Path baseTexturePath;
-	wzl_sprintf(baseTexturePath, sizeof(baseTexturePath), "%s/%s", basePath, baseItem->string);
+	cwk_path_join(basePath, baseItem->valuestring, baseTexturePath, sizeof(baseTexturePath));
 
 	Logging_PrintLine(RAYGE_LOG_TRACE, "%s Loading base texture %s", context, baseTexturePath);
 	world->baseTexture = TextureResources_LoadTextureAndRetainImage(baseTexturePath, &world->baseImage);
