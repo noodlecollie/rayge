@@ -12,7 +12,17 @@ option(BUILD_TESTING "If set, builds tests for the engine" NO)
 option(RAYGE_ENABLE_LEAK_CHECK "If set, enables leak checking upon termination of the executable. Currently MSVC-only." NO)
 option(RAYGE_INSTALL_SANITY_TEST "If set, a separate directory will be created under the install prefix for the sanity test game." NO)
 
-# This must go here, so that it is configured before the later options are set up.
+if(RAYGE_ENABLE_LEAK_CHECK)
+	if(NOT MSVC)
+		message(FATAL_ERROR "RAYGE_ENABLE_LEAK_CHECK was set, but the current compiler is not MSVC. Only MSVC is currently supported.")
+	else()
+		message(STATUS "RAYGE_ENABLE_LEAK_CHECK is set - this may impact performance.")
+	endif()
+
+	add_compile_definitions(RAYGE_ENABLE_LEAK_CHECK)
+endif()
+
+# Third party libs must go here, so that it is configured before the later options are set up.
 set(OLD_WARNINGS_AS_ERRORS ${CMAKE_COMPILE_WARNING_AS_ERROR})
 set(CMAKE_COMPILE_WARNING_AS_ERROR NO)
 add_subdirectory(thirdparty)
@@ -55,14 +65,6 @@ if(Git_FOUND)
 		ERROR_QUIET
 		OUTPUT_STRIP_TRAILING_WHITESPACE
 	)
-endif()
-
-if(RAYGE_ENABLE_LEAK_CHECK)
-	if(NOT MSVC)
-		message(FATAL_ERROR "RAYGE_ENABLE_LEAK_CHECK was set, but the current compiler is not MSVC. Only MSVC is currently supported.")
-	else()
-		message(STATUS "RAYGE_ENABLE_LEAK_CHECK is set - this may impact performance.")
-	endif()
 endif()
 
 if(MSVC)

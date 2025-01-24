@@ -9,6 +9,7 @@
 #include "Logging/Logging.h"
 #include "Debugging.h"
 #include "Utils/Utils.h"
+#include "utlist.h"
 
 // Disable some seemingly buggy GCC warnings for this file,
 // since we will be doing some wacky things with pointers.
@@ -44,9 +45,9 @@ typedef struct MemPool
 {
 	MemPool_Category category;
 	MemPoolItemHead* head;
-	MemPoolItemHead* tail;
 	size_t totalClientMemory;  // Sizes of all allocations requested
 	size_t totalMemory;  // Total memory used, including head and tail structs.
+	size_t totalAllocations;
 } MemPool;
 
 typedef struct ManagerData
@@ -172,16 +173,74 @@ static size_t ItemAllocationSize(size_t coreSize)
 	return sizeof(MemPoolItemHead) + coreSize + sizeof(MemPoolItemTail);
 }
 
-static void FreeChain(MemPoolItemHead* chain, const char* file, int line)
+static void FreeChain(MemPoolItemHead** chain, const char* file, int line)
 {
-	while ( chain )
-	{
-		VerifyIntegrity(chain, file, line);
+	MemPoolItemHead* item = NULL;
+	MemPoolItemHead* temp1 = NULL;
 
-		MemPoolItemHead* next = chain->next;
-		free(chain);
-		chain = next;
+	DL_FOREACH_SAFE(*chain, item, temp1)
+	{
+		VerifyIntegrity(item, file, line);
+		free(item);
 	}
+}
+
+static void CheckCountersForNewAllocation(MemPool* pool, size_t size, const char* file, int line)
+{
+	RAYGE_ENSURE(
+		SIZE_MAX - pool->totalClientMemory >= size,
+		"Mem pool invocation from %s:%d: Request to allocate %zu client bytes would overflow pool's client memory counter.",
+		file,
+		line,
+		size
+	);
+
+	size_t totalSize = ItemAllocationSize(size);
+
+	RAYGE_ENSURE(
+		SIZE_MAX - pool->totalMemory >= totalSize,
+		"Mem pool invocation from %s:%d: Request to allocate %zu client bytes would overflow pool's total memory counter.",
+		file,
+		line,
+		size
+	);
+
+	RAYGE_ENSURE(
+		pool->totalAllocations < SIZE_MAX,
+		"Mem pool invocation from %s:%d: Request to allocate %zu client bytes would overflow pool's total allocations counter.",
+		file,
+		line,
+		size
+	);
+}
+
+static void CheckCountersForAllocationRemoval(MemPool* pool, size_t clientAllocSize, const char* file, int line)
+{
+	RAYGE_ENSURE(
+		clientAllocSize <= pool->totalClientMemory,
+		"Mem pool invocation from %s:%d: Freeing %zu bytes underflows pool's client memory counter.",
+		file,
+		line,
+		clientAllocSize
+	);
+
+	const size_t totalBytesToFree = ItemAllocationSize(clientAllocSize);
+
+	RAYGE_ENSURE(
+		totalBytesToFree <= pool->totalMemory,
+		"Mem pool invocation from %s:%d: Freeing %zu total bytes underflows pool's total memory counter.",
+		file,
+		line,
+		totalBytesToFree
+	);
+
+	RAYGE_ENSURE(
+		pool->totalAllocations > 0,
+		"Mem pool invocation from %s:%d: Allocation to free but total allocations counter was zero.",
+		file,
+		line,
+		totalBytesToFree
+	);
 }
 
 static MemPoolItemHead* CreateItemInPool(MemPool* pool, size_t size, const char* file, int line)
@@ -196,18 +255,10 @@ static MemPoolItemHead* CreateItemInPool(MemPool* pool, size_t size, const char*
 		size
 	);
 
-	size_t totalSize = ItemAllocationSize(size);
+	CheckCountersForNewAllocation(pool, size, file, line);
 
-	RAYGE_ENSURE(
-		SIZE_MAX - pool->totalMemory >= totalSize,
-		"Mem pool invocation from %s:%d: Request to allocate %zu total bytes would overflow pool's total memory "
-		"counter.",
-		file,
-		line,
-		size
-	);
-
-	MemPoolItemHead* item = (MemPoolItemHead*)malloc(totalSize);
+	const size_t totalSize = ItemAllocationSize(size);
+	MemPoolItemHead* item = (MemPoolItemHead*)calloc(1, totalSize);
 
 	RAYGE_ENSURE(
 		item,
@@ -226,75 +277,28 @@ static MemPoolItemHead* CreateItemInPool(MemPool* pool, size_t size, const char*
 	ItemTail(item)->sentinel = TAIL_SENTINEL_VALUE;
 
 	item->pool = pool;
-	item->prev = pool->tail;
-	item->next = NULL;
 
-	if ( pool->tail )
-	{
-		pool->tail->next = item;
-	}
-	else
-	{
-		pool->tail = item;
-	}
-
-	if ( !pool->head )
-	{
-		// Pool was empty, so this is the first item.
-		pool->head = item;
-	}
+	DL_APPEND(pool->head, item);
 
 	// Keep track of how much memory is being used in this pool.
 	pool->totalClientMemory += item->allocSize;
 	pool->totalMemory += totalSize;
+	++pool->totalAllocations;
 
 	return item;
 }
 
 static void DestroyItemInPool(MemPool* pool, MemPoolItemHead* item, const char* file, int line)
 {
-	// If this happens, something's gone seriously wrong:
-	RAYGE_ENSURE(
-		item->allocSize <= pool->totalClientMemory,
-		"Mem pool invocation from %s:%d: Freeing %zu bytes underflows pool's client memory counter.",
-		file,
-		line,
-		item->allocSize
-	);
+	CheckCountersForAllocationRemoval(pool, item->allocSize, file, line);
 
-	size_t totalBytesToFree = ItemAllocationSize(item->allocSize);
-
-	// If this happens, something's gone seriously wrong:
-	RAYGE_ENSURE(
-		totalBytesToFree <= pool->totalMemory,
-		"Mem pool invocation from %s:%d: Freeing %zu total bytes underflows pool's total memory counter.",
-		file,
-		line,
-		totalBytesToFree
-	);
+	const size_t totalBytesToFree = ItemAllocationSize(item->allocSize);
 
 	pool->totalClientMemory -= item->allocSize;
-	pool->totalMemory -= ItemAllocationSize(item->allocSize);
+	pool->totalMemory -= totalBytesToFree;
+	--pool->totalAllocations;
 
-	if ( item->prev )
-	{
-		item->prev->next = item->next;
-	}
-
-	if ( item->next )
-	{
-		item->next->prev = item->prev;
-	}
-
-	if ( pool->head == item )
-	{
-		pool->head = item->next;
-	}
-
-	if ( pool->tail == item )
-	{
-		pool->tail = item->prev;
-	}
+	DL_DELETE(pool->head, item);
 
 	free(item);
 }
@@ -319,7 +323,7 @@ static void FreeData(ManagerData* data)
 {
 	for ( size_t index = 0; index < RAYGE_ARRAY_SIZE(data->pools); ++index )
 	{
-		FreeChain(data->pools[index].head, __FILE__, __LINE__);
+		FreeChain(&data->pools[index].head, __FILE__, __LINE__);
 	}
 
 	memset(data, 0, sizeof(*data));
@@ -414,34 +418,34 @@ void* MemPoolManager_Realloc(const char* file, int line, MemPool_Category catego
 	}
 
 	MemPoolItemHead* item = MemPtrToItemChecked(memory, file, line);
-	MemPoolItemHead* prev = item->prev;
-	MemPoolItemHead* next = item->next;
+	CheckCountersForAllocationRemoval(item->pool, item->allocSize, file, line);
 
-	void* newPtr = realloc(memory, ItemAllocationSize(newSize));
+	DL_DELETE(item->pool->head, item);
 
-	// Fix the final sentinel which will likely have been corrupted.
-	// The first one should be OK since that memory will have migrated.
+	item->pool->totalClientMemory -= item->allocSize;
+	item->pool->totalMemory -= ItemAllocationSize(item->allocSize);
+	--item->pool->totalAllocations;
+
+	CheckCountersForNewAllocation(item->pool, newSize, file, line);
+
+	const size_t newPtrMemSize = ItemAllocationSize(newSize);
+	void* newPtr = realloc(memory, newPtrMemSize);
 	item = MemPtrToItem(newPtr);
+
+	// Set up the item again. The head sentinel will still be intact,
+	// but the tail will not.
 	MemPoolItemTail* tail = ItemTail(item);
 	tail->sentinel = TAIL_SENTINEL_VALUE;
 
-	if ( prev )
-	{
-		prev->next = item;
-	}
-	else
-	{
-		item->pool->head = item;
-	}
+	item->allocSize = newSize;
+	item->allocFile = file;
+	item->allocLine = line;
 
-	if ( next )
-	{
-		next->prev = item;
-	}
-	else
-	{
-		item->pool->tail = item;
-	}
+	DL_APPEND(item->pool->head, item);
+
+	item->pool->totalClientMemory += item->allocSize;
+	item->pool->totalMemory += newPtrMemSize;
+	++item->pool->totalAllocations;
 
 	return newPtr;
 }
@@ -480,4 +484,36 @@ void MemPoolManager_DumpAllocInfo(void* memory)
 	LOG("  Allocated from: %s:%d", SafeFileNameString(item), SafeFileLineNumber(item));
 
 #undef LOG
+}
+
+void MemPoolManager_DumpAllAllocInfo(void)
+{
+	ENSURE_INITIALISED();
+	RAYGE_ASSERT(g_Data.debuggingEnabled, "Mem pool debugging must be enabled to use this function.");
+
+	if ( !g_Data.debuggingEnabled )
+	{
+		return;
+	}
+
+	for ( size_t index = 0; index < MEMPOOL__COUNT; ++index )
+	{
+		MemPool* pool = &g_Data.pools[index];
+
+		Logging_PrintLine(
+			RAYGE_LOG_INFO,
+			"Mempool %zu has %zu bytes allocated (%zu including overhead) across %zu allocations",
+			index,
+			pool->totalClientMemory,
+			pool->totalMemory,
+			pool->totalAllocations
+		);
+
+		for ( MemPoolItemHead* item = pool->head; item; item = item->next )
+		{
+			MemPoolManager_DumpAllocInfo((uint8_t*)item + sizeof(*item));
+		}
+
+		Logging_PrintLine(RAYGE_LOG_INFO, "");
+	}
 }

@@ -9,7 +9,4 @@ target_link_libraries(${TARGETNAME_LAUNCHER}
 	wzl-cutl
 )
 
-target_compile_definitions(${TARGETNAME_LAUNCHER}
-	PRIVATE
-	$<$<BOOL:${RAYGE_ENABLE_LEAK_CHECK}>:RAYGE_ENABLE_LEAK_CHECK>
-)
+target_precompile_headers(${TARGETNAME_LAUNCHER} PRIVATE ${CMAKE_SOURCE_DIR}/pch/LeakCheckDefs.h)

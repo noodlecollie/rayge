@@ -6,16 +6,6 @@
 #include "wzl_cutl/libloader.h"
 #include "wzl_cutl/string.h"
 
-#ifdef RAYGE_ENABLE_LEAK_CHECK
-#ifdef _MSC_VER
-#define _CRTDBG_MAP_ALLOC
-#include <stdlib.h>
-#include <crtdbg.h>
-#else
-#error Leak checking is not currently implemented for non-MSVC compilation.
-#endif  // _MSC_VER
-#endif  // RAYGE_ENABLE_LEAK_CHECK
-
 #ifndef NDEBUG
 // Debug
 #define FIRST_ENGINE_PREFERENCE LIB_PREFIX LIBNAME_ENGINE_DEBUG LIB_EXTENSION
@@ -66,7 +56,13 @@ static void* LoadEngineLibrary(void)
 int main(int argc, char** argv)
 {
 #ifdef RAYGE_ENABLE_LEAK_CHECK
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+	_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
+	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
+	_CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDOUT);
+	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
+	_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDOUT);
+
 	printf("*** Memory leak checking is enabled. This may impact performance. ***\n");
 #endif
 
@@ -131,14 +127,21 @@ int main(int argc, char** argv)
 
 	free(newParams);
 
-	wzl_unload_library(engineLibrary);
-
 #ifdef RAYGE_ENABLE_LEAK_CHECK
-	printf("*** Beginning memory leak dump (no news = good news) ***\n");
-	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
-	_CrtDumpMemoryLeaks();
-	printf("*** Memory leak dump complete ***\n");
+	// This must be done before we unload the library, or
+	// the file names will not be printed correctly
+	// (they show up as "#File Error#").
+	// Literally only one page on the internet has this
+	// information, and the JS on the page makes it a pain
+	// to translate:
+	// https://blog.csdn.net/changyujan/article/details/8290309
+
+	printf("*** Begin memory leak check results (no news = good news) ***\n");
+	const int checkResult = _CrtDumpMemoryLeaks();
+	printf("*** End memory leak check results (%s) ***\n", checkResult != 0 ? "LEAKS DETECTED" : "no leaks detected");
 #endif
+
+	wzl_unload_library(engineLibrary);
 
 	return result;
 }

@@ -30,6 +30,8 @@ void ResourceSubsystem_Init(void)
 			g_Resources[index].Init();
 		}
 	}
+
+	g_Initialised = true;
 }
 
 void ResourceSubsystem_ShutDown(void)
@@ -46,4 +48,6 @@ void ResourceSubsystem_ShutDown(void)
 			g_Resources[index - 1].ShutDown();
 		}
 	}
+
+	g_Initialised = false;
 }

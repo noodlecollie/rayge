@@ -50,6 +50,7 @@ void MemPoolManager_Free(const char* file, int line, void* memory);
 // Prints information about the allocation to the logs.
 // Debugging must be enabled (see MemPoolManager_DebuggingEnabled()).
 void MemPoolManager_DumpAllocInfo(void* memory);
+void MemPoolManager_DumpAllAllocInfo(void);
 
 #define MEMPOOL_MALLOC(category, size) MemPoolManager_Malloc(__FILE__, __LINE__, (category), (size))
 #define MEMPOOL_CALLOC(category, numElements, elementSize) \

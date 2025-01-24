@@ -180,10 +180,11 @@ target_compile_definitions(${TARGETNAME_ENGINE}
 	PRIVATE
 	RAYGE_PRODUCER
 	$<$<BOOL:${BUILD_TESTING}>:RAYGE_BUILD_TESTING_FLAG>
-	$<$<BOOL:${RAYGE_ENABLE_LEAK_CHECK}>:RAYGE_ENABLE_LEAK_CHECK>
 
 	# This is required to be defined on the consumer
 	# of cimgui ONLY. If it's defined on cimgui itself,
 	# everything breaks.
 	CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 )
+
+target_precompile_headers(${TARGETNAME_ENGINE} PRIVATE ${CMAKE_SOURCE_DIR}/pch/LeakCheckDefs.h)

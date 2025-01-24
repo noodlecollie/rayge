@@ -540,6 +540,9 @@ void ImGui_ImplRaylib_Shutdown(void)
 
 	SetFontTextureFromImage(&g_Data, NULL);
 
+	igDestroyContext(g_Data.context);
+	g_Data.context = NULL;
+
 	cimgui_set_assert_handler(NULL);
 }
 
