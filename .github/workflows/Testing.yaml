@@ -45,7 +45,7 @@ jobs:
     # in quotes (it escapes the quotes). If you want a good job doing, do it yourself.
     - name: Build
       run: |
-        cd ${{runner.workspace}}
+        cd ${{runner.workspace}}\rayge
         mkdir build
         cd build
         cmake -G "Visual Studio 17 2022" -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install -DRAYGE_ENABLE_LEAK_CHECK=YES ..
