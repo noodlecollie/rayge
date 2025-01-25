@@ -27,9 +27,9 @@ jobs:
         cxx: g++
         build-type: Debug
         target: install
-        configure-options: -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install -DRAYGE_ENABLE_LEAK_CHECK=YES
+        configure-options: -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install
 
-    -name: Run tests
+    - name: Run tests
       run: cd ${{runner.workspace}}/build/install/rayge && LD_LIBRARY_PATH=. ./launcher
 
   build-windows:
@@ -52,5 +52,5 @@ jobs:
         target: install
         configure-options: -G Ninja -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install -DRAYGE_ENABLE_LEAK_CHECK=YES
 
-    -name: Run tests
+    - name: Run tests
       run: cd ${{runner.workspace}}\build\install\rayge && .\launcher.exe
