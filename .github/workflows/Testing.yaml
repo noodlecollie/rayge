@@ -47,7 +47,7 @@ jobs:
         build-dir: ${{runner.workspace}}/build
         build-type: Debug
         target: install
-        configure-options: -G "Visual Studio 17 2022" -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install -DRAYGE_ENABLE_LEAK_CHECK=YES
+        configure-options: -G 'Visual Studio 17 2022' -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install -DRAYGE_ENABLE_LEAK_CHECK=YES
 
     - name: Run tests
       run: cd ${{runner.workspace}}\build\install\rayge && .\launcher.exe
