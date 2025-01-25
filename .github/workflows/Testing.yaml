@@ -52,4 +52,4 @@ jobs:
         cmake --build . --config Debug --target install
 
     - name: Run tests
-      run: cd ${{runner.workspace}}\rayge\install\rayge && .\launcher.exe
+      run: cd ${{runner.workspace}}\rayge\build\install\rayge && .\launcher.exe
