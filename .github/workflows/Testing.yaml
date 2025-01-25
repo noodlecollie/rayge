@@ -30,7 +30,7 @@ jobs:
         configure-options: -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install
 
     - name: Run tests
-      run: cd ${{runner.workspace}}/build/install/rayge && LD_LIBRARY_PATH=. ./launcher
+      run: cd ${{runner.workspace}}/rayge/install/rayge && LD_LIBRARY_PATH=. ./launcher
 
   build-windows:
     name: Test on Windows
@@ -41,13 +41,15 @@ jobs:
       with:
         submodules: recursive
 
+    # The stupid ashutoshvarma/action-cmake-build step won't let us specify "Visual Studio 17 2022"
+    # in quotes (it escapes the quotes). If you want a good job doing, do it yourself.
     - name: Build
-      uses: ashutoshvarma/action-cmake-build@master
-      with:
-        build-dir: ${{runner.workspace}}/build
-        build-type: Debug
-        target: install
-        configure-options: -G 'Visual Studio 17 2022' -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install -DRAYGE_ENABLE_LEAK_CHECK=YES
+      run: |
+        cd ${{runner.workspace}}
+        mkdir build
+        cd build
+        cmake -G "Visual Studio 17 2022" -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install -DRAYGE_ENABLE_LEAK_CHECK=YES ..
+        cmake --build . --config Debug --target install
 
     - name: Run tests
-      run: cd ${{runner.workspace}}\build\install\rayge && .\launcher.exe
+      run: cd ${{runner.workspace}}\rayge\install\rayge && .\launcher.exe
