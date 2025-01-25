@@ -117,7 +117,7 @@ int main(int argc, char** argv)
 	params.argc = newParamCount;
 	params.argv = (const char* const*)newParams;
 
-	const int32_t result = runFuncPtr(&params);
+	int32_t result = runFuncPtr(&params);
 
 	// Free the new param list
 	for ( size_t index = 0; index < newParamCount; ++index )
@@ -139,9 +139,10 @@ int main(int argc, char** argv)
 	printf("*** Begin memory leak check results (no news = good news) ***\n");
 	const int checkResult = _CrtDumpMemoryLeaks();
 	printf("*** End memory leak check results (%s) ***\n", checkResult != 0 ? "LEAKS DETECTED" : "no leaks detected");
+
+	result = checkResult;
 #endif
 
 	wzl_unload_library(engineLibrary);
-
 	return result;
 }

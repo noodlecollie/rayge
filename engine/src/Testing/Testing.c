@@ -41,7 +41,7 @@ static void EnsureNewSpaceInResultList(void)
 		g_Data.numTestResults = 0;
 		g_Data.testResultsListCapacity = RESULT_LIST_INCREMENT;
 		g_Data.testResultsList =
-			MEMPOOL_MALLOC(MEMPOOL_TESTMANAGER, g_Data.testResultsListCapacity * sizeof(TestCheckResult));
+			MEMPOOL_MALLOC(MEMPOOL_TEST_MANAGER, g_Data.testResultsListCapacity * sizeof(TestCheckResult));
 	}
 
 	if ( g_Data.numTestResults >= g_Data.testResultsListCapacity )
@@ -49,7 +49,7 @@ static void EnsureNewSpaceInResultList(void)
 		g_Data.testResultsListCapacity += RESULT_LIST_INCREMENT;
 
 		MEMPOOL_REALLOC(
-			MEMPOOL_TESTMANAGER,
+			MEMPOOL_TEST_MANAGER,
 			g_Data.testResultsList,
 			g_Data.testResultsListCapacity * sizeof(TestCheckResult)
 		);

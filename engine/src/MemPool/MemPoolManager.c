@@ -22,6 +22,12 @@
 
 #define ENSURE_INITIALISED() RAYGE_ENSURE(g_Initialised, "MemPool manager was not initialised")
 
+static const char* const g_MemPoolNames[] = {
+#define LIST_ITEM(enum, name) name,
+	MEMPOOL_CATEGORY_LIST
+#undef LIST_ITEM
+};
+
 struct MemPool;
 
 typedef struct MemPoolItemHead
@@ -58,6 +64,11 @@ typedef struct ManagerData
 
 static ManagerData g_Data;
 static bool g_Initialised = false;
+
+static const char* MemPoolName(MemPool_Category category)
+{
+	return (category >= MEMPOOL_UNCATEGORISED && category < MEMPOOL__COUNT) ? g_MemPoolNames[category] : "UNKNOWN";
+}
 
 static const char* SafeFileNameString(MemPoolItemHead* item)
 {
@@ -119,8 +130,8 @@ static void VerifyIntegrity(MemPoolItemHead* item, const char* file, int line)
 
 	RAYGE_ENSURE(
 		item->sentinel == HEAD_SENTINEL_VALUE,
-		"Mem pool invocation from %s:%d: Head sentinel was trashed for 0x%p allocated from %s:%d. Expected 0x%08x, got "
-		"0x%08x.",
+		"Mem pool invocation from %s:%d: Head sentinel was trashed for 0x%p allocated from %s:%d. Expected 0x%08X, got "
+		"0x%08X.",
 		file,
 		line,
 		ItemToMemPtr(item),
@@ -144,8 +155,8 @@ static void VerifyIntegrity(MemPoolItemHead* item, const char* file, int line)
 
 	RAYGE_ENSURE(
 		tail->sentinel == TAIL_SENTINEL_VALUE,
-		"Mem pool invocation from %s:%d: Tail sentinel was trashed for 0x%p allocated from %s:%d. Expected 0x%08x, got "
-		"0x%08x.",
+		"Mem pool invocation from %s:%d: Tail sentinel was trashed for 0x%p allocated from %s:%d. Expected 0x%08X, got "
+		"0x%08X.",
 		file,
 		line,
 		ItemToMemPtr(item),
@@ -189,7 +200,8 @@ static void CheckCountersForNewAllocation(MemPool* pool, size_t size, const char
 {
 	RAYGE_ENSURE(
 		SIZE_MAX - pool->totalClientMemory >= size,
-		"Mem pool invocation from %s:%d: Request to allocate %zu client bytes would overflow pool's client memory counter.",
+		"Mem pool invocation from %s:%d: Request to allocate %zu client bytes would overflow pool's client memory "
+		"counter.",
 		file,
 		line,
 		size
@@ -199,7 +211,8 @@ static void CheckCountersForNewAllocation(MemPool* pool, size_t size, const char
 
 	RAYGE_ENSURE(
 		SIZE_MAX - pool->totalMemory >= totalSize,
-		"Mem pool invocation from %s:%d: Request to allocate %zu client bytes would overflow pool's total memory counter.",
+		"Mem pool invocation from %s:%d: Request to allocate %zu client bytes would overflow pool's total memory "
+		"counter.",
 		file,
 		line,
 		size
@@ -207,7 +220,8 @@ static void CheckCountersForNewAllocation(MemPool* pool, size_t size, const char
 
 	RAYGE_ENSURE(
 		pool->totalAllocations < SIZE_MAX,
-		"Mem pool invocation from %s:%d: Request to allocate %zu client bytes would overflow pool's total allocations counter.",
+		"Mem pool invocation from %s:%d: Request to allocate %zu client bytes would overflow pool's total allocations "
+		"counter.",
 		file,
 		line,
 		size
@@ -477,9 +491,11 @@ void MemPoolManager_DumpAllocInfo(void* memory)
 #define LOG(...) Logging_PrintLine(RAYGE_LOG_INFO, __VA_ARGS__)
 
 	LOG("==== Allocation info for 0x%p ====", memory);
-	LOG("  Head sentinel: 0x%08x", item->sentinel);
-	LOG("  Tail sentinel: 0x%08x", tail->sentinel);
-	LOG("  Pool: %d", item->pool ? (int)item->pool->category : -1);
+	LOG("  Head sentinel: 0x%08X", item->sentinel);
+	LOG("  Tail sentinel: 0x%08X", tail->sentinel);
+	LOG("  Pool: %s (%d)",
+		item->pool ? MemPoolName(item->pool->category) : "UNKNOWN",
+		item->pool ? (int)item->pool->category : -1);
 	LOG("  Requested allocation size: %zu bytes", item->allocSize);
 	LOG("  Allocated from: %s:%d", SafeFileNameString(item), SafeFileLineNumber(item));
 
@@ -502,7 +518,8 @@ void MemPoolManager_DumpAllAllocInfo(void)
 
 		Logging_PrintLine(
 			RAYGE_LOG_INFO,
-			"Mempool %zu has %zu bytes allocated (%zu including overhead) across %zu allocations",
+			"Mempool %s (%zu) has %zu bytes allocated (%zu including overhead) across %zu allocations",
+			MemPoolName((MemPool_Category)index),
 			index,
 			pool->totalClientMemory,
 			pool->totalMemory,

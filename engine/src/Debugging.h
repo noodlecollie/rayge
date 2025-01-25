@@ -51,7 +51,7 @@ static inline void RayGE_CheckInvariant(
 	const bool shouldActOnAssertionFailure = true;
 #endif
 
-	char descBuffer[256];
+	char descBuffer[LOG_MESSAGE_MAX_LENGTH];
 	descBuffer[0] = '\0';
 
 	if ( description )

@@ -82,6 +82,7 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Input/KeyboardModifiers.h
 	src/Integrations/ImGuiBackend.h
 	src/Integrations/ImGuiBackend.c
+	src/Integrations/RaylibCustomAllocFunctions.c
 	src/JSON/JSONUtils.h
 	src/JSON/JSONUtils.c
 	src/Launcher/Launcher.c
