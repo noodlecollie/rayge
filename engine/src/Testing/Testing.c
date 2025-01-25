@@ -131,7 +131,7 @@ void Testing_PrintResultsToLog(void)
 		);
 	}
 
-	Logging_PrintLine(RAYGE_LOG_INFO, "");
+	Logging_PrintLineStr(RAYGE_LOG_INFO, "");
 }
 
 bool Testing_TestRunning(void)

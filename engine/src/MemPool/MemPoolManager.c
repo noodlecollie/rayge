@@ -531,6 +531,6 @@ void MemPoolManager_DumpAllAllocInfo(void)
 			MemPoolManager_DumpAllocInfo((uint8_t*)item + sizeof(*item));
 		}
 
-		Logging_PrintLine(RAYGE_LOG_INFO, "");
+		Logging_PrintLineStr(RAYGE_LOG_INFO, "");
 	}
 }

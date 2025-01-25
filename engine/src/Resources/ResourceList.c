@@ -502,8 +502,8 @@ ResourceList* ResourceList_Create(ResourceListAttributes attributes)
 	{
 		Logging_PrintLine(
 			RAYGE_LOG_WARNING,
-			"ResourceList_Create: Items per bucket (%zu) did not neatly divide capacity (%zu), leaving a remainder of "
-			"%zu. New capacity of list will be %zu items.",
+			"ResourceList_Create: Items per bucket (%u) did not neatly divide capacity (%u), leaving a remainder of "
+			"%u. New capacity of list will be %u items.",
 			attributes.itemsPerBucket,
 			attributes.maxCapacity,
 			remainder,

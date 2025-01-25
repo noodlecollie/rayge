@@ -64,7 +64,7 @@ RAYGE_ENGINE_PUBLIC(int32_t) RayGE_Launcher_Run(const RayGE_LaunchParams* params
 	{
 		return Engine_RunTestsOnly();
 	}
-#endif()
+#endif
 
 	Engine_StartUp();
 	int32_t returnCode = LoadAndRunGame(params);

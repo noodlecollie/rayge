@@ -310,7 +310,8 @@ void FilesystemSubsystem_SetBaseRelPath(const char* path)
 		Logging_PrintLine(
 			RAYGE_LOG_WARNING,
 			"Cannot set filesystem base path to \"%s\" as this would leave engine filesystem subtree. Resetting to "
-			"blank base path."
+			"blank base path.",
+			path
 		);
 
 		path = "";

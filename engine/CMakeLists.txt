@@ -188,4 +188,6 @@ target_compile_definitions(${TARGETNAME_ENGINE}
 	CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 )
 
-target_precompile_headers(${TARGETNAME_ENGINE} PRIVATE ${CMAKE_SOURCE_DIR}/pch/LeakCheckDefs.h)
+if(RAYGE_ENABLE_LEAK_CHECK)
+	target_precompile_headers(${TARGETNAME_ENGINE} PRIVATE ${CMAKE_SOURCE_DIR}/pch/LeakCheckDefs.h)
+endif()

@@ -201,4 +201,4 @@ int32_t Engine_RunTestsOnly(void)
 	Engine_ShutDown();
 	return testSuccess ? 0 : 1;
 }
-#endif()
+#endif

@@ -59,7 +59,7 @@ RayGE_Entity* Scene_CreateEntity(RayGE_Scene* scene)
 	{
 		Logging_PrintLine(
 			RAYGE_LOG_ERROR,
-			"Max limit of %zu scene entities reached.",
+			"Max limit of %u scene entities reached.",
 			Entity_GetListCapacity(scene->entities)
 		);
 

@@ -26,10 +26,16 @@ void Logging_PrintLineV(RayGE_Log_Level level, const char* format, va_list args)
 void Logging_AddListener(Logging_Callback callback, void* userData);
 void Logging_RemoveListener(Logging_Callback callback);
 
+static inline void Logging_PrintLine(RayGE_Log_Level level, const char* format, ...) WZL_ATTR_FORMAT(printf, 2, 3);
 static inline void Logging_PrintLine(RayGE_Log_Level level, const char* format, ...)
 {
 	va_list args;
 	va_start(args, format);
 	Logging_PrintLineV(level, format, args);
 	va_end(args);
-} WZL_ATTR_FORMAT(printf, 2, 3)
+}
+
+static inline void Logging_PrintLineStr(RayGE_Log_Level level, const char* str)
+{
+	Logging_PrintLine(level, "%s", str);
+}
