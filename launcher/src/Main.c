@@ -140,7 +140,10 @@ int main(int argc, char** argv)
 	const int checkResult = _CrtDumpMemoryLeaks();
 	printf("*** End memory leak check results (%s) ***\n", checkResult != 0 ? "LEAKS DETECTED" : "no leaks detected");
 
-	result = checkResult;
+	if ( checkResult != 0 )
+	{
+		result = checkResult;
+	}
 #endif
 
 	wzl_unload_library(engineLibrary);
