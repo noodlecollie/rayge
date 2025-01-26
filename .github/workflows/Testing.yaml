@@ -25,7 +25,7 @@ jobs:
         build-dir: ${{runner.workspace}}/build
         cc: gcc
         cxx: g++
-        build-type: Debug
+        build-type: MinSizeRel
         target: install
         configure-options: -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install
 
@@ -36,7 +36,7 @@ jobs:
         echo "ldd launcher:"
         ldd ./launcher
         echo "ldd engine:"
-        ldd ./librayge-engine-debug.so
+        ldd ./librayge-engine.so
         ./launcher --run-tests --dev 3
 
   build-windows:
@@ -56,7 +56,7 @@ jobs:
         mkdir build
         cd build
         cmake -G "Visual Studio 17 2022" -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install -DRAYGE_ENABLE_LEAK_CHECK=YES ..
-        cmake --build . --config Debug --target install
+        cmake --build . --config MinSizeRel --target install
 
     - name: Run tests
       run: cd ${{runner.workspace}}\rayge\build\install\rayge && .\launcher.exe --run-tests --dev 3
