@@ -30,7 +30,14 @@ jobs:
         configure-options: -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install
 
     - name: Run tests
-      run: cd ${{runner.workspace}}/rayge/install/rayge && LD_LIBRARY_PATH=. ./launcher --run-tests --dev 3
+      run: |
+        cd ${{runner.workspace}}/rayge/install/rayge
+        export LD_LIBRARY_PATH=.
+        echo "ldd launcher:"
+        ldd ./launcher
+        echo "ldd engine:"
+        ldd ./librayge-engine-debug.so
+        ./launcher --run-tests --dev 3
 
   build-windows:
     name: Test on Windows
