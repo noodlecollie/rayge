@@ -66,6 +66,9 @@ int main(int argc, char** argv)
 	printf("*** Memory leak checking is enabled. This may impact performance. ***\n");
 #endif
 
+	// REMOVE ME
+	printf("LAUNCHER: Started with argc = %d\n", argc);
+
 	if ( argc < 1 )
 	{
 		return RAYGE_LAUNCHER_EXIT_UNKNOWN_ERROR;
