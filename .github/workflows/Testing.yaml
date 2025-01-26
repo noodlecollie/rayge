@@ -30,7 +30,7 @@ jobs:
         configure-options: -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install
 
     - name: Run tests
-      run: cd ${{runner.workspace}}/rayge/install/rayge && LD_LIBRARY_PATH=. ./launcher
+      run: cd ${{runner.workspace}}/rayge/install/rayge && LD_LIBRARY_PATH=. ./launcher --run-tests --dev 3
 
   build-windows:
     name: Test on Windows
@@ -52,4 +52,4 @@ jobs:
         cmake --build . --config Debug --target install
 
     - name: Run tests
-      run: cd ${{runner.workspace}}\rayge\build\install\rayge && .\launcher.exe
+      run: cd ${{runner.workspace}}\rayge\build\install\rayge && .\launcher.exe --run-tests --dev 3
