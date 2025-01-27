@@ -1,3 +1,8 @@
+# This file is disabled until we can work out why
+# the executable crashes on the server.
+# We can use mxschmitt/action-tmate@v3 to create a
+# tmate session and do debugging.
+
 name: Testing
 
 on:
@@ -38,6 +43,10 @@ jobs:
         echo "ldd engine:"
         ldd ./librayge-engine.so
         ./launcher --run-tests --dev 3
+
+    - name: Debug with tmate on failure
+      if: ${{ failure() }}
+      uses: mxschmitt/action-tmate@v3
 
   build-windows:
     name: Test on Windows
