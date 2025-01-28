@@ -30,19 +30,14 @@ jobs:
         build-dir: ${{runner.workspace}}/build
         cc: gcc
         cxx: g++
-        build-type: MinSizeRel
+        build-type: Debug
         target: install
         configure-options: -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install
 
     - name: Run tests
       run: |
         cd ${{runner.workspace}}/rayge/install/rayge
-        export LD_LIBRARY_PATH=.
-        echo "ldd launcher:"
-        ldd ./launcher
-        echo "ldd engine:"
-        ldd ./librayge-engine.so
-        ./launcher --run-tests --dev 3
+        LD_LIBRARY_PATH=. ./launcher --run-tests --dev 3
 
     - name: Debug with tmate on failure
       if: ${{ failure() }}
