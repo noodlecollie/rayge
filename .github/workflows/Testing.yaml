@@ -25,7 +25,7 @@ jobs:
         build-dir: ${{runner.workspace}}/build
         cc: gcc
         cxx: g++
-        build-type: MinSizeRel
+        build-type: Debug
         target: install
         configure-options: -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install -DRAYGE_HEADLESS=YES
 
@@ -33,6 +33,10 @@ jobs:
       run: |
         cd ${{runner.workspace}}/rayge/install/rayge
         LD_LIBRARY_PATH=. ./launcher --run-tests --dev 3
+
+    - name: Debug with tmate on failure
+      if: ${{ failure() }}
+      uses: mxschmitt/action-tmate@v3
 
   build-windows:
     name: Test on Windows
