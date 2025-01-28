@@ -5,6 +5,7 @@
 #include "BinaryResources/OpenSans_Medium.h"
 #include "Resources/TextureResources.h"
 #include "Debugging.h"
+#include "Headless.h"
 #include "raylib.h"
 
 typedef struct SubsystemData

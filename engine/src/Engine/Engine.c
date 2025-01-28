@@ -3,11 +3,9 @@
 #include "Engine/EngineAPI.h"
 #include "Logging/Logging.h"
 #include "EngineSubsystems/EngineSubsystemManager.h"
-#include "EngineSubsystems/UISubsystem.h"
 #include "EngineSubsystems/InputSubsystem.h"
 #include "EngineSubsystems/InputHookSubsystem.h"
 #include "EngineSubsystems/SceneSubsystem.h"
-#include "EngineSubsystems/RendererSubsystem.h"
 #include "BehaviouralSubsystems/BSysManager.h"
 #include "MemPool/MemPoolManager.h"
 #include "Hooks/HookManager.h"
@@ -18,6 +16,12 @@
 #include "Identity/Identity.h"
 #include "Debugging.h"
 #include "wzl_cutl/memory.h"
+#include "Headless.h"
+
+#if !RAYGE_HEADLESS()
+#include "EngineSubsystems/UISubsystem.h"
+#include "EngineSubsystems/RendererSubsystem.h"
+#endif
 
 #define NUM_ENGINE_API_FUNCTIONS (sizeof(RayGE_Engine_API_Current) / sizeof(void*))
 
@@ -111,13 +115,21 @@ static void RunFrameInput(void)
 	InputSubsystem_NewFrame();
 	InputSubsystem_ProcessInput();
 	InputHookSubsystem_ProcessInput();
+
+#if !RAYGE_HEADLESS()
 	UISubsystem_ProcessInput();
 	UISubsystem_Poll();
+#endif
 }
 
 static bool RunFrame(void)
 {
+	// TODO: We should add a command to allow shutdown in headless mode
+#if !RAYGE_HEADLESS()
 	const bool windowShouldClose = RendererSubsystem_IsWindowCloseRequested();
+#else
+	const bool windowShouldClose = false;
+#endif
 
 	BSysManager_Invoke(BSYS_STAGE_DESERIALISATION);
 	RunFrameInput();

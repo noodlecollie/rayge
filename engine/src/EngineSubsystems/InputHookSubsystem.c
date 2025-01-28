@@ -1,11 +1,15 @@
 #include "EngineSubsystems/InputHookSubsystem.h"
-#include "EngineSubsystems/UISubsystem.h"
 #include "Logging/Logging.h"
 #include "Input/InputBufferKeyboard.h"
 #include "utlist.h"
+#include "Headless.h"
 
 #define UTHASH_POOLED_MEMPOOL MEMPOOL_INPUT
 #include "UTUtils/UTHash_Pooled.h"
+
+#if !RAYGE_HEADLESS()
+#include "EngineSubsystems/UISubsystem.h"
+#endif
 
 typedef struct CallbackInfo
 {
@@ -110,6 +114,8 @@ static void DestroyData(Data* data)
 	MEMPOOL_FREE(data);
 }
 
+// TODO: Remove these guards once we call these functions in headless mode
+#if !RAYGE_HEADLESS()
 static bool
 PassesModifierChecks(RayGE_InputSource source, const RayGE_InputBuffer* inputBuffer, unsigned int requiredModifiers)
 {
@@ -184,6 +190,45 @@ static void CheckAndCallHook(int id, RayGE_InputState state, void* userData)
 		}
 	}
 }
+
+static void TriggerUIHooks(void)
+{
+	const bool uiIsOpen = UISubsystem_HasActiveMenus();
+
+	// Deal with all newly inactive inputs before all newly active ones.
+	for ( size_t source = 0; source < INPUT_SOURCE__COUNT; ++source )
+	{
+		const RayGE_InputSource inputSource = (RayGE_InputSource)source;
+
+		const RayGE_InputBuffer* buffer = InputSubsystem_GetInputForSource(inputSource);
+		RAYGE_ENSURE(buffer, "Expected valid input buffer for source");
+
+		const CallbackInfo cbInfo = {
+			inputSource,
+			buffer,
+			uiIsOpen,
+		};
+
+		InputBuffer_TriggerForAllInputsNowInactive(buffer, &CheckAndCallHook, (void*)&cbInfo);
+	}
+
+	for ( size_t source = 0; source < INPUT_SOURCE__COUNT; ++source )
+	{
+		const RayGE_InputSource inputSource = (RayGE_InputSource)source;
+
+		const RayGE_InputBuffer* buffer = InputSubsystem_GetInputForSource(inputSource);
+		RAYGE_ENSURE(buffer, "Expected valid input buffer for source");
+
+		const CallbackInfo cbInfo = {
+			inputSource,
+			buffer,
+			uiIsOpen,
+		};
+
+		InputBuffer_TriggerForAllInputsNowActive(buffer, &CheckAndCallHook, (void*)&cbInfo);
+	}
+}
+#endif
 
 void InputHookSubsystem_Init(void)
 {
@@ -290,38 +335,7 @@ void InputHookSubsystem_ProcessInput(void)
 		return;
 	}
 
-	const bool uiIsOpen = UISubsystem_HasActiveMenus();
-
-	// Deal with all newly inactive inputs before all newly active ones.
-	for ( size_t source = 0; source < INPUT_SOURCE__COUNT; ++source )
-	{
-		const RayGE_InputSource inputSource = (RayGE_InputSource)source;
-
-		const RayGE_InputBuffer* buffer = InputSubsystem_GetInputForSource(inputSource);
-		RAYGE_ENSURE(buffer, "Expected valid input buffer for source");
-
-		const CallbackInfo cbInfo = {
-			inputSource,
-			buffer,
-			uiIsOpen,
-		};
-
-		InputBuffer_TriggerForAllInputsNowInactive(buffer, &CheckAndCallHook, (void*)&cbInfo);
-	}
-
-	for ( size_t source = 0; source < INPUT_SOURCE__COUNT; ++source )
-	{
-		const RayGE_InputSource inputSource = (RayGE_InputSource)source;
-
-		const RayGE_InputBuffer* buffer = InputSubsystem_GetInputForSource(inputSource);
-		RAYGE_ENSURE(buffer, "Expected valid input buffer for source");
-
-		const CallbackInfo cbInfo = {
-			inputSource,
-			buffer,
-			uiIsOpen,
-		};
-
-		InputBuffer_TriggerForAllInputsNowActive(buffer, &CheckAndCallHook, (void*)&cbInfo);
-	}
+#if !RAYGE_HEADLESS()
+	TriggerUIHooks();
+#endif
 }

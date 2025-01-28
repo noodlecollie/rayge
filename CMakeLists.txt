@@ -11,6 +11,7 @@ option(CMAKE_COMPILE_WARNING_AS_ERROR "If set, any compiler warnings are treated
 option(BUILD_TESTING "If set, builds tests for the engine" NO)
 option(RAYGE_ENABLE_LEAK_CHECK "If set, enables leak checking upon termination of the executable. Currently MSVC-only." NO)
 option(RAYGE_INSTALL_SANITY_TEST "If set, a separate directory will be created under the install prefix for the sanity test game." NO)
+option(RAYGE_HEADLESS "If set, graphical libraries will not be built, and functions such as GPU texture loading will not function. Useful for servers without GUI functionality." NO)
 
 if(RAYGE_ENABLE_LEAK_CHECK)
 	if(NOT MSVC)
@@ -20,6 +21,10 @@ if(RAYGE_ENABLE_LEAK_CHECK)
 	endif()
 
 	add_compile_definitions(RAYGE_ENABLE_LEAK_CHECK)
+endif()
+
+if(RAYGE_HEADLESS)
+	message(STATUS "Building in headless mode. Graphical capabilities are disabled.")
 endif()
 
 # Third party libs must go here, so that it is configured before the later options are set up.
