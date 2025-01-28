@@ -19,8 +19,8 @@
 #include "Headless.h"
 
 #if !RAYGE_HEADLESS()
-#include "EngineSubsystems/UISubsystem.h"
-#include "EngineSubsystems/RendererSubsystem.h"
+#include "Non-Headless/EngineSubsystems/UISubsystem.h"
+#include "Non-Headless/EngineSubsystems/RendererSubsystem.h"
 #endif
 
 #define NUM_ENGINE_API_FUNCTIONS (sizeof(RayGE_Engine_API_Current) / sizeof(void*))

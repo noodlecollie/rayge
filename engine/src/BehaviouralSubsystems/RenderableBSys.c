@@ -1,11 +1,11 @@
 #include "BehaviouralSubsystems/RenderableBSys.h"
-#include "EngineSubsystems/SceneSubsystem.h"
 #include "Debugging.h"
 #include "Headless.h"
 
 #if !RAYGE_HEADLESS()
-#include "EngineSubsystems/RendererSubsystem.h"
-#include "EngineSubsystems/UISubsystem.h"
+#include "Non-Headless/EngineSubsystems/RendererSubsystem.h"
+#include "Non-Headless/EngineSubsystems/UISubsystem.h"
+#include "EngineSubsystems/SceneSubsystem.h"
 #endif
 
 #if !RAYGE_HEADLESS()

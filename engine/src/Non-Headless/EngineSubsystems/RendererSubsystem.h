@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 #include "raylib.h"
-#include "Rendering/Renderer.h"
+#include "Non-Headless/Rendering/Renderer.h"
 
 #define RENDERERMODULE_DEFAULT_FONT_SIZE 20
 

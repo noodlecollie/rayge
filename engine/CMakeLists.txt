@@ -125,24 +125,24 @@ set(SOURCES
 
 if(NOT RAYGE_HEADLESS)
 	set(NON_HEADLESS_SOURCES
-		src/EngineSubsystems/RendererSubsystem.h
-		src/EngineSubsystems/RendererSubsystem.c
-		src/EngineSubsystems/UISubsystem.h
-		src/EngineSubsystems/UISubsystem.c
-		src/Hooks/MenuHooks.h
-		src/Hooks/MenuHooks.c
-		src/Integrations/ImGuiBackend.h
-		src/Integrations/ImGuiBackend.c
-		src/Rendering/Renderer.h
-		src/Rendering/Renderer.c
-		src/UI/DeveloperConsole.h
-		src/UI/DeveloperConsole.c
-		src/UI/ImGuiDemo.h
-		src/UI/ImGuiDemo.c
-		src/UI/ResourceViewer.h
-		src/UI/ResourceViewer.c
-		src/UI/SceneDebugUI.h
-		src/UI/SceneDebugUI.c
+		src/Non-Headless/EngineSubsystems/RendererSubsystem.h
+		src/Non-Headless/EngineSubsystems/RendererSubsystem.c
+		src/Non-Headless/EngineSubsystems/UISubsystem.h
+		src/Non-Headless/EngineSubsystems/UISubsystem.c
+		src/Non-Headless/Hooks/MenuHooks.h
+		src/Non-Headless/Hooks/MenuHooks.c
+		src/Non-Headless/Integrations/ImGuiBackend.h
+		src/Non-Headless/Integrations/ImGuiBackend.c
+		src/Non-Headless/Rendering/Renderer.h
+		src/Non-Headless/Rendering/Renderer.c
+		src/Non-Headless/UI/DeveloperConsole.h
+		src/Non-Headless/UI/DeveloperConsole.c
+		src/Non-Headless/UI/ImGuiDemo.h
+		src/Non-Headless/UI/ImGuiDemo.c
+		src/Non-Headless/UI/ResourceViewer.h
+		src/Non-Headless/UI/ResourceViewer.c
+		src/Non-Headless/UI/SceneDebugUI.h
+		src/Non-Headless/UI/SceneDebugUI.c
 	)
 endif()
 

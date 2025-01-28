@@ -1,11 +1,11 @@
-#include "EngineSubsystems/UISubsystem.h"
+#include "Non-Headless/EngineSubsystems/UISubsystem.h"
 #include "MemPool/MemPoolManager.h"
-#include "EngineSubsystems/RendererSubsystem.h"
+#include "Non-Headless/EngineSubsystems/RendererSubsystem.h"
 #include "Debugging.h"
 #include "cimgui.h"
 #include "raylib.h"
 #include "utlist.h"
-#include "Integrations/ImGuiBackend.h"
+#include "Non-Headless/Integrations/ImGuiBackend.h"
 
 typedef struct MenuEntry
 {

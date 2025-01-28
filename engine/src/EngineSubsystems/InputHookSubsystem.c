@@ -8,7 +8,7 @@
 #include "UTUtils/UTHash_Pooled.h"
 
 #if !RAYGE_HEADLESS()
-#include "EngineSubsystems/UISubsystem.h"
+#include "Non-Headless/EngineSubsystems/UISubsystem.h"
 #endif
 
 typedef struct CallbackInfo

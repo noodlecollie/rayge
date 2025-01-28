@@ -11,8 +11,8 @@
 #include "Headless.h"
 
 #if !RAYGE_HEADLESS()
-#include "EngineSubsystems/RendererSubsystem.h"
-#include "EngineSubsystems/UISubsystem.h"
+#include "Non-Headless/EngineSubsystems/RendererSubsystem.h"
+#include "Non-Headless/EngineSubsystems/UISubsystem.h"
 #endif
 
 typedef struct SubsystemInitAndShutdown

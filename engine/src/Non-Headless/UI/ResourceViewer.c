@@ -1,4 +1,4 @@
-#include "UI/ResourceViewer.h"
+#include "Non-Headless/UI/ResourceViewer.h"
 #include "cimgui.h"
 #include "wzl_cutl/string.h"
 #include "Resources/TextureResources.h"

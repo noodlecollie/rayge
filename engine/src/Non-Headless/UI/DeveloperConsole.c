@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <float.h>
-#include "UI/DeveloperConsole.h"
+#include "Non-Headless/UI/DeveloperConsole.h"
 #include "Logging/Logging.h"
 #include "MemPool/MemPoolManager.h"
 #include "Commands/CommandParser.h"
