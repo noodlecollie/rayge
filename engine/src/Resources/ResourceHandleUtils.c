@@ -48,9 +48,9 @@ uint64_t Resource_CreateKey(uint32_t index)
 	// I'd be amazed if this ever happened:
 	RAYGE_ENSURE(
 		outKey != 0,
-		"Generated invalid entity key, which should be virtually impossible. Time: %lu Bits: 0x%016lx",
-		timestamp,
-		timeBits
+		"Generated invalid entity key, which should be virtually impossible. Time: %ju Bits: 0x%016jx",
+		(uintmax_t)timestamp,
+		(uintmax_t)timeBits
 	);
 
 	return outKey;
