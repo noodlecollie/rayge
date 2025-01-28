@@ -64,9 +64,7 @@ void* Component_CastImpl(
 				header,
 				"Component cast @ %s:%d: Provided component pointer was null.",
 				file,
-				line,
-				header->type,
-				toType
+				line
 			);
 		}
 

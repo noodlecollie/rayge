@@ -38,6 +38,17 @@ static inline void RayGE_CheckInvariant(
 	const char* function,
 	const char* description,
 	...
+)WZL_ATTR_FORMAT_PRINTF(7, 8) ;
+
+static inline void RayGE_CheckInvariant(
+	InvariantFailureType type,
+	bool expression,
+	const char* expressionStr,
+	const char* file,
+	int line,
+	const char* function,
+	const char* description,
+	...
 )
 {
 	if ( expression )

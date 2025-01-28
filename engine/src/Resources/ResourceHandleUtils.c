@@ -1,7 +1,6 @@
 #include "Resources/ResourceHandleUtils.h"
 #include "Debugging.h"
-#include "raylib.h"
-
+#include "wzl_cutl/time.h"
 // This operation should be reversible with the same index.
 static uint64_t MixKeyWithIndex(uint64_t key, uint32_t index)
 {
@@ -28,27 +27,30 @@ RayGE_ResourceHandle Resource_CreateInternalHandle(InternalResourceDomain domain
 
 uint64_t Resource_CreateKey(uint32_t index)
 {
-	typedef union Timestamp
+	static unsigned int bitShift = 0;
+
+	uint64_t timestamp = wzl_get_milliseconds_monotonic();
+	RAYGE_ENSURE(timestamp != 0, "Expected non-zero timestamp");
+
+	uint64_t timeBits = timestamp;
+
+	// Shift the bits differently on each call.
+	if ( bitShift > 0 )
 	{
-		uint64_t bitsAsUint64;
-		double timeElapsed;
-	} Timestamp;
+		timeBits = (timeBits << bitShift) | (timeBits >> ((8 * sizeof(uint64_t)) - bitShift));
+	}
 
-	Timestamp ts;
-	ts.timeElapsed = GetTime();
-
-	// Shouldn't happen, but may if the window has not been created yet for some reason.
-	RAYGE_ENSURE(ts.timeElapsed != 0.0f, "Cannot create entity key without access to underlying elapsed time");
+	bitShift = (bitShift + 1) % (8 * sizeof(uint64_t));
 
 	// Make sure the key's value is affected by the index.
-	uint64_t outKey = MixKeyWithIndex(ts.bitsAsUint64, index);
+	uint64_t outKey = MixKeyWithIndex(timeBits, index);
 
 	// I'd be amazed if this ever happened:
 	RAYGE_ENSURE(
 		outKey != 0,
-		"Generated invalid entity key, which should be virtually impossible. Time: %lf Bits: 0x%016x",
-		ts.timeElapsed,
-		ts.bitsAsUint64
+		"Generated invalid entity key, which should be virtually impossible. Time: %lu Bits: 0x%016lx",
+		timestamp,
+		timeBits
 	);
 
 	return outKey;

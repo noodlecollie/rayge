@@ -252,8 +252,7 @@ static void CheckCountersForAllocationRemoval(MemPool* pool, size_t clientAllocS
 		pool->totalAllocations > 0,
 		"Mem pool invocation from %s:%d: Allocation to free but total allocations counter was zero.",
 		file,
-		line,
-		totalBytesToFree
+		line
 	);
 }
 

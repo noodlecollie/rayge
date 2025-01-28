@@ -70,7 +70,7 @@ RayGE_Entity* Scene_CreateEntity(RayGE_Scene* scene)
 
 	RAYGE_ENSURE(
 		ent,
-		"Expected to be able to find a free entity in scene with only %zu of %zu slots filled.",
+		"Expected to be able to find a free entity in scene with only %u of %u slots filled.",
 		Entity_GetNumFreeSlots(scene->entities),
 		Entity_GetListCapacity(scene->entities)
 	);
