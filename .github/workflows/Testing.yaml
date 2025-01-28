@@ -34,12 +34,12 @@ jobs:
         cd ${{runner.workspace}}/rayge/install/rayge
         LD_LIBRARY_PATH=. ./launcher --run-tests --dev 3
 
-    - name: Debug with tmate on failure
-      if: ${{ failure() }}
-      uses: mxschmitt/action-tmate@v3
+    # - name: Debug with tmate on failure
+    #   if: ${{ failure() }}
+    #   uses: mxschmitt/action-tmate@v3
 
   build-windows:
-    name: Test on Windows
+    name: Test w/ leak check on Windows
     runs-on: windows-2022
 
     steps:
@@ -55,7 +55,7 @@ jobs:
         mkdir build
         cd build
         cmake -G "Visual Studio 17 2022" -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install -DRAYGE_HEADLESS=YES -DRAYGE_ENABLE_LEAK_CHECK=YES ..
-        cmake --build . --config MinSizeRel --target install
+        cmake --build . --config Debug --target install
 
     - name: Run tests
       run: cd ${{runner.workspace}}\rayge\build\install\rayge && .\launcher.exe --run-tests --dev 3
