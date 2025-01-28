@@ -1,8 +1,3 @@
-# This file is disabled until we can work out why
-# the executable crashes on the server.
-# We can use mxschmitt/action-tmate@v3 to create a
-# tmate session and do debugging.
-
 name: Testing
 
 on:
@@ -32,7 +27,7 @@ jobs:
         cxx: g++
         build-type: MinSizeRel
         target: install
-        configure-options: -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install
+        configure-options: -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install -DRAYGE_HEADLESS=YES
 
     - name: Run tests
       run: |
@@ -55,7 +50,7 @@ jobs:
         cd ${{runner.workspace}}\rayge
         mkdir build
         cd build
-        cmake -G "Visual Studio 17 2022" -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install -DRAYGE_ENABLE_LEAK_CHECK=YES ..
+        cmake -G "Visual Studio 17 2022" -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install -DRAYGE_HEADLESS=YES -DRAYGE_ENABLE_LEAK_CHECK=YES ..
         cmake --build . --config MinSizeRel --target install
 
     - name: Run tests
