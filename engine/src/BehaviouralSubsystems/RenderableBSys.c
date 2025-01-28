@@ -1,9 +1,14 @@
 #include "BehaviouralSubsystems/RenderableBSys.h"
-#include "EngineSubsystems/RendererSubsystem.h"
-#include "EngineSubsystems/SceneSubsystem.h"
-#include "EngineSubsystems/UISubsystem.h"
 #include "Debugging.h"
+#include "Headless.h"
 
+#if !RAYGE_HEADLESS()
+#include "Non-Headless/EngineSubsystems/RendererSubsystem.h"
+#include "Non-Headless/EngineSubsystems/UISubsystem.h"
+#include "EngineSubsystems/SceneSubsystem.h"
+#endif
+
+#if !RAYGE_HEADLESS()
 // TODO: Remove this once rendering is formalised more
 static void VisualiseEntities(RayGE_Renderer* renderer)
 {
@@ -23,6 +28,7 @@ static void VisualiseEntities(RayGE_Renderer* renderer)
 	Renderer_SetDrawingMode3D(renderer, Renderer_GetDefaultCamera3D());
 	Renderer_DrawAllActiveEntitiesInScene3D(renderer);
 }
+#endif
 
 static void Init(void)
 {
@@ -43,6 +49,7 @@ static void Invoke(BSys_Stage stage)
 		return;
 	}
 
+#if !RAYGE_HEADLESS()
 	RayGE_Renderer* renderer = RendererSubsystem_GetRenderer();
 
 	// Frame setup
@@ -58,6 +65,7 @@ static void Invoke(BSys_Stage stage)
 
 	// End rendering frame
 	Renderer_EndFrame(renderer);
+#endif
 }
 
 const BSys_Definition RenderableBSys_Definition =

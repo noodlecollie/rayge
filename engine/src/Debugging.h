@@ -38,6 +38,17 @@ static inline void RayGE_CheckInvariant(
 	const char* function,
 	const char* description,
 	...
+)WZL_ATTR_FORMAT_PRINTF(7, 8) ;
+
+static inline void RayGE_CheckInvariant(
+	InvariantFailureType type,
+	bool expression,
+	const char* expressionStr,
+	const char* file,
+	int line,
+	const char* function,
+	const char* description,
+	...
 )
 {
 	if ( expression )
@@ -66,7 +77,7 @@ static inline void RayGE_CheckInvariant(
 	{
 		// Since these may be used to trace error conditions in release builds,
 		// don't make them too verbose.
-		if ( descBuffer )
+		if ( descBuffer[0] )
 		{
 			Logging_PrintLine(RAYGE_LOG_ERROR, "%s:%d: %s", file ? file : "unknown-file", line, descBuffer);
 		}

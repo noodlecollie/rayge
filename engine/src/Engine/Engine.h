@@ -10,4 +10,4 @@ void Engine_RunToCompletion(void);
 #if RAYGE_BUILD_TESTING()
 // Starts up minimally, runs tests, and shuts down.
 int32_t Engine_RunTestsOnly(void);
-#endif()
+#endif

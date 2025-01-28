@@ -19,17 +19,23 @@ void Logging_Init(void);
 void Logging_ShutDown(void);
 void Logging_SetLogLevel(RayGE_Log_Level level);
 void Logging_SetBackendDebugLogsEnabled(bool enabled);
-void Logging_PrintLineV(RayGE_Log_Level level, const char* format, va_list args) WZL_ATTR_FORMAT(printf, 2, 0);
+void Logging_PrintLineV(RayGE_Log_Level level, const char* format, va_list args) WZL_ATTR_FORMAT_PRINTF(2, 0);
 
 // Must be initialised beforehand.
 // On shutdown, all listeners are unregistered.
 void Logging_AddListener(Logging_Callback callback, void* userData);
 void Logging_RemoveListener(Logging_Callback callback);
 
-static inline void Logging_PrintLine(RayGE_Log_Level level, const char* format, ...) WZL_ATTR_FORMAT(printf, 2, 3)
+static inline void Logging_PrintLine(RayGE_Log_Level level, const char* format, ...) WZL_ATTR_FORMAT_PRINTF(2, 3);
+static inline void Logging_PrintLine(RayGE_Log_Level level, const char* format, ...)
 {
 	va_list args;
 	va_start(args, format);
 	Logging_PrintLineV(level, format, args);
 	va_end(args);
+}
+
+static inline void Logging_PrintLineStr(RayGE_Log_Level level, const char* str)
+{
+	Logging_PrintLine(level, "%s", str);
 }

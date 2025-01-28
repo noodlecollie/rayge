@@ -1,9 +1,9 @@
 #include <stddef.h>
 #include <stdarg.h>
 #include <float.h>
-#include "UI/SceneDebugUI.h"
+#include "Non-Headless/UI/SceneDebugUI.h"
 #include "Logging/Logging.h"
-#include "EngineSubsystems/RendererSubsystem.h"
+#include "Non-Headless/EngineSubsystems/RendererSubsystem.h"
 #include "EngineSubsystems/SceneSubsystem.h"
 #include "raylib.h"
 #include "cimgui.h"

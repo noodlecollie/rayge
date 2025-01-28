@@ -1,9 +1,9 @@
 #include <stdarg.h>
 #include <limits.h>
-#include "Rendering/Renderer.h"
+#include "Non-Headless/Rendering/Renderer.h"
 #include "RayGE/External/raymath.h"
 #include "Resources/RenderablePrimitives.h"
-#include "EngineSubsystems/RendererSubsystem.h"
+#include "Non-Headless/EngineSubsystems/RendererSubsystem.h"
 #include "MemPool/MemPoolManager.h"
 #include "EngineSubsystems/SceneSubsystem.h"
 #include "Scene/Entity.h"

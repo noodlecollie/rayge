@@ -1,7 +1,7 @@
 #include <string.h>
-#include "Integrations/ImGuiBackend.h"
-#include "Rendering/Renderer.h"
-#include "EngineSubsystems/RendererSubsystem.h"
+#include "Non-Headless/Integrations/ImGuiBackend.h"
+#include "Non-Headless/Rendering/Renderer.h"
+#include "Non-Headless/EngineSubsystems/RendererSubsystem.h"
 #include "Resources/TextureResources.h"
 #include "cimgui.h"
 #include "cimgui_assert.h"

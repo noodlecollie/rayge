@@ -48,15 +48,6 @@ static int32_t LoadAndRunGame(const RayGE_LaunchParams* params)
 
 RAYGE_ENGINE_PUBLIC(int32_t) RayGE_Launcher_Run(const RayGE_LaunchParams* params)
 {
-// #ifdef RAYGE_ENABLE_LEAK_CHECK
-// 	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-// 	_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
-// 	_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
-// 	_CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDOUT);
-// 	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
-// 	_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDOUT);
-// #endif
-
 	if ( !RAYGE_INTERFACE_VERIFY(params, RAYGE_LAUNCHPARAMS_VERSION) )
 	{
 		return -RAYGE_LAUNCHPARAMS_VERSION;
@@ -73,15 +64,11 @@ RAYGE_ENGINE_PUBLIC(int32_t) RayGE_Launcher_Run(const RayGE_LaunchParams* params
 	{
 		return Engine_RunTestsOnly();
 	}
-#endif()
+#endif
 
 	Engine_StartUp();
 	int32_t returnCode = LoadAndRunGame(params);
 	Engine_ShutDown();
-
-// #ifdef RAYGE_ENABLE_LEAK_CHECK
-// 	_CrtDumpMemoryLeaks();
-// #endif
 
 	return returnCode;
 }

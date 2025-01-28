@@ -59,7 +59,7 @@ RayGE_Entity* Scene_CreateEntity(RayGE_Scene* scene)
 	{
 		Logging_PrintLine(
 			RAYGE_LOG_ERROR,
-			"Max limit of %zu scene entities reached.",
+			"Max limit of %u scene entities reached.",
 			Entity_GetListCapacity(scene->entities)
 		);
 
@@ -70,7 +70,7 @@ RayGE_Entity* Scene_CreateEntity(RayGE_Scene* scene)
 
 	RAYGE_ENSURE(
 		ent,
-		"Expected to be able to find a free entity in scene with only %zu of %zu slots filled.",
+		"Expected to be able to find a free entity in scene with only %u of %u slots filled.",
 		Entity_GetNumFreeSlots(scene->entities),
 		Entity_GetListCapacity(scene->entities)
 	);

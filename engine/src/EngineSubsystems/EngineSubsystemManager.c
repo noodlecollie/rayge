@@ -1,15 +1,19 @@
 #include <stdbool.h>
 #include "EngineSubsystems/EngineSubsystemManager.h"
 #include "EngineSubsystems/FilesystemSubsystem.h"
-#include "EngineSubsystems/RendererSubsystem.h"
 #include "EngineSubsystems/InputSubsystem.h"
-#include "EngineSubsystems/UISubsystem.h"
 #include "EngineSubsystems/CommandSubsystem.h"
 #include "EngineSubsystems/InputHookSubsystem.h"
 #include "EngineSubsystems/SceneSubsystem.h"
 #include "EngineSubsystems/ResourceSubsystem.h"
 #include "BehaviouralSubsystems/BSysManager.h"
 #include "Utils/Utils.h"
+#include "Headless.h"
+
+#if !RAYGE_HEADLESS()
+#include "Non-Headless/EngineSubsystems/RendererSubsystem.h"
+#include "Non-Headless/EngineSubsystems/UISubsystem.h"
+#endif
 
 typedef struct SubsystemInitAndShutdown
 {
@@ -20,12 +24,20 @@ typedef struct SubsystemInitAndShutdown
 // Initialised in order, shut down in reverse order
 static const SubsystemInitAndShutdown g_Subsystems[] = {
 	{FilesystemSubsystem_Init, FilesystemSubsystem_ShutDown},
+
+#if !RAYGE_HEADLESS()
 	{RendererSubsystem_Init, RendererSubsystem_ShutDown},
+#endif
+
 	{ResourceSubsystem_Init, ResourceSubsystem_ShutDown},
 	{SceneSubsystem_Init, SceneSubsystem_ShutDown},
 	{InputSubsystem_Init, InputSubsystem_ShutDown},
 	{InputHookSubsystem_Init, InputHookSubsystem_ShutDown},
+
+#if !RAYGE_HEADLESS()
 	{UISubsystem_Init, UISubsystem_ShutDown},
+#endif
+
 	{CommandSubsystem_Init, CommandSubsystem_ShutDown},
 	{BSysManager_Init, BSysManager_ShutDown},
 };

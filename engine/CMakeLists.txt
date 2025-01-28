@@ -25,7 +25,7 @@ generate_export_header_template(
 
 configure_file(configure/VCS.h.in ${GENERATED_HEADER_DIR}/Identity/VCS.h)
 
-target_sources(${TARGETNAME_ENGINE} PRIVATE
+set(SOURCES
 	${GENERATED_HEADER_DIR}/Identity/VCS.h
 
 	include/RayGE/Private/InterfaceUtils.h
@@ -57,22 +57,16 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/EngineSubsystems/InputSubsystem.c
 	src/EngineSubsystems/EngineSubsystemManager.h
 	src/EngineSubsystems/EngineSubsystemManager.c
-	src/EngineSubsystems/RendererSubsystem.h
-	src/EngineSubsystems/RendererSubsystem.c
 	src/EngineSubsystems/ResourceSubsystem.h
 	src/EngineSubsystems/ResourceSubsystem.c
 	src/EngineSubsystems/SceneSubsystem.h
 	src/EngineSubsystems/SceneSubsystem.c
-	src/EngineSubsystems/UISubsystem.h
-	src/EngineSubsystems/UISubsystem.c
 	src/Game/GameData.h
 	src/Game/GameData.c
 	src/Game/GameLoader.h
 	src/Game/GameLoader.c
 	src/Hooks/HookManager.h
 	src/Hooks/HookManager.c
-	src/Hooks/MenuHooks.h
-	src/Hooks/MenuHooks.c
 	src/Identity/Identity.h
 	src/Identity/Identity.c
 	src/Input/InputBuffer.h
@@ -80,8 +74,6 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Input/InputBufferKeyboard.h
 	src/Input/InputBufferKeyboard.c
 	src/Input/KeyboardModifiers.h
-	src/Integrations/ImGuiBackend.h
-	src/Integrations/ImGuiBackend.c
 	src/Integrations/RaylibCustomAllocFunctions.c
 	src/JSON/JSONUtils.h
 	src/JSON/JSONUtils.c
@@ -94,8 +86,6 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/MemPool/MemPoolManager.c
 	src/PixelWorld/PixelWorld.h
 	src/PixelWorld/PixelWorld.c
-	src/Rendering/Renderer.h
-	src/Rendering/Renderer.c
 	src/Resources/PixelWorldResources.h
 	src/Resources/PixelWorldResources.c
 	src/Resources/RenderablePrimitives.h
@@ -119,14 +109,6 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Scene/Scene.c
 	src/Scene/SceneAPI.h
 	src/Scene/SceneAPI.c
-	src/UI/DeveloperConsole.h
-	src/UI/DeveloperConsole.c
-	src/UI/ImGuiDemo.h
-	src/UI/ImGuiDemo.c
-	src/UI/ResourceViewer.h
-	src/UI/ResourceViewer.c
-	src/UI/SceneDebugUI.h
-	src/UI/SceneDebugUI.c
 	src/Utils/StringUtils.h
 	src/Utils/StringUtils.c
 	src/Utils/Utils.h
@@ -134,10 +116,39 @@ target_sources(${TARGETNAME_ENGINE} PRIVATE
 	src/Conversions.h
 	src/Debugging.h
 	src/Debugging.c
+	src/Headless.h
 
 	# Testing
 	src/Testing/Testing.h
 	$<$<BOOL:${BUILD_TESTING}>:src/Testing/Testing.c>
+)
+
+if(NOT RAYGE_HEADLESS)
+	set(NON_HEADLESS_SOURCES
+		src/Non-Headless/EngineSubsystems/RendererSubsystem.h
+		src/Non-Headless/EngineSubsystems/RendererSubsystem.c
+		src/Non-Headless/EngineSubsystems/UISubsystem.h
+		src/Non-Headless/EngineSubsystems/UISubsystem.c
+		src/Non-Headless/Hooks/MenuHooks.h
+		src/Non-Headless/Hooks/MenuHooks.c
+		src/Non-Headless/Integrations/ImGuiBackend.h
+		src/Non-Headless/Integrations/ImGuiBackend.c
+		src/Non-Headless/Rendering/Renderer.h
+		src/Non-Headless/Rendering/Renderer.c
+		src/Non-Headless/UI/DeveloperConsole.h
+		src/Non-Headless/UI/DeveloperConsole.c
+		src/Non-Headless/UI/ImGuiDemo.h
+		src/Non-Headless/UI/ImGuiDemo.c
+		src/Non-Headless/UI/ResourceViewer.h
+		src/Non-Headless/UI/ResourceViewer.c
+		src/Non-Headless/UI/SceneDebugUI.h
+		src/Non-Headless/UI/SceneDebugUI.c
+	)
+endif()
+
+target_sources(${TARGETNAME_ENGINE} PRIVATE
+	${SOURCES}
+	$<$<NOT:$<BOOL:${RAYGE_HEADLESS}>>:${NON_HEADLESS_SOURCES}>
 )
 
 target_sources(${TARGETNAME_ENGINE}
@@ -174,18 +185,22 @@ target_link_libraries(${TARGETNAME_ENGINE}
 	cargs
 	debugbreak
 	ut-utils
-	cimgui
+
+	$<$<NOT:$<BOOL:${RAYGE_HEADLESS}>>:cimgui>
 )
 
 target_compile_definitions(${TARGETNAME_ENGINE}
 	PRIVATE
 	RAYGE_PRODUCER
 	$<$<BOOL:${BUILD_TESTING}>:RAYGE_BUILD_TESTING_FLAG>
+	$<$<BOOL:${RAYGE_HEADLESS}>:RAYGE_HEADLESS_FLAG>
 
 	# This is required to be defined on the consumer
 	# of cimgui ONLY. If it's defined on cimgui itself,
 	# everything breaks.
-	CIMGUI_DEFINE_ENUMS_AND_STRUCTS
+	$<$<NOT:$<BOOL:${RAYGE_HEADLESS}>>:CIMGUI_DEFINE_ENUMS_AND_STRUCTS>
 )
 
-target_precompile_headers(${TARGETNAME_ENGINE} PRIVATE ${CMAKE_SOURCE_DIR}/pch/LeakCheckDefs.h)
+if(RAYGE_ENABLE_LEAK_CHECK)
+	target_precompile_headers(${TARGETNAME_ENGINE} PRIVATE ${CMAKE_SOURCE_DIR}/pch/LeakCheckDefs.h)
+endif()

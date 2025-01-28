@@ -7,6 +7,6 @@ option(BUILD_SHARED_LIBS "" OFF)
 add_subdirectory(raylib-5.0 EXCLUDE_FROM_ALL)
 
 target_precompile_headers(raylib PRIVATE
-	${CMAKE_SOURCE_DIR}/pch/LeakCheckDefs.h
+	$<$<BOOL:${RAYGE_ENABLE_LEAK_CHECK}>:${CMAKE_SOURCE_DIR}/pch/LeakCheckDefs.h>
 	${CMAKE_SOURCE_DIR}/pch/RaylibAllocators.h
 )

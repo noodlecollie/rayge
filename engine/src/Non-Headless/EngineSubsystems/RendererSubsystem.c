@@ -1,10 +1,11 @@
 #include <stdbool.h>
-#include "EngineSubsystems/RendererSubsystem.h"
+#include "Non-Headless/EngineSubsystems/RendererSubsystem.h"
 #include "MemPool/MemPoolManager.h"
 #include "BinaryResources/DMMono_Regular.h"
 #include "BinaryResources/OpenSans_Medium.h"
 #include "Resources/TextureResources.h"
 #include "Debugging.h"
+#include "Headless.h"
 #include "raylib.h"
 
 typedef struct SubsystemData

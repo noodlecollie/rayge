@@ -1,0 +1,61 @@
+name: Testing
+
+on:
+  pull_request:
+    branches: [ master ]
+  push:
+    branches: [ master ]
+
+jobs:
+  build-linux:
+    name: Test on Ubuntu
+    runs-on: ubuntu-24.04
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: sudo apt update && sudo apt install -y libsdl2-dev
+
+    - name: Build
+      uses: ashutoshvarma/action-cmake-build@master
+      with:
+        build-dir: ${{runner.workspace}}/build
+        cc: gcc
+        cxx: g++
+        build-type: Debug
+        target: install
+        configure-options: -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install -DRAYGE_HEADLESS=YES
+
+    - name: Run tests
+      run: |
+        cd ${{runner.workspace}}/rayge/install/rayge
+        LD_LIBRARY_PATH=. ./launcher --run-tests --dev 3
+
+    # - name: Debug with tmate on failure
+    #   if: ${{ failure() }}
+    #   uses: mxschmitt/action-tmate@v3
+
+  build-windows:
+    name: Test w/ leak check on Windows
+    runs-on: windows-2022
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    # The stupid ashutoshvarma/action-cmake-build step won't let us specify "Visual Studio 17 2022"
+    # in quotes (it escapes the quotes). If you want a good job doing, do it yourself.
+    - name: Build
+      run: |
+        cd ${{runner.workspace}}\rayge
+        mkdir build
+        cd build
+        cmake -G "Visual Studio 17 2022" -DBUILD_TESTING=YES -DCMAKE_INSTALL_PREFIX=install -DRAYGE_HEADLESS=YES -DRAYGE_ENABLE_LEAK_CHECK=YES ..
+        cmake --build . --config Debug --target install
+
+    - name: Run tests
+      run: cd ${{runner.workspace}}\rayge\build\install\rayge && .\launcher.exe --run-tests --dev 3

@@ -4,7 +4,7 @@
 #include "MemPool/MemPoolManager.h"
 #include "Resources/ResourceHandleUtils.h"
 #include "Debugging.h"
-#include "raylib.h"
+#include "Resources/ResourceHandleUtils.h"
 
 struct RayGE_Entity
 {
@@ -23,34 +23,6 @@ struct RayGE_EntityList
 	uint32_t capacity;
 	uint32_t numInUse;
 };
-
-static uint64_t CrunchKey(uint64_t key, size_t index)
-{
-	return key ^ (0x1234BA55FACE4321 ^ ~index);
-}
-
-static uint64_t CreateEntityKey(size_t index)
-{
-	typedef union Timestamp
-	{
-		uint64_t key;
-		double timeElapsed;
-	} Timestamp;
-
-	Timestamp ts;
-	ts.timeElapsed = GetTime();
-
-	// Shouldn't happen, but may if the window has not been created yet for some reason.
-	RAYGE_ENSURE(ts.timeElapsed != 0.0f, "Cannot create entity key without access to underlying elapsed time");
-
-	// Make sure the key's value is affected by the index.
-	ts.key = CrunchKey(ts.key, index);
-
-	// I'd be amazed if this ever happened:
-	RAYGE_ENSURE(ts.key != 0, "Generated invalid entity key");
-
-	return ts.key;
-}
 
 RayGE_EntityList* Entity_AllocateList(uint32_t capacity)
 {
@@ -72,7 +44,7 @@ RayGE_EntityList* Entity_AllocateList(uint32_t capacity)
 
 		entity->parentList = list;
 		entity->indexInParent = index;
-		entity->key = CreateEntityKey(index);
+		entity->key = Resource_CreateKey(index);
 	}
 
 	return list;
@@ -228,7 +200,7 @@ void Entity_Release(RayGE_Entity* entity)
 
 	// Reset the key to make sure that entity handles referring to
 	// this index will no longer pass.
-	entity->key = CreateEntityKey(entity->indexInParent);
+	entity->key = Resource_CreateKey(entity->indexInParent);
 
 	--entity->parentList->numInUse;
 }
