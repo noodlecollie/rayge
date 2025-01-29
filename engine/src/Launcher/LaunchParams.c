@@ -15,22 +15,32 @@
 #define MEMPOOL_DEBUG_DEFAULT_STR "false"
 #endif
 
+typedef enum OptionIdentifier
+{
+	ID_HELP = (int)'A',
+	ID_VERSION,
+	ID_DEBUG_MEMPOOL,
+	ID_RUN_TESTS,
+	ID_VERBOSE_TESTS,
+	ID_DEV_LEVEL,
+} OptionIdentifier;
+
 static RayGE_LaunchState g_LaunchState;
 static const struct cag_option LaunchOptionDefs[] = {
 	{
-		.identifier = 'h',
+		.identifier = (char)ID_HELP,
 		.access_letters = "h",
 		.access_name = "help",
 		.description = "Displays a help message and exits.",
 	},
 	{
-		.identifier = 'v',
+		.identifier = (char)ID_VERSION,
 		.access_letters = "v",
 		.access_name = "version",
 		.description = "Displays version string and exits.",
 	},
 	{
-		.identifier = 'm',
+		.identifier = (char)ID_DEBUG_MEMPOOL,
 		.access_letters = NULL,
 		.access_name = "debug-mempool",
 		.description =
@@ -39,14 +49,20 @@ static const struct cag_option LaunchOptionDefs[] = {
 	},
 #if RAYGE_BUILD_TESTING()
 	{
-		.identifier = 't',
+		.identifier = (char)ID_RUN_TESTS,
 		.access_letters = "t",
 		.access_name = "run-tests",
 		.description = "If set, runs tests on launch, prints their results, and exits.",
 	},
+	{
+		.identifier = (char)ID_VERBOSE_TESTS,
+		.access_letters = NULL,
+		.access_name = "verbose-tests",
+		.description = "If set alongside --run-tests, results of the tests will be logged verbosely.",
+	},
 #endif
 	{
-		.identifier = 'd',
+		.identifier = (char)ID_DEV_LEVEL,
 		.access_letters = NULL,
 		.access_name = "dev",
 		.value_name = "DEV_LEVEL",
@@ -86,7 +102,7 @@ bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 	{
 		switch ( cag_option_get(&context) )
 		{
-			case 'h':
+			case ID_HELP:
 			{
 				cag_option_print(LaunchOptionDefs, CAG_ARRAY_SIZE(LaunchOptionDefs), stdout);
 
@@ -94,7 +110,7 @@ bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 				return false;
 			}
 
-			case 'v':
+			case ID_VERSION:
 			{
 				printf("RayGE %s\n", Identity_GetBuildDescription());
 
@@ -102,7 +118,7 @@ bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 				return false;
 			}
 
-			case 'd':
+			case ID_DEV_LEVEL:
 			{
 				const char* value = cag_option_get_value(&context);
 				int level = value ? atoi(value) : 0;
@@ -131,16 +147,22 @@ bool LaunchParams_Parse(const RayGE_LaunchParams* params)
 				break;
 			}
 
-			case 'm':
+			case ID_DEBUG_MEMPOOL:
 			{
 				g_LaunchState.enableMemPoolDebugging = true;
 				break;
 			}
 
 #if RAYGE_BUILD_TESTING()
-			case 't':
+			case ID_RUN_TESTS:
 			{
 				g_LaunchState.runTestsAndExit = true;
+				break;
+			}
+
+			case ID_VERBOSE_TESTS:
+			{
+				g_LaunchState.runTestsVerbose = true;
 				break;
 			}
 #endif

@@ -6,6 +6,7 @@
 #include "RayGE/ResourceHandle.h"
 #include "Resources/ResourceDomains.h"
 #include "Testing/Testing.h"
+#include "wzl_cutl/attributes.h"
 
 typedef struct ResourceList ResourceList;
 
@@ -43,7 +44,7 @@ typedef enum ResourceListErrorCode
 	RESOURCELIST_ERROR_PATH_ALREADY_EXISTED,
 } ResourceListErrorCode;
 
-ResourceList* ResourceList_Create(ResourceListAttributes attributes);
+WZL_ATTR_NODISCARD ResourceList* ResourceList_Create(ResourceListAttributes attributes);
 void ResourceList_Destroy(ResourceList* list);
 size_t ResourceList_ItemCount(const ResourceList* list);
 size_t ResourceList_Capacity(const ResourceList* list);

@@ -10,6 +10,7 @@ typedef struct RayGE_LaunchState
 	bool enableBackendDebugLogs;
 	bool enableMemPoolDebugging;
 	bool runTestsAndExit;
+	bool runTestsVerbose;
 } RayGE_LaunchState;
 
 bool LaunchParams_Parse(const RayGE_LaunchParams* params);

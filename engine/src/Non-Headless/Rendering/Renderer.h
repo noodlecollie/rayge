@@ -3,6 +3,7 @@
 #include "RayGE/SceneTypes.h"
 #include "Scene/Entity.h"
 #include "raylib.h"
+#include "wzl_cutl/attributes.h"
 
 #define RENDERCOLOUR_NONE BLANK
 
@@ -34,7 +35,7 @@ typedef struct Renderer_RawBatch2D
 	unsigned int textureID;
 } Renderer_RawBatch2D;
 
-RayGE_Renderer* Renderer_Create(void);
+WZL_ATTR_NODISCARD RayGE_Renderer* Renderer_Create(void);
 void Renderer_Destroy(RayGE_Renderer* renderer);
 
 void Renderer_AddDebugFlags(RayGE_Renderer* renderer, uint64_t flags);

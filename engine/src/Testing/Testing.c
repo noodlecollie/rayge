@@ -1,7 +1,10 @@
 #include <stdbool.h>
+#include <math.h>
 #include "Testing/Testing.h"
 #include "MemPool/MemPoolManager.h"
 #include "Resources/ResourceList.h"
+#include "Testing/AngleTests.h"
+#include "Launcher/LaunchParams.h"
 #include "Debugging.h"
 
 #if !RAYGE_BUILD_TESTING()
@@ -14,7 +17,7 @@
 typedef struct TestCheckResult
 {
 	char category[TEST_CATEGORY_NAME_LENGTH];
-	bool result;
+	bool passed;
 	const char* expression;
 	const char* file;
 	int line;
@@ -48,7 +51,7 @@ static void EnsureNewSpaceInResultList(void)
 	{
 		g_Data.testResultsListCapacity += RESULT_LIST_INCREMENT;
 
-		MEMPOOL_REALLOC(
+		g_Data.testResultsList = MEMPOOL_REALLOC(
 			MEMPOOL_TEST_MANAGER,
 			g_Data.testResultsList,
 			g_Data.testResultsListCapacity * sizeof(TestCheckResult)
@@ -71,6 +74,47 @@ static void RunTestsInCategory(const char* category, void (*func)(void))
 	g_Data.currentTestCategory[0] = '\0';
 }
 
+bool RecordTestResult(bool passed, const char* expression, const char* file, int line)
+{
+	if ( !g_Data.testRunning )
+	{
+		// This should not be called if we're not running tests!
+		// Don't log because we don't know the state of that system,
+		// but do break in the debugger.
+		RayGE_DebugBreak();
+		return passed;
+	}
+
+	if ( LaunchParams_GetLaunchState()->runTestsVerbose )
+	{
+		Logging_PrintLine(RAYGE_LOG_INFO, "[%s] %s:%d: %s", passed ? "PASS" : "FAIL", file, line, expression);
+	}
+
+	EnsureNewSpaceInResultList();
+
+	TestCheckResult* item = &g_Data.testResultsList[g_Data.numTestResults];
+
+	wzl_strcpy(item->category, sizeof(item->category), g_Data.currentTestCategory);
+
+	item->passed = passed;
+	item->expression = expression;
+	item->file = file;
+	item->line = line;
+
+	++g_Data.numTestResults;
+
+	if ( item->passed )
+	{
+		++g_Data.numTestsSuccessful;
+	}
+	else
+	{
+		++g_Data.numTestsFailed;
+	}
+
+	return passed;
+}
+
 bool Testing_RunAllTests(void)
 {
 	if ( g_Data.testResultsList )
@@ -82,7 +126,9 @@ bool Testing_RunAllTests(void)
 		g_Data.numTestsFailed = 0;
 	}
 
+	RunTestsInCategory("MemPool Realloc", &MemPoolManager_TestRealloc);
 	RunTestsInCategory("Resource List", &ResourceList_RunTests);
+	RunTestsInCategory("Angle Normalisation", &Testing_RunAngleNormalisationTests);
 
 	if ( g_Data.numTestsFailed > 0 )
 	{
@@ -116,7 +162,7 @@ void Testing_PrintResultsToLog(void)
 	{
 		TestCheckResult* item = &g_Data.testResultsList[index];
 
-		if ( item->result )
+		if ( item->passed )
 		{
 			continue;
 		}
@@ -139,38 +185,49 @@ bool Testing_TestRunning(void)
 	return g_Data.testRunning;
 }
 
-bool Testing_RecordTestResult(bool result, const char* expression, const char* file, int line)
+bool Testing_ExpectTrue(bool result, const char* expression, const char* file, int line)
 {
-	if ( !g_Data.testRunning )
-	{
-		// This should not be called if we're not running tests!
-		// Don't log because we don't know the state of that system,
-		// but do break in the debugger.
-		RayGE_DebugBreak();
-		return result;
-	}
+	return RecordTestResult(result, expression, file, line);
+}
 
-	EnsureNewSpaceInResultList();
+bool Testing_RecordTestResult_ExpectFalse(bool result, const char* expression, const char* file, int line)
+{
+	return RecordTestResult(!result, expression, file, line);
+}
 
-	TestCheckResult* item = &g_Data.testResultsList[g_Data.numTestResults];
+bool Testing_ExpectIntegersEqual(
+	int64_t lhs,
+	int64_t rhs,
+	bool checkEqual,
+	const char* expression,
+	const char* file,
+	int line
+)
+{
+	return RecordTestResult((lhs == rhs) == checkEqual, expression, file, line);
+}
 
-	wzl_strcpy(item->category, sizeof(item->category), g_Data.currentTestCategory);
+bool Testing_ExpectFloatsExactlyEqual(
+	double lhs,
+	double rhs,
+	bool checkEqual,
+	const char* expression,
+	const char* file,
+	int line
+)
+{
+	return RecordTestResult((lhs == rhs) == checkEqual, expression, file, line);
+}
 
-	item->result = result;
-	item->expression = expression;
-	item->file = file;
-	item->line = line;
-
-	++g_Data.numTestResults;
-
-	if ( item->result )
-	{
-		++g_Data.numTestsSuccessful;
-	}
-	else
-	{
-		++g_Data.numTestsFailed;
-	}
-
-	return result;
+bool Testing_ExpectFloatsApproxEqual(
+	double lhs,
+	double rhs,
+	double tolerance,
+	bool checkEqual,
+	const char* expression,
+	const char* file,
+	int line
+)
+{
+	return RecordTestResult((fabs(lhs - rhs) <= tolerance) == checkEqual, expression, file, line);
 }

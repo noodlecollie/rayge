@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "RayGE/SceneTypes.h"
+#include "wzl_cutl/attributes.h"
 
 typedef struct RayGE_ComponentHeader
 {
@@ -40,9 +41,9 @@ CHECK_COMPONENT_STRUCTURE(RayGE_ComponentImpl_Renderable);
 
 void Component_FreeList(RayGE_ComponentHeader* head);
 
-RayGE_ComponentImpl_Spatial* Component_CreateSpatial(void);
-RayGE_ComponentImpl_Camera* Component_CreateCamera(void);
-RayGE_ComponentImpl_Renderable* Component_CreateRenderable(void);
+WZL_ATTR_NODISCARD RayGE_ComponentImpl_Spatial* Component_CreateSpatial(void);
+WZL_ATTR_NODISCARD RayGE_ComponentImpl_Camera* Component_CreateCamera(void);
+WZL_ATTR_NODISCARD RayGE_ComponentImpl_Renderable* Component_CreateRenderable(void);
 
 // Do not use this function directly - use the macros below instead.
 // If ensureTypeMatches is set, emits a fatal log error if the type does not match.

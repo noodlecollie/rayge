@@ -120,31 +120,31 @@ set(SOURCES
 
 	# Testing
 	src/Testing/Testing.h
+	$<$<BOOL:${BUILD_TESTING}>:src/Testing/AngleTests.h>
+	$<$<BOOL:${BUILD_TESTING}>:src/Testing/AngleTests.c>
 	$<$<BOOL:${BUILD_TESTING}>:src/Testing/Testing.c>
 )
 
-if(NOT RAYGE_HEADLESS)
-	set(NON_HEADLESS_SOURCES
-		src/Non-Headless/EngineSubsystems/RendererSubsystem.h
-		src/Non-Headless/EngineSubsystems/RendererSubsystem.c
-		src/Non-Headless/EngineSubsystems/UISubsystem.h
-		src/Non-Headless/EngineSubsystems/UISubsystem.c
-		src/Non-Headless/Hooks/MenuHooks.h
-		src/Non-Headless/Hooks/MenuHooks.c
-		src/Non-Headless/Integrations/ImGuiBackend.h
-		src/Non-Headless/Integrations/ImGuiBackend.c
-		src/Non-Headless/Rendering/Renderer.h
-		src/Non-Headless/Rendering/Renderer.c
-		src/Non-Headless/UI/DeveloperConsole.h
-		src/Non-Headless/UI/DeveloperConsole.c
-		src/Non-Headless/UI/ImGuiDemo.h
-		src/Non-Headless/UI/ImGuiDemo.c
-		src/Non-Headless/UI/ResourceViewer.h
-		src/Non-Headless/UI/ResourceViewer.c
-		src/Non-Headless/UI/SceneDebugUI.h
-		src/Non-Headless/UI/SceneDebugUI.c
-	)
-endif()
+set(NON_HEADLESS_SOURCES
+	src/Non-Headless/EngineSubsystems/RendererSubsystem.h
+	src/Non-Headless/EngineSubsystems/RendererSubsystem.c
+	src/Non-Headless/EngineSubsystems/UISubsystem.h
+	src/Non-Headless/EngineSubsystems/UISubsystem.c
+	src/Non-Headless/Hooks/MenuHooks.h
+	src/Non-Headless/Hooks/MenuHooks.c
+	src/Non-Headless/Integrations/ImGuiBackend.h
+	src/Non-Headless/Integrations/ImGuiBackend.c
+	src/Non-Headless/Rendering/Renderer.h
+	src/Non-Headless/Rendering/Renderer.c
+	src/Non-Headless/UI/DeveloperConsole.h
+	src/Non-Headless/UI/DeveloperConsole.c
+	src/Non-Headless/UI/ImGuiDemo.h
+	src/Non-Headless/UI/ImGuiDemo.c
+	src/Non-Headless/UI/ResourceViewer.h
+	src/Non-Headless/UI/ResourceViewer.c
+	src/Non-Headless/UI/SceneDebugUI.h
+	src/Non-Headless/UI/SceneDebugUI.c
+)
 
 target_sources(${TARGETNAME_ENGINE} PRIVATE
 	${SOURCES}

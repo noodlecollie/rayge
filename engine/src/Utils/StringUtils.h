@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MemPool/MemPoolManager.h"
+#include "wzl_cutl/attributes.h"
 
 typedef struct StringBounds
 {
@@ -11,4 +12,4 @@ typedef struct StringBounds
 StringBounds StringUtils_GetStringTrimBounds(const char* str);
 
 // Caller is responsible for freeing
-char* StringUtils_TrimString(MemPool_Category memPool, const char* str);
+WZL_ATTR_NODISCARD char* StringUtils_TrimString(MemPool_Category memPool, const char* str);

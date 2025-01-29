@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "Testing/Testing.h"
+#include "wzl_cutl/attributes.h"
 
 #define MEMPOOL_CATEGORY_LIST \
 	LIST_ITEM(MEMPOOL_UNCATEGORISED, "Uncategorised") \
@@ -37,15 +38,14 @@ void MemPoolManager_ShutDown(void);
 bool MemPoolManager_DebuggingEnabled(void);
 void MemPoolManager_SetDebuggingEnabled(bool enabled);
 
-void* MemPoolManager_Malloc(const char* file, int line, MemPool_Category category, size_t size);
-void* MemPoolManager_Calloc(
-	const char* file,
-	int line,
-	MemPool_Category category,
-	size_t numElements,
-	size_t elementSize
-);
-void* MemPoolManager_Realloc(const char* file, int line, MemPool_Category category, void* memory, size_t newSize);
+WZL_ATTR_NODISCARD void* MemPoolManager_Malloc(const char* file, int line, MemPool_Category category, size_t size);
+
+WZL_ATTR_NODISCARD void*
+MemPoolManager_Calloc(const char* file, int line, MemPool_Category category, size_t numElements, size_t elementSize);
+
+WZL_ATTR_NODISCARD void*
+MemPoolManager_Realloc(const char* file, int line, MemPool_Category category, void* memory, size_t newSize);
+
 void MemPoolManager_Free(const char* file, int line, void* memory);
 
 // Prints information about the allocation to the logs.
@@ -62,3 +62,7 @@ void MemPoolManager_DumpAllAllocInfo(void);
 
 #define MEMPOOL_MALLOC_STRUCT(category, type) ((type*)MEMPOOL_MALLOC(category, sizeof(type)))
 #define MEMPOOL_CALLOC_STRUCT(category, type) ((type*)MEMPOOL_CALLOC(category, 1, sizeof(type)))
+
+#if RAYGE_BUILD_TESTING()
+void MemPoolManager_TestRealloc(void);
+#endif

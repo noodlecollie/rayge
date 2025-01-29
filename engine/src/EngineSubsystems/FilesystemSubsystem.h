@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include "wzl_cutl/attributes.h"
 
 #define FILESYSTEM_MAX_REL_PATH 512
 #define FILESYSTEM_MAX_ABS_PATH 4096
@@ -38,8 +39,8 @@ void FilesystemSubsystem_SetBaseRelPath(const char* path);
 
 bool FilesystemSubsystem_DirectoryExists(const char* path);
 
-uint8_t* FilesystemSubsystem_LoadFileData(const char* path, size_t* size);
+WZL_ATTR_NODISCARD uint8_t* FilesystemSubsystem_LoadFileData(const char* path, size_t* size);
 void FilesystemSubsystem_UnloadFileData(uint8_t* data);
 
 bool FilesystemSubsystem_MakeAbsolute(const char* relPath, char* outBuffer, size_t outBufferSize);
-char* FilesystemSubsystem_MakeAbsoluteAlloc(const char* relPath);
+WZL_ATTR_NODISCARD char* FilesystemSubsystem_MakeAbsoluteAlloc(const char* relPath);

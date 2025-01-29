@@ -4,11 +4,12 @@
 #include "RayGE/SceneTypes.h"
 #include "RayGE/ResourceHandle.h"
 #include "Scene/Component.h"
+#include "wzl_cutl/attributes.h"
 
 typedef struct RayGE_Entity RayGE_Entity;
 typedef struct RayGE_EntityList RayGE_EntityList;
 
-RayGE_EntityList* Entity_AllocateList(uint32_t capacity);
+WZL_ATTR_NODISCARD RayGE_EntityList* Entity_AllocateList(uint32_t capacity);
 void Entity_FreeList(RayGE_EntityList* list);
 uint32_t Entity_GetListCapacity(const RayGE_EntityList* list);
 uint32_t Entity_GetNumFreeSlots(const RayGE_EntityList* list);
