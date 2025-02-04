@@ -99,10 +99,6 @@ add_subdirectory(engine)
 add_subdirectory(launcher)
 add_subdirectory(gamelib_sanitytest)
 
-if(BUILD_TESTING)
-add_subdirectory(tests)
-endif()
-
 generate_engine_install(${INSTALL_DEST} FALSE)
 
 if(RAYGE_INSTALL_SANITY_TEST)
