@@ -54,6 +54,12 @@ bool Testing_ExpectFloatsApproxEqual(
 #define TEST_EXPECT_TRUE(expression) Testing_ExpectTrue((expression), #expression, __FILE__, __LINE__)
 #define TEST_EXPECT_FALSE(expression) Testing_ExpectFalse((expression), #expression, __FILE__, __LINE__)
 
+#define TEST_EXPECT_TRUE_CALLABLE(func, lhs, rhs) \
+	Testing_ExpectTrue(func((lhs), (rhs)), #func ": " #lhs " == " #rhs, __FILE__, __LINE__)
+
+#define TEST_EXPECT_FALSE_CALLABLE(func, lhs, rhs) \
+	Testing_ExpectTrue(!func((lhs), (rhs)), "!" #func ": " #lhs " != " #rhs, __FILE__, __LINE__)
+
 #define TEST_EXPECT_EQL_INT(lhs, rhs) \
 	Testing_ExpectIntegersEqual((int64_t)(lhs), (int64_t)(rhs), true, #lhs " == " #rhs, __FILE__, __LINE__)
 

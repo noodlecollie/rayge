@@ -144,10 +144,10 @@ void Testing_PrintResultsToLog(void)
 
 	Logging_PrintLine(
 		RAYGE_LOG_INFO,
-		"  %zu tests run (%zu successful, %zu failed, %.2f%% passed)",
-		g_Data.numTestResults,
+		"  %zu tests successful, %zu failed, of %zu total (%.2f%% passed)",
 		g_Data.numTestsSuccessful,
 		g_Data.numTestsFailed,
+		g_Data.numTestResults,
 		g_Data.numTestResults != 0 ? (((float)g_Data.numTestsSuccessful / (float)g_Data.numTestResults) * 100.0f) : 0.0f
 	);
 
