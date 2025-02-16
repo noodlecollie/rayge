@@ -10,6 +10,14 @@
 #include "Debugging.h"
 #include "Utils/Utils.h"
 #include "utlist.h"
+#include "Testing/Testing.h"
+
+#if RAYGE_BUILD_TESTING()
+#define MEMPOOL_TEST_POOL MEMPOOL__COUNT
+#define TOTAL_MEMPOOLS (MEMPOOL__COUNT + 1)
+#else
+#define TOTAL_MEMPOOLS MEMPOOL__COUNT
+#endif
 
 // Disable some seemingly buggy GCC warnings for this file,
 // since we will be doing some wacky things with pointers.
@@ -19,6 +27,7 @@
 
 #define HEAD_SENTINEL_VALUE 0xF9A23BAD
 #define TAIL_SENTINEL_VALUE ~(HEAD_SENTINEL_VALUE)
+#define TAIL_DEAD_SENTINEL_VALUE 0xDEAD7A12
 
 #define ENSURE_INITIALISED() RAYGE_ENSURE(g_Initialised, "MemPool manager was not initialised")
 
@@ -38,7 +47,7 @@ typedef struct MemPoolItemHead
 
 	const char* allocFile;
 	int allocLine;
-	size_t allocSize;
+	size_t requestedSize;
 	uint32_t sentinel;
 } MemPoolItemHead;
 
@@ -58,7 +67,7 @@ typedef struct MemPool
 
 typedef struct ManagerData
 {
-	MemPool pools[MEMPOOL__COUNT];
+	MemPool pools[TOTAL_MEMPOOLS];
 	bool debuggingEnabled;
 } ManagerData;
 
@@ -67,7 +76,14 @@ static bool g_Initialised = false;
 
 static const char* MemPoolName(MemPool_Category category)
 {
-	return (category >= MEMPOOL_UNCATEGORISED && category < MEMPOOL__COUNT) ? g_MemPoolNames[category] : "UNKNOWN";
+#if RAYGE_BUILD_TESTING()
+	if ( category == MEMPOOL_TEST_POOL )
+	{
+		return "Test Pool";
+	}
+#endif
+
+	return (category >= MEMPOOL_UNCATEGORISED && category < RAYGE_ARRAY_SIZE(g_MemPoolNames)) ? g_MemPoolNames[category] : "UNKNOWN";
 }
 
 static const char* SafeFileNameString(MemPoolItemHead* item)
@@ -109,14 +125,14 @@ static void* ItemToMemPtr(MemPoolItemHead* item)
 
 static MemPoolItemTail* ItemTail(MemPoolItemHead* item)
 {
-	return (MemPoolItemTail*)((uint8_t*)item + sizeof(MemPoolItemHead) + item->allocSize);
+	return (MemPoolItemTail*)((uint8_t*)item + sizeof(MemPoolItemHead) + item->requestedSize);
 }
 
 static bool VerifyPoolValid(MemPool* pool)
 {
 	const size_t poolNum = (size_t)pool;
 	const size_t poolMin = (size_t)g_Data.pools;
-	const size_t poolMax = (size_t)(g_Data.pools + MEMPOOL__COUNT);
+	const size_t poolMax = (size_t)(g_Data.pools + TOTAL_MEMPOOLS);
 
 	return poolNum >= poolMin && poolNum < poolMax && poolNum % sizeof(void*) == 0;
 }
@@ -283,7 +299,7 @@ static MemPoolItemHead* CreateItemInPool(MemPool* pool, size_t size, const char*
 	);
 
 	item->sentinel = HEAD_SENTINEL_VALUE;
-	item->allocSize = size;
+	item->requestedSize = size;
 	item->allocFile = file;
 	item->allocLine = line;
 
@@ -294,7 +310,7 @@ static MemPoolItemHead* CreateItemInPool(MemPool* pool, size_t size, const char*
 	DL_APPEND(pool->head, item);
 
 	// Keep track of how much memory is being used in this pool.
-	pool->totalClientMemory += item->allocSize;
+	pool->totalClientMemory += item->requestedSize;
 	pool->totalMemory += totalSize;
 	++pool->totalAllocations;
 
@@ -303,11 +319,11 @@ static MemPoolItemHead* CreateItemInPool(MemPool* pool, size_t size, const char*
 
 static void DestroyItemInPool(MemPool* pool, MemPoolItemHead* item, const char* file, int line)
 {
-	CheckCountersForAllocationRemoval(pool, item->allocSize, file, line);
+	CheckCountersForAllocationRemoval(pool, item->requestedSize, file, line);
 
-	const size_t totalBytesToFree = ItemAllocationSize(item->allocSize);
+	const size_t totalBytesToFree = ItemAllocationSize(item->requestedSize);
 
-	pool->totalClientMemory -= item->allocSize;
+	pool->totalClientMemory -= item->requestedSize;
 	pool->totalMemory -= totalBytesToFree;
 	--pool->totalAllocations;
 
@@ -379,7 +395,7 @@ void* MemPoolManager_Malloc(const char* file, int line, MemPool_Category categor
 	ENSURE_INITIALISED();
 
 	RAYGE_ENSURE(
-		(size_t)category < MEMPOOL__COUNT,
+		(size_t)category < TOTAL_MEMPOOLS,
 		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolManager_Malloc",
 		file,
 		line
@@ -400,7 +416,7 @@ void* MemPoolManager_Calloc(
 	ENSURE_INITIALISED();
 
 	RAYGE_ENSURE(
-		(size_t)category < MEMPOOL__COUNT,
+		(size_t)category < TOTAL_MEMPOOLS,
 		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolManager_Calloc",
 		file,
 		line
@@ -419,7 +435,7 @@ void* MemPoolManager_Realloc(const char* file, int line, MemPool_Category catego
 	ENSURE_INITIALISED();
 
 	RAYGE_ENSURE(
-		(size_t)category < MEMPOOL__COUNT,
+		(size_t)category < TOTAL_MEMPOOLS,
 		"Mem pool invocation from %s:%d: Invalid category provided to MemPoolManager_Realloc",
 		file,
 		line
@@ -431,36 +447,37 @@ void* MemPoolManager_Realloc(const char* file, int line, MemPool_Category catego
 	}
 
 	MemPoolItemHead* item = MemPtrToItemChecked(memory, file, line);
-	CheckCountersForAllocationRemoval(item->pool, item->allocSize, file, line);
+	CheckCountersForAllocationRemoval(item->pool, item->requestedSize, file, line);
 
 	DL_DELETE(item->pool->head, item);
+	item->prev = NULL;
+	item->next = NULL;
+	ItemTail(item)->sentinel = TAIL_DEAD_SENTINEL_VALUE;
 
-	item->pool->totalClientMemory -= item->allocSize;
-	item->pool->totalMemory -= ItemAllocationSize(item->allocSize);
+	item->pool->totalClientMemory -= item->requestedSize;
+	item->pool->totalMemory -= ItemAllocationSize(item->requestedSize);
 	--item->pool->totalAllocations;
 
 	CheckCountersForNewAllocation(item->pool, newSize, file, line);
 
 	const size_t newPtrMemSize = ItemAllocationSize(newSize);
-	void* newPtr = realloc(memory, newPtrMemSize);
-	item = MemPtrToItem(newPtr);
+	item = (MemPoolItemHead*)realloc(item, newPtrMemSize);
 
-	// Set up the item again. The head sentinel will still be intact,
-	// but the tail will not.
-	MemPoolItemTail* tail = ItemTail(item);
-	tail->sentinel = TAIL_SENTINEL_VALUE;
+	// This must be set first, before we get the tail.
+	item->requestedSize = newSize;
 
-	item->allocSize = newSize;
 	item->allocFile = file;
 	item->allocLine = line;
 
+	ItemTail(item)->sentinel = TAIL_SENTINEL_VALUE;
+
 	DL_APPEND(item->pool->head, item);
 
-	item->pool->totalClientMemory += item->allocSize;
+	item->pool->totalClientMemory += item->requestedSize;
 	item->pool->totalMemory += newPtrMemSize;
 	++item->pool->totalAllocations;
 
-	return newPtr;
+	return ItemToMemPtr(item);
 }
 
 void MemPoolManager_Free(const char* file, int line, void* memory)
@@ -495,7 +512,7 @@ void MemPoolManager_DumpAllocInfo(void* memory)
 	LOG("  Pool: %s (%d)",
 		item->pool ? MemPoolName(item->pool->category) : "UNKNOWN",
 		item->pool ? (int)item->pool->category : -1);
-	LOG("  Requested allocation size: %zu bytes", item->allocSize);
+	LOG("  Requested allocation size: %zu bytes", item->requestedSize);
 	LOG("  Allocated from: %s:%d", SafeFileNameString(item), SafeFileLineNumber(item));
 
 #undef LOG
@@ -511,7 +528,7 @@ void MemPoolManager_DumpAllAllocInfo(void)
 		return;
 	}
 
-	for ( size_t index = 0; index < MEMPOOL__COUNT; ++index )
+	for ( size_t index = 0; index < RAYGE_ARRAY_SIZE(g_Data.pools); ++index )
 	{
 		MemPool* pool = &g_Data.pools[index];
 
@@ -533,3 +550,40 @@ void MemPoolManager_DumpAllAllocInfo(void)
 		Logging_PrintLineStr(RAYGE_LOG_INFO, "");
 	}
 }
+
+#if RAYGE_BUILD_TESTING()
+void MemPoolManager_TestRealloc(void)
+{
+	if ( !TEST_EXPECT_TRUE(g_Initialised) )
+	{
+		return;
+	}
+
+	MemPool* pool = &g_Data.pools[MEMPOOL_TEST_POOL];
+	size_t allocationsBefore = pool->totalAllocations;
+	size_t clientMemoryBefore = pool->totalClientMemory;
+	size_t totalMemoryBefore = pool->totalMemory;
+
+	TEST_EXPECT_EQL_INT(allocationsBefore, 0);
+	TEST_EXPECT_EQL_INT(clientMemoryBefore, 0);
+	TEST_EXPECT_EQL_INT(totalMemoryBefore, 0);
+
+	void* ptr = MEMPOOL_REALLOC(MEMPOOL_TEST_POOL, NULL, 32);
+
+	TEST_EXPECT_EQL_INT(pool->totalAllocations, allocationsBefore + 1);
+	TEST_EXPECT_EQL_INT(pool->totalClientMemory, clientMemoryBefore + 32);
+	TEST_EXPECT_EQL_INT(pool->totalMemory, totalMemoryBefore + sizeof(MemPoolItemHead) + 32 + sizeof(MemPoolItemTail));
+
+	ptr = MEMPOOL_REALLOC(MEMPOOL_TEST_POOL, ptr, 64);
+
+	TEST_EXPECT_EQL_INT(pool->totalAllocations, allocationsBefore + 1);
+	TEST_EXPECT_EQL_INT(pool->totalClientMemory, clientMemoryBefore + 64);
+	TEST_EXPECT_EQL_INT(pool->totalMemory, totalMemoryBefore + sizeof(MemPoolItemHead) + 64 + sizeof(MemPoolItemTail));
+
+	MEMPOOL_FREE(ptr);
+
+	TEST_EXPECT_EQL_INT(pool->totalAllocations, allocationsBefore);
+	TEST_EXPECT_EQL_INT(pool->totalClientMemory, clientMemoryBefore);
+	TEST_EXPECT_EQL_INT(pool->totalMemory, totalMemoryBefore);
+}
+#endif

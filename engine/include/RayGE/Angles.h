@@ -171,6 +171,11 @@ static inline bool EulerAnglesEqual(EulerAngles a, EulerAngles b)
 	return FloatEquals(a.pitch, b.pitch) && FloatEquals(a.yaw, b.yaw) && FloatEquals(a.roll, b.roll);
 }
 
+static inline bool EulerAnglesExactlyEqual(EulerAngles a, EulerAngles b)
+{
+	return a.pitch == b.pitch && a.yaw == b.yaw && a.roll == b.roll;
+}
+
 // Raymath has a couple of functions which return Euler angles, but these
 // have components in a different order, and whose angles are radians.
 // This function converts back to out canonical angle type.

@@ -763,7 +763,7 @@ static void TestInvalidArguments(void)
 		.maxCapacity = 8,
 	};
 
-	TESTING_CHECK(!ResourceList_Create(atts));
+	TEST_EXPECT_TRUE(!ResourceList_Create(atts));
 
 	// Zero capacity
 	atts = (ResourceListAttributes) {
@@ -773,7 +773,7 @@ static void TestInvalidArguments(void)
 		.maxCapacity = 0,
 	};
 
-	TESTING_CHECK(!ResourceList_Create(atts));
+	TEST_EXPECT_TRUE(!ResourceList_Create(atts));
 
 	// Zero items per bucket
 	atts = (ResourceListAttributes) {
@@ -783,7 +783,7 @@ static void TestInvalidArguments(void)
 		.maxCapacity = 8,
 	};
 
-	TESTING_CHECK(!ResourceList_Create(atts));
+	TEST_EXPECT_TRUE(!ResourceList_Create(atts));
 
 	// Zero capacity because items per bucket exceeded it
 	atts = (ResourceListAttributes) {
@@ -793,7 +793,7 @@ static void TestInvalidArguments(void)
 		.maxCapacity = 8,
 	};
 
-	TESTING_CHECK(!ResourceList_Create(atts));
+	TEST_EXPECT_TRUE(!ResourceList_Create(atts));
 }
 
 void TestAddingAndRemovingElements(void)
@@ -807,7 +807,7 @@ void TestAddingAndRemovingElements(void)
 
 	ResourceList* list = ResourceList_Create(atts);
 
-	if ( !TESTING_CHECK(list) )
+	if ( !TEST_EXPECT_TRUE(list) )
 	{
 		return;
 	}
@@ -834,10 +834,10 @@ void TestAddingAndRemovingElements(void)
 			ResourceList_DestroyItem(list, handle);
 		}
 
-		TESTING_CHECK(!RAYGE_IS_NULL_RESOURCE_HANDLE(handle));
-		TESTING_CHECK(itemCreateResult == RESOURCELIST_ERROR_NONE);
-		TESTING_CHECK(data);
-		TESTING_CHECK(dataValue == 1234);
+		TEST_EXPECT_TRUE(!RAYGE_IS_NULL_RESOURCE_HANDLE(handle));
+		TEST_EXPECT_TRUE(itemCreateResult == RESOURCELIST_ERROR_NONE);
+		TEST_EXPECT_TRUE(data);
+		TEST_EXPECT_TRUE(dataValue == 1234);
 	}
 
 	// Do the same again, but with a path this time.
@@ -863,11 +863,11 @@ void TestAddingAndRemovingElements(void)
 
 		// No cleanup this time - it should happen in ResourceList_Destroy().
 
-		TESTING_CHECK(!RAYGE_IS_NULL_RESOURCE_HANDLE(handle));
-		TESTING_CHECK(itemCreateResult == RESOURCELIST_ERROR_NONE);
-		TESTING_CHECK(data);
-		TESTING_CHECK(dataValue == 5678);
-		TESTING_CHECK(wzl_strequals(path, "my/item"));
+		TEST_EXPECT_TRUE(!RAYGE_IS_NULL_RESOURCE_HANDLE(handle));
+		TEST_EXPECT_TRUE(itemCreateResult == RESOURCELIST_ERROR_NONE);
+		TEST_EXPECT_TRUE(data);
+		TEST_EXPECT_TRUE(dataValue == 5678);
+		TEST_EXPECT_TRUE(wzl_strequals(path, "my/item"));
 	}
 
 	ResourceList_Destroy(list);

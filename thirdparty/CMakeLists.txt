@@ -6,7 +6,3 @@ add_subdirectory(cargs-1.1.0)
 add_subdirectory(debugbreak-1.0)
 add_subdirectory(cimgui-1.53.1)
 add_subdirectory(uthash-2.3.0)
-
-if(BUILD_TESTING)
-	add_subdirectory(catch2-3.5.4)
-endif()

@@ -73,6 +73,8 @@ void RendererSubsystem_ShutDown(void)
 	Renderer_Destroy(g_Data->renderer);
 	UnloadFont(g_Data->defaultMonoFont);
 	UnloadFont(g_Data->defaultUIFont);
+
+	RAYGE_ASSERT(IsWindowReady(), "Window was not ready to be closed!");
 	CloseWindow();
 
 	g_Data = NULL;
