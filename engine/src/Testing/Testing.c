@@ -129,6 +129,9 @@ bool Testing_RunAllTests(void)
 	RunTestsInCategory("MemPool Realloc", &MemPoolManager_TestRealloc);
 	RunTestsInCategory("Resource List", &ResourceList_RunTests);
 	RunTestsInCategory("Angle Normalisation", &Testing_RunAngleNormalisationTests);
+	RunTestsInCategory("Angle To Direction Vector", &Testing_RunAngleToDirectionVectorTests);
+	RunTestsInCategory("Direction Vector To Angle", &Testing_RunDirectionVectorToAngleTests);
+	RunTestsInCategory("Raylib Sanity Checks", &Testing_RunRaylibSanityChecks);
 
 	if ( g_Data.numTestsFailed > 0 )
 	{
