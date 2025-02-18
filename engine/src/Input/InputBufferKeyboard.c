@@ -1,4 +1,5 @@
 #include "Input/InputBufferKeyboard.h"
+#include "Input/InputBuffer.h"
 #include "Logging/Logging.h"
 #include "raylib.h"
 
@@ -101,6 +102,26 @@ void InputBuffer_PopulateFromKeyboard(RayGE_InputBuffer* buffer)
 		}
 
 		bufferData[nextIndex++] = pressedKey;
+	}
+
+	int* unicodeChars = InputBuffer_GetUnicodeCharBuffer(buffer);
+	nextIndex = 0;
+
+	for ( int pressedChar = GetCharPressed(); pressedChar != KEY_NULL; pressedChar = GetCharPressed() )
+	{
+		if ( nextIndex >= bufferMaxLength )
+		{
+			Logging_PrintLine(
+				RAYGE_LOG_WARNING,
+				"Unicode char %d exceeded max of %zu simultaneous key presses per frame",
+				pressedChar,
+				bufferMaxLength
+			);
+
+			continue;
+		}
+
+		unicodeChars[nextIndex] = pressedChar;
 	}
 }
 

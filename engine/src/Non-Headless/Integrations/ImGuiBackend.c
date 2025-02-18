@@ -3,6 +3,8 @@
 #include "Non-Headless/Rendering/Renderer.h"
 #include "Non-Headless/EngineSubsystems/RendererSubsystem.h"
 #include "Resources/TextureResources.h"
+#include "Input/InputBuffer.h"
+#include "EngineSubsystems/InputSubsystem.h"
 #include "cimgui.h"
 #include "cimgui_assert.h"
 #include "raylib.h"
@@ -20,11 +22,6 @@ typedef struct Data
 	ImGuiContext* context;
 
 	bool lastFrameFocused;
-	bool lastControlPressed;
-	bool lastShiftPressed;
-	bool lastAltPressed;
-	bool lastSuperPressed;
-
 	ImGuiMouseCursor currentMouseCursor;
 
 	int raylibToImGuiKeyMap[NUM_KEY_CODES];
@@ -41,26 +38,6 @@ static void
 CImGuiAssertHandler(bool expression, const char* description, const char* file, int line, const char* function)
 {
 	RayGE_CheckInvariant(true, expression, description, file, line, function, "<ImGui assertion failed>");
-}
-
-static bool IsAnyCtrlKeyDown(void)
-{
-	return IsKeyDown(KEY_RIGHT_CONTROL) || IsKeyDown(KEY_LEFT_CONTROL);
-}
-
-static bool IsAnyShiftKeyDown(void)
-{
-	return IsKeyDown(KEY_RIGHT_SHIFT) || IsKeyDown(KEY_LEFT_SHIFT);
-}
-
-static bool IsAnyAltKeyDown(void)
-{
-	return IsKeyDown(KEY_RIGHT_ALT) || IsKeyDown(KEY_LEFT_ALT);
-}
-
-static bool IsAnySuperKeyDown(void)
-{
-	return IsKeyDown(KEY_RIGHT_SUPER) || IsKeyDown(KEY_LEFT_SUPER);
 }
 
 static void SetFontTextureFromImage(Data* data, const Image* image)
@@ -265,17 +242,38 @@ static void ReloadFonts(Data* data)
 	io->Fonts->TexID = data->fontTexture.id;
 }
 
-static void HandleKeyEvent(ImGuiIO* io, ImGuiKey key, bool isPressed, bool* lastPressedState)
+static void
+HandleModifierKey(ImGuiIO* io, const RayGE_InputBuffer* inputBuffer, KeyboardKey key1, KeyboardKey key2, ImGuiKey key)
 {
-	if ( isPressed != *lastPressedState )
-	{
-		ImGuiIO_AddKeyEvent(io, key, isPressed);
-	}
+	const bool eitherWasActive =
+		InputBuffer_InputWasActive(inputBuffer, key1) || InputBuffer_InputWasActive(inputBuffer, key2);
+	const bool eitherIsActive =
+		InputBuffer_InputIsCurrentlyActive(inputBuffer, key1) || InputBuffer_InputIsCurrentlyActive(inputBuffer, key2);
 
-	*lastPressedState = isPressed;
+	if ( !eitherWasActive && eitherIsActive )
+	{
+		ImGuiIO_AddKeyEvent(io, key, true);
+	}
+	else if ( eitherWasActive && !eitherIsActive )
+	{
+		ImGuiIO_AddKeyEvent(io, key, false);
+	}
 }
 
-static void HandleMouseEvenet(ImGuiIO* io, int rayMouse, int imGuiMouse)
+static void HandleKeyEvent(int raylibKey, RayGE_InputState state, void* userData)
+{
+	Data* data = (Data*)userData;
+	const int imGuiKey = data->raylibToImGuiKeyMap[raylibKey];
+
+	if ( imGuiKey == 0 )
+	{
+		return;
+	}
+
+	ImGuiIO_AddKeyEvent(igGetIO(), imGuiKey, state == INPUT_STATE_ACTIVE);
+}
+
+static void HandleMouseEvent(ImGuiIO* io, int rayMouse, int imGuiMouse)
 {
 	if ( IsMouseButtonPressed(rayMouse) )
 	{
@@ -329,52 +327,42 @@ static void ProcessEvents(Data* data)
 		data->lastFrameFocused = focused;
 	}
 
-	HandleKeyEvent(io, ImGuiMod_Ctrl, IsAnyCtrlKeyDown(), &data->lastControlPressed);
-	HandleKeyEvent(io, ImGuiMod_Shift, IsAnyShiftKeyDown(), &data->lastShiftPressed);
-	HandleKeyEvent(io, ImGuiMod_Alt, IsAnyAltKeyDown(), &data->lastAltPressed);
-	HandleKeyEvent(io, ImGuiMod_Super, IsAnySuperKeyDown(), &data->lastSuperPressed);
+	const RayGE_InputBuffer* inputBuffer = InputSubsystem_GetInputBuffer(INPUT_SOURCE_KEYBOARD, INPUT_LAYER_UI);
 
-	for ( int raylibKey = 0; raylibKey < NUM_KEY_CODES; ++raylibKey )
-	{
-		const int imGuiKey = data->raylibToImGuiKeyMap[raylibKey];
+	HandleModifierKey(io, inputBuffer, KEY_LEFT_CONTROL, KEY_RIGHT_CONTROL, ImGuiMod_Ctrl);
+	HandleModifierKey(io, inputBuffer, KEY_LEFT_SHIFT, KEY_RIGHT_SHIFT, ImGuiMod_Shift);
+	HandleModifierKey(io, inputBuffer, KEY_LEFT_ALT, KEY_RIGHT_ALT, ImGuiMod_Alt);
+	HandleModifierKey(io, inputBuffer, KEY_LEFT_SUPER, KEY_RIGHT_SUPER, ImGuiMod_Super);
 
-		if ( imGuiKey == 0 )
-		{
-			continue;
-		}
-
-		if ( IsKeyReleased(raylibKey) )
-		{
-			ImGuiIO_AddKeyEvent(io, imGuiKey, false);
-		}
-		else if ( IsKeyPressed(raylibKey) )
-		{
-			ImGuiIO_AddKeyEvent(io, imGuiKey, true);
-		}
-	}
+	InputBuffer_TriggerForAllInputsNowInactive(inputBuffer, &HandleKeyEvent, data);
+	InputBuffer_TriggerForAllInputsNowActive(inputBuffer, &HandleKeyEvent, data);
 
 	if ( io->WantCaptureKeyboard )
 	{
-		// add the text input in order
-		unsigned int pressed = GetCharPressed();
+		const int* chars = InputBuffer_GetUnicodeCharBufferConst(inputBuffer);
+		const size_t maxLength = InputBuffer_GetMaxLength(inputBuffer);
 
-		while ( pressed != 0 )
+		for ( size_t index = 0; index < maxLength; ++index )
 		{
-			ImGuiIO_AddInputCharacter(io, pressed);
-			pressed = GetCharPressed();
+			if ( chars[index] )
+			{
+				ImGuiIO_AddInputCharacter(io, (unsigned int)chars[index]);
+			}
 		}
 	}
+
+	// TODO: At a later date, the stuff below should go through the input subsystem too
 
 	if ( !io->WantSetMousePos )
 	{
 		ImGuiIO_AddMousePosEvent(io, (float)GetMouseX(), (float)GetMouseY());
 	}
 
-	HandleMouseEvenet(io, MOUSE_BUTTON_LEFT, ImGuiMouseButton_Left);
-	HandleMouseEvenet(io, MOUSE_BUTTON_RIGHT, ImGuiMouseButton_Right);
-	HandleMouseEvenet(io, MOUSE_BUTTON_MIDDLE, ImGuiMouseButton_Middle);
-	HandleMouseEvenet(io, MOUSE_BUTTON_FORWARD, ImGuiMouseButton_Middle + 1);
-	HandleMouseEvenet(io, MOUSE_BUTTON_BACK, ImGuiMouseButton_Middle + 2);
+	HandleMouseEvent(io, MOUSE_BUTTON_LEFT, ImGuiMouseButton_Left);
+	HandleMouseEvent(io, MOUSE_BUTTON_RIGHT, ImGuiMouseButton_Right);
+	HandleMouseEvent(io, MOUSE_BUTTON_MIDDLE, ImGuiMouseButton_Middle);
+	HandleMouseEvent(io, MOUSE_BUTTON_FORWARD, ImGuiMouseButton_Middle + 1);
+	HandleMouseEvent(io, MOUSE_BUTTON_BACK, ImGuiMouseButton_Middle + 2);
 
 	{
 		const Vector2 mouseWheel = GetMouseWheelMoveV();

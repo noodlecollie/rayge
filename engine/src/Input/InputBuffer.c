@@ -7,6 +7,9 @@ struct RayGE_InputBuffer
 	int* buffers[2];
 	size_t bufferLength;
 	size_t currentIndex;
+
+	// Same length as bufferLength
+	int* unicodeCharsPressed;
 };
 
 #define OTHER_BUFFER_INDEX(index) (((index) + 1) % 2)
@@ -66,6 +69,7 @@ RayGE_InputBuffer* InputBuffer_Create(size_t maxSimultaneousInputs)
 	buffer->bufferLength = maxSimultaneousInputs;
 	buffer->buffers[0] = MEMPOOL_CALLOC(MEMPOOL_INPUT, buffer->bufferLength, sizeof(int));
 	buffer->buffers[1] = MEMPOOL_CALLOC(MEMPOOL_INPUT, buffer->bufferLength, sizeof(int));
+	buffer->unicodeCharsPressed = MEMPOOL_CALLOC(MEMPOOL_INPUT, buffer->bufferLength, sizeof(int));
 
 	return buffer;
 }
@@ -79,6 +83,7 @@ void InputBuffer_Destroy(RayGE_InputBuffer* buffer)
 
 	MEMPOOL_FREE(buffer->buffers[0]);
 	MEMPOOL_FREE(buffer->buffers[1]);
+	MEMPOOL_FREE(buffer->unicodeCharsPressed);
 	MEMPOOL_FREE(buffer);
 }
 
@@ -107,6 +112,16 @@ const int* InputBuffer_GetLastBufferConst(const RayGE_InputBuffer* buffer)
 	return buffer ? buffer->buffers[OTHER_BUFFER_INDEX(buffer->currentIndex)] : NULL;
 }
 
+int* InputBuffer_GetUnicodeCharBuffer(RayGE_InputBuffer* buffer)
+{
+	return buffer ? buffer->unicodeCharsPressed : NULL;
+}
+
+const int* InputBuffer_GetUnicodeCharBufferConst(const RayGE_InputBuffer* buffer)
+{
+	return buffer ? buffer->unicodeCharsPressed : NULL;
+}
+
 void InputBuffer_SetCurrentBufferValues(RayGE_InputBuffer* buffer, int value)
 {
 	if ( !buffer )
@@ -127,6 +142,16 @@ void InputBuffer_SetLastBufferValues(RayGE_InputBuffer* buffer, int value)
 	SetValues(buffer->buffers[OTHER_BUFFER_INDEX(buffer->currentIndex)], buffer->bufferLength, value);
 }
 
+void InputBuffer_ClearUnicodeBufferValues(RayGE_InputBuffer* buffer)
+{
+	if ( !buffer )
+	{
+		return;
+	}
+
+	memset(buffer->unicodeCharsPressed, 0, buffer->bufferLength);
+}
+
 void InputBuffer_Swap(RayGE_InputBuffer* buffer)
 {
 	if ( !buffer )
@@ -135,6 +160,7 @@ void InputBuffer_Swap(RayGE_InputBuffer* buffer)
 	}
 
 	buffer->currentIndex = OTHER_BUFFER_INDEX(buffer->currentIndex);
+	InputBuffer_ClearUnicodeBufferValues(buffer);
 }
 
 bool InputBuffer_InputIsNowActive(const RayGE_InputBuffer* buffer, int value)
@@ -157,6 +183,26 @@ bool InputBuffer_InputIsNowInctive(const RayGE_InputBuffer* buffer, int value)
 
 	return !InputIsInList(buffer->buffers[buffer->currentIndex], buffer->bufferLength, value) &&
 		InputIsInList(buffer->buffers[OTHER_BUFFER_INDEX(buffer->currentIndex)], buffer->bufferLength, value);
+}
+
+bool InputBuffer_InputIsCurrentlyActive(const RayGE_InputBuffer* buffer, int value)
+{
+	if ( !buffer )
+	{
+		return false;
+	}
+
+	return InputIsInList(buffer->buffers[buffer->currentIndex], buffer->bufferLength, value);
+}
+
+bool InputBuffer_InputWasActive(const RayGE_InputBuffer* buffer, int value)
+{
+	if ( !buffer )
+	{
+		return false;
+	}
+
+	return InputIsInList(buffer->buffers[OTHER_BUFFER_INDEX(buffer->currentIndex)], buffer->bufferLength, value);
 }
 
 void InputBuffer_TriggerForAllInputsNowActive(

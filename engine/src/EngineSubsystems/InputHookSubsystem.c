@@ -1,4 +1,5 @@
 #include "EngineSubsystems/InputHookSubsystem.h"
+#include "EngineSubsystems/InputSubsystem.h"
 #include "Logging/Logging.h"
 #include "Input/InputBufferKeyboard.h"
 #include "utlist.h"
@@ -114,8 +115,6 @@ static void DestroyData(Data* data)
 	MEMPOOL_FREE(data);
 }
 
-// TODO: Remove these guards once we call these functions in headless mode
-#if !RAYGE_HEADLESS()
 static bool
 PassesModifierChecks(RayGE_InputSource source, const RayGE_InputBuffer* inputBuffer, unsigned int requiredModifiers)
 {
@@ -191,7 +190,7 @@ static void CheckAndCallHook(int id, RayGE_InputState state, void* userData)
 	}
 }
 
-static void TriggerUIHooks(void)
+static void TriggerHooks(void)
 {
 	const bool uiIsOpen = UISubsystem_HasActiveMenus();
 
@@ -200,7 +199,7 @@ static void TriggerUIHooks(void)
 	{
 		const RayGE_InputSource inputSource = (RayGE_InputSource)source;
 
-		const RayGE_InputBuffer* buffer = InputSubsystem_GetInputForSource(inputSource);
+		const RayGE_InputBuffer* buffer = InputSubsystem_GetInputBuffer(inputSource, INPUT_LAYER_GAME);
 		RAYGE_ENSURE(buffer, "Expected valid input buffer for source");
 
 		const CallbackInfo cbInfo = {
@@ -216,7 +215,7 @@ static void TriggerUIHooks(void)
 	{
 		const RayGE_InputSource inputSource = (RayGE_InputSource)source;
 
-		const RayGE_InputBuffer* buffer = InputSubsystem_GetInputForSource(inputSource);
+		const RayGE_InputBuffer* buffer = InputSubsystem_GetInputBuffer(inputSource, INPUT_LAYER_GAME);
 		RAYGE_ENSURE(buffer, "Expected valid input buffer for source");
 
 		const CallbackInfo cbInfo = {
@@ -228,7 +227,6 @@ static void TriggerUIHooks(void)
 		InputBuffer_TriggerForAllInputsNowActive(buffer, &CheckAndCallHook, (void*)&cbInfo);
 	}
 }
-#endif
 
 void InputHookSubsystem_Init(void)
 {
@@ -335,7 +333,5 @@ void InputHookSubsystem_ProcessInput(void)
 		return;
 	}
 
-#if !RAYGE_HEADLESS()
-	TriggerUIHooks();
-#endif
+	TriggerHooks();
 }

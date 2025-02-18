@@ -1,9 +1,8 @@
 #include "Non-Headless/EngineSubsystems/UISubsystem.h"
-#include "MemPool/MemPoolManager.h"
 #include "Non-Headless/EngineSubsystems/RendererSubsystem.h"
+#include "EngineSubsystems/InputSubsystem.h"
+#include "MemPool/MemPoolManager.h"
 #include "Debugging.h"
-#include "cimgui.h"
-#include "raylib.h"
 #include "utlist.h"
 #include "Non-Headless/Integrations/ImGuiBackend.h"
 
@@ -206,6 +205,7 @@ void UISubsystem_ShowMenu(const RayGE_UIMenu* menu)
 	g_Data.lockActiveMenus = true;
 
 	AddMenuToList(&g_Data.menus.activeMenus, menu);
+	InputSubsystem_SetCurrentInputLayer(INPUT_LAYER_UI);
 
 	if ( menu->Show )
 	{
@@ -379,6 +379,8 @@ void UISubsystem_Poll(void)
 
 	ClearList(&menus.menusToShow);
 	ClearList(&menus.menusToHide);
+
+	InputSubsystem_SetCurrentInputLayer(UISubsystem_HasActiveMenus() ? INPUT_LAYER_UI : INPUT_LAYER_GAME);
 
 	g_Data.lockActiveMenus = false;
 }
